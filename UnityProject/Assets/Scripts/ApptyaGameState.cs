@@ -7,7 +7,7 @@ namespace ApptyaKingdom {
  }
  public class ApptyaGameState:MonoBehaviour {
   public static ApptyaGameState Instance {get;private set;} public KingdomSave Data {get;private set;} public event Action Changed;
-  const string Key="apptya.kingdom.save.v1";
+  const string Key="apptya.kingdom.save.v1";\n  float productionClock;\n  void Update(){productionClock+=Time.deltaTime;if(productionClock>=30f){productionClock-=30f;Data.wood+=5*Data.lumberLevel;Data.food+=6*Data.farmLevel;Data.stone+=3*Data.quarryLevel;Data.gold+=2*Data.keepLevel;Save();}}
   void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);Load();}
   public void Load(){Data=PlayerPrefs.HasKey(Key)?JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(Key)):new KingdomSave();if(Data==null)Data=new KingdomSave();Changed?.Invoke();}
   public void Save(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();Changed?.Invoke();}
