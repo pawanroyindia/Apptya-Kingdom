@@ -50,4 +50,4 @@ Build the first playable, visually representative slice before expanding the gam
 - [ ] Visual performance is checked on at least one lower-end Android phone.
 
 ## Technical note
-The preferred implementation path is Unity + URP for a mobile-first 3D slice. This repository is currently documentation-first; engine project files, art assets, and a tested Android APK must be added and verified in subsequent implementation work.
+The preferred implementation path is Unity + URP for a mobile-first 3D slice. The repository now contains a Unity 6 project, procedural kingdom blockout, gameplay state, runtime HUD, camera controls, and source preflight checks. It remains an uncompiled/unverified vertical-slice source project: production art, Unity compile/Play Mode verification, and Android device validation are still required. Do not build an APK until the user explicitly authorizes it.
