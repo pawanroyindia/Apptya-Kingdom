@@ -119,11 +119,12 @@ namespace ApptyaKingdom {
    Data.exploredRegions=Mathf.Max(0,Data.exploredRegions);
    Data.keepUpgradeRemaining=Mathf.Max(0f,Data.keepUpgradeRemaining);
    Data.lumberUpgradeRemaining=Mathf.Max(0f,Data.lumberUpgradeRemaining);Data.farmUpgradeRemaining=Mathf.Max(0f,Data.farmUpgradeRemaining);Data.barracksUpgradeRemaining=Mathf.Max(0f,Data.barracksUpgradeRemaining);Data.quarryUpgradeRemaining=Mathf.Max(0f,Data.quarryUpgradeRemaining);
-   if(Data.keepUpgradeActive && Data.keepUpgradeRemaining<=0f){Data.keepUpgradeActive=false;Data.keepUpgradeTargetLevel=0;}
-   if(Data.lumberUpgradeActive && Data.lumberUpgradeRemaining<=0f)Data.lumberUpgradeActive=false;
-   if(Data.farmUpgradeActive && Data.farmUpgradeRemaining<=0f)Data.farmUpgradeActive=false;
-   if(Data.barracksUpgradeActive && Data.barracksUpgradeRemaining<=0f)Data.barracksUpgradeActive=false;
-   if(Data.quarryUpgradeActive && Data.quarryUpgradeRemaining<=0f)Data.quarryUpgradeActive=false;
+   // Finish upgrades that expired while the app was suspended instead of silently cancelling them.
+   if(Data.keepUpgradeActive && Data.keepUpgradeRemaining<=0f){Data.keepLevel=Mathf.Clamp(Data.keepUpgradeTargetLevel>Data.keepLevel?Data.keepUpgradeTargetLevel:Data.keepLevel+1,Data.keepLevel,10);Data.keepUpgradeActive=false;Data.keepUpgradeTargetLevel=0;Data.day++;Data.tutorialUpgraded=true;}
+   if(Data.lumberUpgradeActive && Data.lumberUpgradeRemaining<=0f){Data.lumberLevel=Mathf.Min(5,Data.lumberLevel+1);Data.lumberUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;}
+   if(Data.farmUpgradeActive && Data.farmUpgradeRemaining<=0f){Data.farmLevel=Mathf.Min(5,Data.farmLevel+1);Data.farmUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;}
+   if(Data.barracksUpgradeActive && Data.barracksUpgradeRemaining<=0f){Data.barracksLevel=Mathf.Min(5,Data.barracksLevel+1);Data.barracksUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;}
+   if(Data.quarryUpgradeActive && Data.quarryUpgradeRemaining<=0f){Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);Data.quarryUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;}
    Data.saveVersion=3;
   }
   public void Save(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();Changed?.Invoke();}
