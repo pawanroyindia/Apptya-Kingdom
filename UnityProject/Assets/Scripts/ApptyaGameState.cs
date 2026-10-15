@@ -15,7 +15,7 @@ namespace ApptyaKingdom {
   public float lumberUpgradeRemaining=0f, farmUpgradeRemaining=0f, barracksUpgradeRemaining=0f, quarryUpgradeRemaining=0f;
  }
  public class ApptyaGameState:MonoBehaviour {
-  public static ApptyaGameState Instance {get;private set;} public KingdomSave Data {get;private set;} public event Action Changed;
+  public static ApptyaGameState Instance {get;private set;} public KingdomSave Data {get;private set;} public event Action Changed; public event Action<string> OfflineProgressApplied; public string LastOfflineSummary {get;private set;}
   const string Key="apptya.kingdom.save.v1";
   const string SaveTimeKey="apptya.kingdom.save.utcTicks.v1";
   float productionClock;
@@ -134,6 +134,7 @@ namespace ApptyaKingdom {
   public void Save(){WriteSaveSnapshot();Changed?.Invoke();}
   void WriteSaveSnapshot(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.SetString(SaveTimeKey,DateTime.UtcNow.Ticks.ToString());PlayerPrefs.Save();}
   void ApplyOfflineUpgradeTime(){
+   LastOfflineSummary=null;
    if(!PlayerPrefs.HasKey(SaveTimeKey))return;
    long savedTicks;if(!long.TryParse(PlayerPrefs.GetString(SaveTimeKey),out savedTicks))return;
    long elapsedTicks=DateTime.UtcNow.Ticks-savedTicks;
@@ -142,10 +143,13 @@ namespace ApptyaKingdom {
    // Keep offline income bounded to eight hours to limit runaway resource accumulation.
    int productionIntervals=Mathf.FloorToInt(Mathf.Min(elapsed,28800f)/30f);
    if(productionIntervals>0){
-    Data.wood+=productionIntervals*5*Data.lumberLevel;
-    Data.food+=productionIntervals*6*Data.farmLevel;
-    Data.stone+=productionIntervals*3*Data.quarryLevel;
-    Data.gold+=productionIntervals*2*Data.keepLevel;
+    int gainedWood=productionIntervals*5*Data.lumberLevel;
+    int gainedFood=productionIntervals*6*Data.farmLevel;
+    int gainedStone=productionIntervals*3*Data.quarryLevel;
+    int gainedGold=productionIntervals*2*Data.keepLevel;
+    Data.wood+=gainedWood;Data.food+=gainedFood;Data.stone+=gainedStone;Data.gold+=gainedGold;
+    LastOfflineSummary="While away: +"+gainedWood+" wood, +"+gainedFood+" food, +"+gainedStone+" stone, +"+gainedGold+" gold.";
+    OfflineProgressApplied?.Invoke(LastOfflineSummary);
    }
    if(Data.keepUpgradeActive)Data.keepUpgradeRemaining-=elapsed;
    if(Data.lumberUpgradeActive)Data.lumberUpgradeRemaining-=elapsed;
