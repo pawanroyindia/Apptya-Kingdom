@@ -48,9 +48,12 @@ namespace ApptyaKingdom
 
             var state = ApptyaGameState.Instance;
             if (state == null || state.Data == null) return;
-            if (selected != null) selected.SetSelected(false);
+            // A building is composed of several separately tappable mesh parts.
+            // Highlight every part with the same key so selection reads as one building.
+            var buildingParts = FindObjectsOfType<ApptyaBuildingTap>();
+            foreach (var part in buildingParts)
+                part.SetSelected(part.buildingKey == buildingKey);
             selected = this;
-            SetSelected(true);
             ApptyaRuntimeHud.Instance.SelectBuilding(buildingKey, displayName);
         }
 
