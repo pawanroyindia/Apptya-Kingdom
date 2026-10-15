@@ -100,6 +100,7 @@ namespace ApptyaKingdom
             GridButton(contentObject.transform, "Reward: Keep Builder", () => Say(ApptyaGameState.Instance.ClaimAchievement("keep_builder")));
             GridButton(contentObject.transform, "Upgrade selected", UpgradeSelectedBuilding);
             GridButton(contentObject.transform, "Collect selected", CollectFromSelectedBuilding);
+            GridButton(contentObject.transform, "Attack selected", AttackSelectedTarget);
 
             ApptyaGameState.Instance.Changed += Refresh;
             Refresh();
@@ -117,6 +118,11 @@ namespace ApptyaKingdom
             if (state == null || state.Data == null) return;
             selectedBuildingKey = key;
             selectedBuildingName = displayName;
+            if (key == "enemy")
+            {
+                Say(displayName + " • Enemy level " + state.Data.enemyLevel + " • Enemy power " + state.EnemyPower() + ". Train guards and upgrade before attacking.");
+                return;
+            }
             if (key == "keep")
             {
                 int level = state.Data.keepLevel;
@@ -170,6 +176,16 @@ namespace ApptyaKingdom
             }
             if (selectedBuildingKey == "keep") { UpgradeKeep(); return; }
             Upgrade(selectedBuildingKey, selectedBuildingName);
+        }
+
+        void AttackSelectedTarget()
+        {
+            if (selectedBuildingKey != "enemy")
+            {
+                Say("Tap the enemy outpost first to select it as your target.");
+                return;
+            }
+            ShowBattleResult(ApptyaGameState.Instance.AttackEnemy());
         }
 
         void CollectFromSelectedBuilding()
