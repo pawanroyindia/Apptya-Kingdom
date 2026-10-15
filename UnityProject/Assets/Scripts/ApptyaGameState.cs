@@ -82,6 +82,19 @@ namespace ApptyaKingdom {
    switch(type){case "lumber":Data.lumberLevel=Mathf.Min(5,Data.lumberLevel+1);break;case "farm":Data.farmLevel=Mathf.Min(5,Data.farmLevel+1);break;case "barracks":Data.barracksLevel=Mathf.Min(5,Data.barracksLevel+1);break;case "quarry":Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);break;}
    Data.day++;Data.tutorialUpgraded=true;Save();
   }
+  void OnApplicationPause(bool paused){if(paused)PersistCurrentState();}
+  void OnApplicationQuit(){PersistCurrentState();}
+  void PersistCurrentState()
+  {
+   if(Data==null)return;
+   Data.wood=Mathf.Max(0,Data.wood);Data.food=Mathf.Max(0,Data.food);Data.stone=Mathf.Max(0,Data.stone);Data.gold=Mathf.Max(0,Data.gold);
+   Data.keepUpgradeRemaining=Data.keepUpgradeActive?Mathf.Max(0f,Data.keepUpgradeRemaining):0f;
+   Data.lumberUpgradeRemaining=Data.lumberUpgradeActive?Mathf.Max(0f,Data.lumberUpgradeRemaining):0f;
+   Data.farmUpgradeRemaining=Data.farmUpgradeActive?Mathf.Max(0f,Data.farmUpgradeRemaining):0f;
+   Data.barracksUpgradeRemaining=Data.barracksUpgradeActive?Mathf.Max(0f,Data.barracksUpgradeRemaining):0f;
+   Data.quarryUpgradeRemaining=Data.quarryUpgradeActive?Mathf.Max(0f,Data.quarryUpgradeRemaining):0f;
+   PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();
+  }
   void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);Load();}
   public void Load()
   {
