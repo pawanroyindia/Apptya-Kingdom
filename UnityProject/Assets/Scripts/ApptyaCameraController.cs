@@ -20,6 +20,7 @@ namespace ApptyaKingdom
         Vector2 previousTouch;
         bool wasDragging;
         bool touchStartedOverUI;
+        bool pinchBlockedByUI;
 
         void Start()
         {
@@ -44,7 +45,8 @@ namespace ApptyaKingdom
                 if (EventSystem.current != null &&
                     (EventSystem.current.IsPointerOverGameObject(a.fingerId) ||
                      EventSystem.current.IsPointerOverGameObject(b.fingerId)))
-                    return;
+                    pinchBlockedByUI = true;
+                if (pinchBlockedByUI) return;
                 Vector2 aPrev = a.position - a.deltaPosition;
                 Vector2 bPrev = b.position - b.deltaPosition;
                 float previousGap = Vector2.Distance(aPrev, bPrev);
@@ -62,7 +64,7 @@ namespace ApptyaKingdom
                     previousTouch = t.position;
                     touchStartedOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(t.fingerId);
                 }
-                else if (t.phase == TouchPhase.Moved && !touchStartedOverUI)
+                else if (t.phase == TouchPhase.Moved && !touchStartedOverUI && !pinchBlockedByUI)
                 {
                     Vector2 delta = t.position - previousTouch;
                     yaw += delta.x * dragSensitivity;
@@ -73,6 +75,7 @@ namespace ApptyaKingdom
                 return;
             }
             touchStartedOverUI = false;
+            pinchBlockedByUI = false;
 
             // Mouse fallback makes the camera easy to test in the Unity Editor.
             if (Input.GetMouseButtonDown(0))
