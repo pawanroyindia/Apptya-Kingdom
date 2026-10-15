@@ -19,7 +19,12 @@ namespace ApptyaKingdom
             CacheRenderer();
         }
 
-        void Awake() { CacheRenderer(); }
+        void Awake() { CacheRenderer(); EnsureCollider(); }
+
+        void EnsureCollider()
+        {
+            if (GetComponent<Collider>() == null) gameObject.AddComponent<BoxCollider>();
+        }
 
         void CacheRenderer()
         {
