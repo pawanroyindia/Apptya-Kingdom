@@ -159,6 +159,16 @@ def gameplay_invariants() -> list[str]:
     else:
         errors.append("ApptyaBuildingVisuals.cs: building visuals source is missing")
 
+    camera_path = ROOT / "UnityProject/Assets/Scripts/ApptyaCameraController.cs"
+    if camera_path.is_file():
+        camera = camera_path.read_text(encoding="utf-8")
+        for required_rule in ("void Pan(Vector2 screenDelta)", "Mathf.Clamp(focus.x", "Mathf.Clamp(focus.z",
+                              "Input.touchCount == 2", "zoomSensitivity"):
+            if required_rule not in camera:
+                errors.append(f"ApptyaCameraController.cs: bounded pan/zoom safeguard missing: {required_rule}")
+    else:
+        errors.append("ApptyaCameraController.cs: camera controller source is missing")
+
     # Building selection should tint every separately tappable mesh piece for the same building.
     tap_path = ROOT / "UnityProject/Assets/Scripts/ApptyaBuildingTap.cs"
     if tap_path.is_file():
