@@ -110,8 +110,8 @@ namespace ApptyaKingdom
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
 
-            GridButton(contentObject.transform, "Gather wood +25", () => { ApptyaGameState.Instance.Gather("wood", 25); Say("Lumber Camp delivered wood."); });
-            GridButton(contentObject.transform, "Harvest food +30", () => { ApptyaGameState.Instance.Gather("food", 30); Say("Farm delivered food."); });
+            GridButton(contentObject.transform, "Gather wood +25", () => { var state = ApptyaGameState.Instance; Say(state != null && state.Gather("wood", 25) ? "Lumber Camp delivered +25 wood." : "Could not gather wood. Game state is unavailable."); });
+            GridButton(contentObject.transform, "Harvest food +30", () => { var state = ApptyaGameState.Instance; Say(state != null && state.Gather("food", 30) ? "Farm delivered +30 food." : "Could not harvest food. Game state is unavailable."); });
             GridButton(contentObject.transform, "Train guard", () => Say(ApptyaGameState.Instance.TrainGuard() ? "A guard joined the army." : "Need 25 food, 10 gold and free barracks capacity."));
             GridButton(contentObject.transform, "Upgrade keep", UpgradeKeep);
             GridButton(contentObject.transform, "Scout wilds", () => Say(ApptyaGameState.Instance.Scout() ? "Scouts returned with loot." : "Train a guard first."));
