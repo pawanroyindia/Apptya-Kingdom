@@ -134,6 +134,29 @@ def gameplay_invariants() -> list[str]:
             if claim_flag not in achievements or "already claimed" not in achievements:
                 errors.append(f"ApptyaGameState.cs: achievement reward protection missing for {claim_flag}")
 
+    # Save/load invariants: keep damaged timer values finite and offline rewards bounded.
+    for required_rule in (
+        "SanitizeTimer(Data.keepUpgradeRemaining)",
+        "float.IsNaN(value)||float.IsInfinity(value)",
+        "Mathf.Min(elapsed,28800f)",
+        "PlayerPrefs.SetString(BackupKey,snapshot)",
+        "loaded=TryReadSave(PlayerPrefs.GetString(BackupKey))",
+        "AddResourceSafely(Data.wood,gainedWood)",
+    ):
+        if required_rule not in source:
+            errors.append(f"ApptyaGameState.cs: save/offline-progression safeguard missing: {required_rule}")
+
+    # Long campaign levels must not turn the enemy building into an enormous mesh.
+    visuals_path = ROOT / "UnityProject/Assets/Scripts/ApptyaBuildingVisuals.cs"
+    if visuals_path.is_file():
+        visuals = visuals_path.read_text(encoding="utf-8")
+        if "Mathf.Clamp(state.Data.enemyLevel, 1, 12)" not in visuals:
+            errors.append("ApptyaBuildingVisuals.cs: enemy visual threat tier must be capped independently of gameplay level")
+        if "visualThreatTier - 1" not in visuals:
+            errors.append("ApptyaBuildingVisuals.cs: enemy roof scaling must use the capped visual tier")
+    else:
+        errors.append("ApptyaBuildingVisuals.cs: building visuals source is missing")
+
     # HUD regression checks: keep touch actions scrollable and safe-area aware.
     hud_path = ROOT / "UnityProject/Assets/Scripts/ApptyaRuntimeHud.cs"
     if hud_path.is_file():
