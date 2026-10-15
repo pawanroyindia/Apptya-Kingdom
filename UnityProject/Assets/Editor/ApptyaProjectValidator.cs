@@ -38,7 +38,7 @@ namespace ApptyaKingdom.EditorTools
                 warnings.Add("Starter scene is not enabled in Build Settings.");
 
             if (GraphicsSettings.defaultRenderPipeline == null)
-                warnings.Add("No default Render Pipeline asset is assigned in Project Settings > Graphics. The scene creates URP-compatible materials, but verify rendering in the Editor.");
+                warnings.Add("No Scriptable Render Pipeline asset is assigned in Project Settings > Graphics. Runtime materials will use the built-in Standard shader fallback; assign a URP asset if URP rendering is intended.");
             if (PlayerSettings.defaultInterfaceOrientation != UIOrientation.Portrait)
                 warnings.Add("Player orientation is not Portrait; the current HUD was designed for portrait screens.");
 
