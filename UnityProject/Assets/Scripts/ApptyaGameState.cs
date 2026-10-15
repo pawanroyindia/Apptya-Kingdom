@@ -3,12 +3,14 @@ using UnityEngine;
 namespace ApptyaKingdom {
  [Serializable] public class KingdomSave {
   public int wood=120, food=150, stone=80, gold=100, keepLevel=1, guards=0, day=1;
+  public int trainingQueueCount=0;
+  public float trainingRemaining=0f;
   public int lumberLevel=1, farmLevel=1, barracksLevel=1, quarryLevel=1;
   public int enemyLevel=1, victories=0, defeats=0, exploredRegions=0;
   public int combatResearch=0, economyResearch=0, scoutingResearch=0;
   public bool rewardFirstVictoryClaimed=false, rewardExplorerClaimed=false, rewardKeepClaimed=false;
   public bool tutorialGathered=false, tutorialUpgraded=false, tutorialTrained=false, tutorialBattled=false;
-  public int saveVersion=4;
+  public int saveVersion=5;
   public bool keepUpgradeActive=false;
   public float keepUpgradeRemaining=0f;
   public int keepUpgradeTargetLevel=0;
@@ -34,10 +36,11 @@ namespace ApptyaKingdom {
    TickBuildingUpgrade("farm",ref Data.farmUpgradeActive,ref Data.farmUpgradeRemaining,ref timerChanged);
    TickBuildingUpgrade("barracks",ref Data.barracksUpgradeActive,ref Data.barracksUpgradeRemaining,ref timerChanged);
    TickBuildingUpgrade("quarry",ref Data.quarryUpgradeActive,ref Data.quarryUpgradeRemaining,ref timerChanged);
+   TickTrainingQueue(Time.deltaTime,ref timerChanged);
    productionClock+=Time.deltaTime;
    if(productionClock>=30f){productionClock-=30f;Data.wood=AddResourceSafely(Data.wood,5*Data.lumberLevel);Data.food=AddResourceSafely(Data.food,6*Data.farmLevel);Data.stone=AddResourceSafely(Data.stone,3*Data.quarryLevel);Data.gold=AddResourceSafely(Data.gold,2*Data.keepLevel);
     if(Data.economyResearch>0){int bonus=Data.economyResearch;Data.wood=AddResourceSafely(Data.wood,bonus);Data.food=AddResourceSafely(Data.food,bonus);Data.stone=AddResourceSafely(Data.stone,bonus);}Save();}
-   if(anyUpgrade && timerChanged)
+   if((anyUpgrade||Data.trainingQueueCount>0) && timerChanged)
    {
     upgradeUiClock+=Time.deltaTime;upgradeSaveClock+=Time.deltaTime;
     if(upgradeUiClock>=1f){upgradeUiClock=0f;Changed?.Invoke();}
@@ -91,12 +94,34 @@ namespace ApptyaKingdom {
    switch(type){case "lumber":Data.lumberLevel=Mathf.Min(5,Data.lumberLevel+1);break;case "farm":Data.farmLevel=Mathf.Min(5,Data.farmLevel+1);break;case "barracks":Data.barracksLevel=Mathf.Min(5,Data.barracksLevel+1);break;case "quarry":Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);break;}
    Data.day=Mathf.Min(1000000,Data.day+1);Data.tutorialUpgraded=true;Save();
   }
+  public float GuardTrainingDuration(){return Data==null?10f:Mathf.Clamp(12f-Data.barracksLevel,6f,11f);}
+  void CompleteQueuedGuard()
+  {
+   if(Data.trainingQueueCount<=0)return;
+   Data.trainingQueueCount--;
+   Data.guards=Mathf.Min(Data.barracksLevel*5,Data.guards+1);
+   Data.tutorialTrained=true;
+  }
+  void TickTrainingQueue(float deltaTime,ref bool timerChanged)
+  {
+   if(Data.trainingQueueCount<=0){Data.trainingQueueCount=0;Data.trainingRemaining=0f;return;}
+   Data.trainingRemaining-=deltaTime;timerChanged=true;
+   int safety=0;
+   while(Data.trainingQueueCount>0 && Data.trainingRemaining<=0f && safety<25)
+   {
+    CompleteQueuedGuard();safety++;
+    if(Data.trainingQueueCount>0)Data.trainingRemaining+=GuardTrainingDuration();else Data.trainingRemaining=0f;
+    Save();
+   }
+  }
   void OnApplicationPause(bool paused){if(paused){productionClock=0f;PersistCurrentState();}else if(Data!=null){productionClock=0f;ApplyOfflineUpgradeTime();NormalizeLoadedData();WriteSaveSnapshot();if(!string.IsNullOrEmpty(LastOfflineSummary))OfflineProgressApplied?.Invoke(LastOfflineSummary);Changed?.Invoke();}}
   void OnApplicationQuit(){PersistCurrentState();}
   void PersistCurrentState()
   {
    if(Data==null)return;
    Data.wood=Mathf.Max(0,Data.wood);Data.food=Mathf.Max(0,Data.food);Data.stone=Mathf.Max(0,Data.stone);Data.gold=Mathf.Max(0,Data.gold);
+   Data.trainingQueueCount=Mathf.Clamp(Data.trainingQueueCount,0,Mathf.Max(0,Data.barracksLevel*5-Data.guards));
+   Data.trainingRemaining=Data.trainingQueueCount>0?SanitizeTimer(Data.trainingRemaining):0f;
    Data.keepUpgradeRemaining=Data.keepUpgradeActive?Mathf.Max(0f,Data.keepUpgradeRemaining):0f;
    Data.lumberUpgradeRemaining=Data.lumberUpgradeActive?Mathf.Max(0f,Data.lumberUpgradeRemaining):0f;
    Data.farmUpgradeRemaining=Data.farmUpgradeActive?Mathf.Max(0f,Data.farmUpgradeRemaining):0f;
@@ -111,7 +136,7 @@ namespace ApptyaKingdom {
    try
    {
     KingdomSave candidate=JsonUtility.FromJson<KingdomSave>(json);
-    if(candidate==null || candidate.saveVersion<0 || candidate.saveVersion>4)return null;
+    if(candidate==null || candidate.saveVersion<0 || candidate.saveVersion>5)return null;
     // JsonUtility can return a non-null object for an empty JSON object. Do not let
     // that placeholder overwrite a valid backup with zeroed progress.
     bool hasProgressMarker=candidate.keepLevel>0 || candidate.day>0 ||
@@ -154,6 +179,9 @@ namespace ApptyaKingdom {
    Data.barracksLevel=Mathf.Clamp(Data.barracksLevel,1,5);
    Data.quarryLevel=Mathf.Clamp(Data.quarryLevel,1,5);
    Data.guards=Mathf.Clamp(Data.guards,0,Data.barracksLevel*5);
+   Data.trainingQueueCount=Mathf.Clamp(Data.trainingQueueCount,0,Mathf.Max(0,Data.barracksLevel*5-Data.guards));
+   Data.trainingRemaining=SanitizeTimer(Data.trainingRemaining);
+   if(Data.trainingQueueCount==0)Data.trainingRemaining=0f;else if(Data.trainingRemaining<=0f)Data.trainingRemaining=GuardTrainingDuration();
    Data.day=Mathf.Clamp(Data.day,1,1000000);Data.enemyLevel=Mathf.Clamp(Data.enemyLevel,1,100000);
    Data.victories=Mathf.Clamp(Data.victories,0,1000000);Data.defeats=Mathf.Clamp(Data.defeats,0,1000000);
    Data.exploredRegions=Mathf.Clamp(Data.exploredRegions,0,1000000);
@@ -166,7 +194,7 @@ namespace ApptyaKingdom {
    if(Data.farmUpgradeActive && Data.farmUpgradeRemaining<=0f){Data.farmLevel=Mathf.Min(5,Data.farmLevel+1);Data.farmUpgradeActive=false;Data.day=Mathf.Min(1000000,Data.day+1);Data.tutorialUpgraded=true;AppendOfflineSummary("Farmstead upgrade completed (level "+Data.farmLevel+").");}
    if(Data.barracksUpgradeActive && Data.barracksUpgradeRemaining<=0f){Data.barracksLevel=Mathf.Min(5,Data.barracksLevel+1);Data.barracksUpgradeActive=false;Data.day=Mathf.Min(1000000,Data.day+1);Data.tutorialUpgraded=true;AppendOfflineSummary("Barracks upgrade completed (level "+Data.barracksLevel+").");}
    if(Data.quarryUpgradeActive && Data.quarryUpgradeRemaining<=0f){Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);Data.quarryUpgradeActive=false;Data.day=Mathf.Min(1000000,Data.day+1);Data.tutorialUpgraded=true;AppendOfflineSummary("Quarry upgrade completed (level "+Data.quarryLevel+").");}
-   Data.saveVersion=4;
+   Data.saveVersion=5;
   }
   public void Save(){if(Data==null)return;WriteSaveSnapshot();Changed?.Invoke();}
   void WriteSaveSnapshot(){if(Data==null)return;string snapshot=JsonUtility.ToJson(Data);string now=DateTime.UtcNow.Ticks.ToString();PlayerPrefs.SetString(BackupKey,snapshot);PlayerPrefs.SetString(BackupTimeKey,now);PlayerPrefs.SetString(Key,snapshot);PlayerPrefs.SetString(SaveTimeKey,now);PlayerPrefs.Save();}
@@ -188,6 +216,10 @@ namespace ApptyaKingdom {
    Data.lumberLevel=Mathf.Clamp(Data.lumberLevel,1,5);
    Data.farmLevel=Mathf.Clamp(Data.farmLevel,1,5);
    Data.quarryLevel=Mathf.Clamp(Data.quarryLevel,1,5);
+   Data.barracksLevel=Mathf.Clamp(Data.barracksLevel,1,5);
+   Data.guards=Mathf.Clamp(Data.guards,0,Data.barracksLevel*5);
+   Data.trainingQueueCount=Mathf.Clamp(Data.trainingQueueCount,0,Mathf.Max(0,Data.barracksLevel*5-Data.guards));
+   Data.trainingRemaining=SanitizeTimer(Data.trainingRemaining);
    Data.combatResearch=Mathf.Clamp(Data.combatResearch,0,5);Data.economyResearch=Mathf.Clamp(Data.economyResearch,0,5);Data.scoutingResearch=Mathf.Clamp(Data.scoutingResearch,0,5);
    Data.wood=Mathf.Max(0,Data.wood);Data.food=Mathf.Max(0,Data.food);
    Data.stone=Mathf.Max(0,Data.stone);Data.gold=Mathf.Max(0,Data.gold);
@@ -205,19 +237,35 @@ namespace ApptyaKingdom {
     int gainedGold=productionIntervals*2*Data.keepLevel;
     int researchBonus=productionIntervals*Data.economyResearch;
     Data.wood=AddResourceSafely(Data.wood,gainedWood+researchBonus);Data.food=AddResourceSafely(Data.food,gainedFood+researchBonus);Data.stone=AddResourceSafely(Data.stone,gainedStone+researchBonus);Data.gold=AddResourceSafely(Data.gold,gainedGold);
-    LastOfflineSummary="While away: +"+(gainedWood+researchBonus)+" wood, +"+(gainedFood+researchBonus)+" food, +"+(gainedStone+researchBonus)+" stone, +"+gainedGold+" gold.";
+    AppendOfflineSummary("While away: +"+(gainedWood+researchBonus)+" wood, +"+(gainedFood+researchBonus)+" food, +"+(gainedStone+researchBonus)+" stone, +"+gainedGold+" gold.");
    }
    if(Data.keepUpgradeActive)Data.keepUpgradeRemaining-=elapsed;
    if(Data.lumberUpgradeActive)Data.lumberUpgradeRemaining-=elapsed;
    if(Data.farmUpgradeActive)Data.farmUpgradeRemaining-=elapsed;
    if(Data.barracksUpgradeActive)Data.barracksUpgradeRemaining-=elapsed;
    if(Data.quarryUpgradeActive)Data.quarryUpgradeRemaining-=elapsed;
+   if(Data.trainingQueueCount>0)AdvanceTrainingQueueOffline(elapsed);
+  }
+  void AdvanceTrainingQueueOffline(float elapsed)
+  {
+   if(Data.trainingQueueCount<=0)return;
+   float remaining=SanitizeTimer(Data.trainingRemaining);
+   if(remaining<=0f)remaining=GuardTrainingDuration();
+   remaining-=Mathf.Max(0f,elapsed);
+   int completed=0,safety=0;
+   while(Data.trainingQueueCount>0 && remaining<=0f && safety<25)
+   {
+    CompleteQueuedGuard();completed++;safety++;
+    if(Data.trainingQueueCount>0)remaining+=GuardTrainingDuration();else remaining=0f;
+   }
+   Data.trainingRemaining=Data.trainingQueueCount>0?Mathf.Clamp(remaining,0f,86400f):0f;
+   if(completed>0)AppendOfflineSummary("Training queue completed "+completed+" guard"+(completed==1?"":"s")+" while away.");
   }
   public bool Gather(string type,int amount){if(Data==null||amount<=0)return false;switch(type){case "wood":Data.wood=AddResourceSafely(Data.wood,amount);Data.tutorialGathered=true;break;case "food":Data.food=AddResourceSafely(Data.food,amount);Data.tutorialGathered=true;break;case "stone":Data.stone=AddResourceSafely(Data.stone,amount);Data.tutorialGathered=true;break;case "gold":Data.gold=AddResourceSafely(Data.gold,amount);Data.tutorialGathered=true;break;default:return false;}Save();return true;}
   public bool UpgradeKeep(){return StartKeepUpgrade();}
   public bool UpgradeBuilding(string type){return StartBuildingUpgrade(type);}
   public int GetBuildingLevel(string type){if(Data==null)return 0;switch(type){case "lumber":return Data.lumberLevel;case "farm":return Data.farmLevel;case "barracks":return Data.barracksLevel;case "quarry":return Data.quarryLevel;default:return 0;}}
-  public bool TrainGuard(){if(Data==null||Data.guards>=Data.barracksLevel*5||Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;Data.guards++;Data.tutorialTrained=true;Save();return true;}
+  public bool TrainGuard(){if(Data==null||Data.guards+Data.trainingQueueCount>=Data.barracksLevel*5||Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;if(Data.trainingQueueCount==0)Data.trainingRemaining=GuardTrainingDuration();Data.trainingQueueCount++;Save();return true;}
   public string Research(string type)
   {
    if(Data==null)return "Game state is not initialized.";
