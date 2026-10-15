@@ -19,7 +19,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - World-visible guard squad that updates when guards are trained or lost in battle/expeditions (up to 25 individual markers, matching barracks capacity).
 - Enemy outpost roof threat scaling is capped visually so high gameplay levels cannot create enormous meshes.
 - Selected-building upgrade and resource collection actions; selected enemy outpost can be attacked through a dedicated action.
-- Persistent contextual building details panel with level, upgrade costs, active countdowns, max-level state and enemy power; details refresh after game-state changes without overwriting action feedback.
+- Persistent contextual building details panel with level, upgrade costs, active countdowns, max-level state and enemy power; Barracks inspection also shows guard capacity/training costs, while resource buildings show passive output rates. Details refresh after game-state changes without overwriting action feedback.
 - Legacy save normalization for levels, troop count, day, progression counters and resource values.
 - Timed Keep and village-building upgrades: costs are charged at start, levels increase on completion, HUD displays remaining seconds, and active timers are periodically persisted to PlayerPrefs.
 - Upgrade timers that reach zero while the app is suspended are completed during save normalization on next load rather than silently cancelled.
