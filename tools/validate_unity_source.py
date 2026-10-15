@@ -190,11 +190,17 @@ def gameplay_invariants() -> list[str]:
     else:
         errors.append("ApptyaBuildingTap.cs: building tap source is missing")
 
+    if "Data.combatResearch=Mathf.Clamp(Data.combatResearch,0,5)" not in state or "Data.economyResearch=Mathf.Clamp(Data.economyResearch,0,5)" not in state or "Data.scoutingResearch=Mathf.Clamp(Data.scoutingResearch,0,5)" not in state:
+        errors.append("ApptyaGameState.cs: research levels must be bounded during save normalization")
+    if "public string Research(string type)" not in state or "Data.guards*(10+Data.combatResearch*2)" not in state:
+        errors.append("ApptyaGameState.cs: research must have a real gameplay effect")
+
     # HUD regression checks: keep touch actions scrollable and safe-area aware.
     hud_path = ROOT / "UnityProject/Assets/Scripts/ApptyaRuntimeHud.cs"
     if hud_path.is_file():
         hud = hud_path.read_text(encoding="utf-8")
         for required in ("ApplySafeArea()", "Screen.safeArea", "ScrollRect", "AttackSelectedTarget",
+                         "Research: Combat", "Research: Economy", "Research: Cartography",
                          "CollectFromSelectedBuilding", "UpgradeSelectedBuilding", "selectionInfo",
                          "UpdateSelectionInfo()", "Selected Building Details", "Guards ", "Train 1 guard: 25 food + 10 gold",
                          "wood +", "food +", "stone +", "ClaimAchievement(string id)",
