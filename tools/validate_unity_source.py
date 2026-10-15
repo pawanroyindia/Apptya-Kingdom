@@ -196,7 +196,8 @@ def gameplay_invariants() -> list[str]:
         hud = hud_path.read_text(encoding="utf-8")
         for required in ("ApplySafeArea()", "Screen.safeArea", "ScrollRect", "AttackSelectedTarget",
                          "CollectFromSelectedBuilding", "UpgradeSelectedBuilding", "selectionInfo",
-                         "UpdateSelectionInfo()", "Selected Building Details", "ClaimAchievement(string id)",
+                         "UpdateSelectionInfo()", "Selected Building Details", "Guards ", "Train 1 guard: 25 food + 10 gold",
+                         "wood +", "food +", "stone +", "ClaimAchievement(string id)",
                          "ClaimAchievement(\"first_victory\")", "ClaimAchievement(\"explorer\")",
                          "ClaimAchievement(\"keep_builder\")",
                          "ApptyaGameState.Instance == null || ApptyaGameState.Instance.Data == null"):
