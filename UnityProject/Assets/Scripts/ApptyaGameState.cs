@@ -17,6 +17,7 @@ namespace ApptyaKingdom {
  public class ApptyaGameState:MonoBehaviour {
   public static ApptyaGameState Instance {get;private set;} public KingdomSave Data {get;private set;} public event Action Changed;
   const string Key="apptya.kingdom.save.v1";
+  const string SaveTimeKey="apptya.kingdom.save.utcTicks.v1";
   float productionClock;
   float upgradeUiClock;
   float upgradeSaveClock;
@@ -36,7 +37,7 @@ namespace ApptyaKingdom {
    {
     upgradeUiClock+=Time.deltaTime;upgradeSaveClock+=Time.deltaTime;
     if(upgradeUiClock>=1f){upgradeUiClock=0f;Changed?.Invoke();}
-    if(upgradeSaveClock>=5f){upgradeSaveClock=0f;PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();}
+    if(upgradeSaveClock>=5f){upgradeSaveClock=0f;WriteSaveSnapshot();}
    }
    else {upgradeUiClock=0f;upgradeSaveClock=0f;}
   }
@@ -93,13 +94,14 @@ namespace ApptyaKingdom {
    Data.farmUpgradeRemaining=Data.farmUpgradeActive?Mathf.Max(0f,Data.farmUpgradeRemaining):0f;
    Data.barracksUpgradeRemaining=Data.barracksUpgradeActive?Mathf.Max(0f,Data.barracksUpgradeRemaining):0f;
    Data.quarryUpgradeRemaining=Data.quarryUpgradeActive?Mathf.Max(0f,Data.quarryUpgradeRemaining):0f;
-   PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();
+   WriteSaveSnapshot();
   }
   void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);Load();}
   public void Load()
   {
    Data=PlayerPrefs.HasKey(Key)?JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(Key)):new KingdomSave();
    if(Data==null)Data=new KingdomSave();
+   ApplyOfflineUpgradeTime();
    NormalizeLoadedData();
    Changed?.Invoke();
   }
@@ -128,7 +130,20 @@ namespace ApptyaKingdom {
    if(Data.quarryUpgradeActive && Data.quarryUpgradeRemaining<=0f){Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);Data.quarryUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;}
    Data.saveVersion=3;
   }
-  public void Save(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();Changed?.Invoke();}
+  public void Save(){WriteSaveSnapshot();Changed?.Invoke();}
+  void WriteSaveSnapshot(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.SetString(SaveTimeKey,DateTime.UtcNow.Ticks.ToString());PlayerPrefs.Save();}
+  void ApplyOfflineUpgradeTime(){
+   if(!PlayerPrefs.HasKey(SaveTimeKey))return;
+   long savedTicks;if(!long.TryParse(PlayerPrefs.GetString(SaveTimeKey),out savedTicks))return;
+   long elapsedTicks=DateTime.UtcNow.Ticks-savedTicks;
+   if(elapsedTicks<=0)return;
+   float elapsed=(float)(elapsedTicks/(double)TimeSpan.TicksPerSecond);
+   if(Data.keepUpgradeActive)Data.keepUpgradeRemaining-=elapsed;
+   if(Data.lumberUpgradeActive)Data.lumberUpgradeRemaining-=elapsed;
+   if(Data.farmUpgradeActive)Data.farmUpgradeRemaining-=elapsed;
+   if(Data.barracksUpgradeActive)Data.barracksUpgradeRemaining-=elapsed;
+   if(Data.quarryUpgradeActive)Data.quarryUpgradeRemaining-=elapsed;
+  }
   public bool Gather(string type,int amount){if(amount<=0)return false;switch(type){case "wood":Data.wood+=amount;Data.tutorialGathered=true;break;case "food":Data.food+=amount;Data.tutorialGathered=true;break;case "stone":Data.stone+=amount;Data.tutorialGathered=true;break;case "gold":Data.gold+=amount;Data.tutorialGathered=true;break;default:return false;}Save();return true;}
   public bool UpgradeKeep(){return StartKeepUpgrade();}
   public bool UpgradeBuilding(string type){return StartBuildingUpgrade(type);}
