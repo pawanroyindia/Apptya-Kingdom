@@ -99,18 +99,35 @@ namespace ApptyaKingdom {
    WriteSaveSnapshot();
   }
   void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);Load();}
+  KingdomSave TryReadSave(string json)
+  {
+   if(string.IsNullOrWhiteSpace(json))return null;
+   try
+   {
+    KingdomSave candidate=JsonUtility.FromJson<KingdomSave>(json);
+    if(candidate==null || candidate.saveVersion<0 || candidate.saveVersion>3)return null;
+    // JsonUtility can return a non-null object for an empty JSON object. Do not let
+    // that placeholder overwrite a valid backup with zeroed progress.
+    bool hasProgressMarker=candidate.keepLevel>0 || candidate.day>0 ||
+     candidate.lumberLevel>0 || candidate.farmLevel>0 ||
+     candidate.barracksLevel>0 || candidate.quarryLevel>0 ||
+     candidate.enemyLevel>0 || candidate.saveVersion>0;
+    return hasProgressMarker?candidate:null;
+   }
+   catch(Exception){return null;}
+  }
   public void Load()
   {
    KingdomSave loaded=null;
-   if(PlayerPrefs.HasKey(Key)){
-    try{loaded=JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(Key));}
-    catch(Exception){loaded=null;}
+   if(PlayerPrefs.HasKey(Key))loaded=TryReadSave(PlayerPrefs.GetString(Key));
+   bool restoredBackup=false;
+   if(loaded==null && PlayerPrefs.HasKey(BackupKey))
+   {
+    loaded=TryReadSave(PlayerPrefs.GetString(BackupKey));
+    restoredBackup=loaded!=null;
    }
-   if(loaded==null && PlayerPrefs.HasKey(BackupKey)){
-    try{loaded=JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(BackupKey));}
-    catch(Exception){loaded=null;}
-    if(loaded!=null && PlayerPrefs.HasKey(BackupTimeKey))PlayerPrefs.SetString(SaveTimeKey,PlayerPrefs.GetString(BackupTimeKey));
-   }
+   if(restoredBackup && PlayerPrefs.HasKey(BackupTimeKey))
+    PlayerPrefs.SetString(SaveTimeKey,PlayerPrefs.GetString(BackupTimeKey));
    Data=loaded??new KingdomSave();
    ApplyOfflineUpgradeTime();
    NormalizeLoadedData();
