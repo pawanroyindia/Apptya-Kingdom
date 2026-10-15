@@ -7,13 +7,67 @@ namespace ApptyaKingdom {
   public int enemyLevel=1, victories=0, defeats=0, exploredRegions=0;
   public bool rewardFirstVictoryClaimed=false, rewardExplorerClaimed=false, rewardKeepClaimed=false;
   public bool tutorialGathered=false, tutorialUpgraded=false, tutorialTrained=false, tutorialBattled=false;
-  public int saveVersion=2;
+  public int saveVersion=3;\n  public bool keepUpgradeActive=false;\n  public float keepUpgradeRemaining=0f;\n  public int keepUpgradeTargetLevel=0;\n  public bool lumberUpgradeActive=false, farmUpgradeActive=false, barracksUpgradeActive=false, quarryUpgradeActive=false;\n  public float lumberUpgradeRemaining=0f, farmUpgradeRemaining=0f, barracksUpgradeRemaining=0f, quarryUpgradeRemaining=0f;
  }
  public class ApptyaGameState:MonoBehaviour {
   public static ApptyaGameState Instance {get;private set;} public KingdomSave Data {get;private set;} public event Action Changed;
   const string Key="apptya.kingdom.save.v1";
   float productionClock;
-  void Update(){if(Data==null)return;productionClock+=Time.deltaTime;if(productionClock>=30f){productionClock-=30f;Data.wood+=5*Data.lumberLevel;Data.food+=6*Data.farmLevel;Data.stone+=3*Data.quarryLevel;Data.gold+=2*Data.keepLevel;Save();}}
+  void Update()
+  {
+   if(Data==null)return;
+   bool timerChanged=false;
+   if(Data.keepUpgradeActive){Data.keepUpgradeRemaining-=Time.deltaTime;timerChanged=true;if(Data.keepUpgradeRemaining<=0f)CompleteKeepUpgrade();}
+   TickBuildingUpgrade("lumber",ref Data.lumberUpgradeActive,ref Data.lumberUpgradeRemaining,ref timerChanged);
+   TickBuildingUpgrade("farm",ref Data.farmUpgradeActive,ref Data.farmUpgradeRemaining,ref timerChanged);
+   TickBuildingUpgrade("barracks",ref Data.barracksUpgradeActive,ref Data.barracksUpgradeRemaining,ref timerChanged);
+   TickBuildingUpgrade("quarry",ref Data.quarryUpgradeActive,ref Data.quarryUpgradeRemaining,ref timerChanged);
+   productionClock+=Time.deltaTime;
+   if(productionClock>=30f){productionClock-=30f;Data.wood+=5*Data.lumberLevel;Data.food+=6*Data.farmLevel;Data.stone+=3*Data.quarryLevel;Data.gold+=2*Data.keepLevel;Save();}
+   else if(timerChanged)Changed?.Invoke();
+  }
+  public float UpgradeDuration(string type)
+  {
+   int level=type=="keep"?Data.keepLevel:GetBuildingLevel(type);
+   return Mathf.Clamp(12f*level,12f,120f);
+  }
+  public bool IsUpgradeActive(string type)
+  {
+   switch(type){case "keep":return Data.keepUpgradeActive;case "lumber":return Data.lumberUpgradeActive;case "farm":return Data.farmUpgradeActive;case "barracks":return Data.barracksUpgradeActive;case "quarry":return Data.quarryUpgradeActive;default:return false;}
+  }
+  public float UpgradeTimeRemaining(string type)
+  {
+   switch(type){case "keep":return Data.keepUpgradeRemaining;case "lumber":return Data.lumberUpgradeRemaining;case "farm":return Data.farmUpgradeRemaining;case "barracks":return Data.barracksUpgradeRemaining;case "quarry":return Data.quarryUpgradeRemaining;default:return 0f;}
+  }
+  public bool StartKeepUpgrade()
+  {
+   if(Data.keepUpgradeActive||Data.keepLevel<1||Data.keepLevel>=10)return false;
+   int w=80*Data.keepLevel,st=45*Data.keepLevel;if(Data.wood<w||Data.stone<st)return false;
+   Data.wood-=w;Data.stone-=st;Data.keepUpgradeActive=true;Data.keepUpgradeRemaining=UpgradeDuration("keep");Data.keepUpgradeTargetLevel=Data.keepLevel+1;Save();return true;
+  }
+  void CompleteKeepUpgrade()
+  {
+   if(!Data.keepUpgradeActive)return;
+   Data.keepLevel=Mathf.Clamp(Data.keepUpgradeTargetLevel,Data.keepLevel,10);Data.keepUpgradeActive=false;Data.keepUpgradeRemaining=0f;Data.keepUpgradeTargetLevel=0;Data.day++;Data.tutorialUpgraded=true;Save();
+  }
+  public bool StartBuildingUpgrade(string type)
+  {
+   if(IsUpgradeActive(type))return false;
+   switch(type){case "lumber":case "farm":case "barracks":case "quarry":break;default:return false;}
+   int level=GetBuildingLevel(type);if(level<1||level>=5)return false;
+   int w=35*level,st=20*level,g=10*level;if(Data.wood<w||Data.stone<st||Data.gold<g)return false;
+   Data.wood-=w;Data.stone-=st;Data.gold-=g;
+   switch(type){case "lumber":Data.lumberUpgradeActive=true;Data.lumberUpgradeRemaining=UpgradeDuration(type);break;case "farm":Data.farmUpgradeActive=true;Data.farmUpgradeRemaining=UpgradeDuration(type);break;case "barracks":Data.barracksUpgradeActive=true;Data.barracksUpgradeRemaining=UpgradeDuration(type);break;case "quarry":Data.quarryUpgradeActive=true;Data.quarryUpgradeRemaining=UpgradeDuration(type);break;}
+   Save();return true;
+  }
+  void TickBuildingUpgrade(string type,ref bool active,ref float remaining,ref bool timerChanged)
+  {
+   if(!active)return;remaining-=Time.deltaTime;timerChanged=true;
+   if(remaining>0f)return;
+   active=false;remaining=0f;
+   switch(type){case "lumber":Data.lumberLevel=Mathf.Min(5,Data.lumberLevel+1);break;case "farm":Data.farmLevel=Mathf.Min(5,Data.farmLevel+1);break;case "barracks":Data.barracksLevel=Mathf.Min(5,Data.barracksLevel+1);break;case "quarry":Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);break;}
+   Data.day++;Data.tutorialUpgraded=true;Save();
+  }
   void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);Load();}
   public void Load()
   {
@@ -36,11 +90,11 @@ namespace ApptyaKingdom {
    Data.day=Mathf.Max(1,Data.day);Data.enemyLevel=Mathf.Max(1,Data.enemyLevel);
    Data.victories=Mathf.Max(0,Data.victories);Data.defeats=Mathf.Max(0,Data.defeats);
    Data.exploredRegions=Mathf.Max(0,Data.exploredRegions);
-   Data.saveVersion=2;
+   Data.keepUpgradeRemaining=Mathf.Max(0f,Data.keepUpgradeRemaining);\n   Data.lumberUpgradeRemaining=Mathf.Max(0f,Data.lumberUpgradeRemaining);Data.farmUpgradeRemaining=Mathf.Max(0f,Data.farmUpgradeRemaining);Data.barracksUpgradeRemaining=Mathf.Max(0f,Data.barracksUpgradeRemaining);Data.quarryUpgradeRemaining=Mathf.Max(0f,Data.quarryUpgradeRemaining);\n   Data.saveVersion=3;
   }
   public void Save(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();Changed?.Invoke();}
   public bool Gather(string type,int amount){if(amount<=0)return false;switch(type){case "wood":Data.wood+=amount;Data.tutorialGathered=true;break;case "food":Data.food+=amount;Data.tutorialGathered=true;break;case "stone":Data.stone+=amount;Data.tutorialGathered=true;break;case "gold":Data.gold+=amount;Data.tutorialGathered=true;break;default:return false;}Save();return true;}
-  public bool UpgradeKeep(){if(Data.keepLevel<1||Data.keepLevel>=10)return false;int w=80*Data.keepLevel,s=45*Data.keepLevel;if(Data.wood<w||Data.stone<s)return false;Data.wood-=w;Data.stone-=s;Data.keepLevel++;Data.day++;Data.tutorialUpgraded=true;Save();return true;}
+  public bool UpgradeKeep(){return StartKeepUpgrade();}
   public bool UpgradeBuilding(string type){
    // Validate first: invalid building keys must never spend resources.
    switch(type){case "lumber":case "farm":case "barracks":case "quarry":break;default:return false;}
