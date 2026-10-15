@@ -12,6 +12,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Local PlayerPrefs save/load for kingdom progression.
 - Redundant PlayerPrefs backup snapshot with fallback loading if the primary save cannot be parsed.
 - Resource gathering, building upgrades, guard training, scouting, exploration and enemy battle calculations.
+- Three persistent research branches (Combat Drills, Efficient Production and Cartography), each capped at level 5; combat improves army power, economy improves active/offline passive production, and cartography improves scouting/exploration rewards.
 - Tap-to-inspect for Keep, Lumber Camp, Farmstead, Barracks, Quarry and enemy outpost.
 - Multiple visible parts of each building (including roof sections and doors) share the same interaction target, while decorative colliders are removed.
 - Gold-tint feedback across all separately tappable mesh parts of the selected building.
@@ -39,7 +40,8 @@ This is a source-level status report. It is not evidence of a successful Unity c
 ## Still needed before calling the vertical slice complete
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
 - Compile and test timed upgrade completion, save/reload countdown continuity, and edge cases in Unity.
-- Add a troop training queue, richer troop/combat animation and a visible practice/combat target in the world; current squad presentation uses simple markers.
+- Add distinct troop classes and a troop training queue, richer troop/combat animation and a visible practice/combat target in the world; current squad presentation uses simple markers.
+- Expand research into a dedicated research screen with prerequisites and clearer per-technology costs; current research is available through the scrollable action HUD.
 - Test bounded camera pan/zoom gestures against HUD interactions in Unity Play Mode and on Android.
 - Improve authored art, animations, audio, lighting, terrain and mobile UI polish.
 - Test save/reload, screen scaling, performance and heat on real Android devices.
