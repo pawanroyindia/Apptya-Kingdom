@@ -157,6 +157,17 @@ def gameplay_invariants() -> list[str]:
     else:
         errors.append("ApptyaBuildingVisuals.cs: building visuals source is missing")
 
+    # Building selection should tint every separately tappable mesh piece for the same building.
+    tap_path = ROOT / "UnityProject/Assets/Scripts/ApptyaBuildingTap.cs"
+    if tap_path.is_file():
+        tap = tap_path.read_text(encoding="utf-8")
+        if "FindObjectsOfType<ApptyaBuildingTap>()" not in tap or "part.buildingKey == buildingKey" not in tap:
+            errors.append("ApptyaBuildingTap.cs: selection must highlight all mesh parts sharing a building key")
+        if "!IsPointerOverUI()" not in tap and "if (IsPointerOverUI()) return;" not in tap:
+            errors.append("ApptyaBuildingTap.cs: world selection must ignore taps over UI")
+    else:
+        errors.append("ApptyaBuildingTap.cs: building tap source is missing")
+
     # HUD regression checks: keep touch actions scrollable and safe-area aware.
     hud_path = ROOT / "UnityProject/Assets/Scripts/ApptyaRuntimeHud.cs"
     if hud_path.is_file():
