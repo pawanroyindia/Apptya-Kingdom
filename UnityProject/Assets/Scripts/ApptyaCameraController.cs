@@ -40,6 +40,11 @@ namespace ApptyaKingdom
                 wasDragging = false;
                 Touch a = Input.GetTouch(0);
                 Touch b = Input.GetTouch(1);
+                // Do not zoom the world while a two-finger gesture is interacting with HUD controls.
+                if (EventSystem.current != null &&
+                    (EventSystem.current.IsPointerOverGameObject(a.fingerId) ||
+                     EventSystem.current.IsPointerOverGameObject(b.fingerId)))
+                    return;
                 Vector2 aPrev = a.position - a.deltaPosition;
                 Vector2 bPrev = b.position - b.deltaPosition;
                 float previousGap = Vector2.Distance(aPrev, bPrev);
