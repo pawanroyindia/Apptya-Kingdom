@@ -4,6 +4,7 @@ namespace ApptyaKingdom {
  [Serializable] public class KingdomSave {
   public int wood=120, food=150, stone=80, gold=100, keepLevel=1, guards=0, day=1;
   public int lumberLevel=1, farmLevel=1, barracksLevel=1, quarryLevel=1;
+  public int enemyLevel=1, victories=0, defeats=0, exploredRegions=0;
  }
  public class ApptyaGameState:MonoBehaviour {
   public static ApptyaGameState Instance {get;private set;} public KingdomSave Data {get;private set;} public event Action Changed;
@@ -27,6 +28,10 @@ namespace ApptyaKingdom {
   }
   public int GetBuildingLevel(string type){switch(type){case "lumber":return Data.lumberLevel;case "farm":return Data.farmLevel;case "barracks":return Data.barracksLevel;case "quarry":return Data.quarryLevel;default:return 0;}}
   public bool TrainGuard(){if(Data.guards>=Data.barracksLevel*5||Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;Data.guards++;Save();return true;}
+  public int ArmyPower(){return Data.guards*10+Data.barracksLevel*3+Data.keepLevel*2;}
+  public int EnemyPower(){return 12+Data.enemyLevel*9;}
+  public string ExploreRegion(){if(Data.guards<1)return "Train at least one guard to explore.";Data.guards--;Data.exploredRegions++;Data.day++;int reward=20+Data.exploredRegions*5;Data.wood+=reward;Data.stone+=10+Data.exploredRegions*2;Save();return "Region explored! Found "+reward+" wood and "+(10+Data.exploredRegions*2)+" stone. One guard was assigned to the expedition.";}
+  public string AttackEnemy(){if(Data.guards<1)return "Train guards before attacking.";int army=ArmyPower(),enemy=EnemyPower();Data.day++;if(army>=enemy){int lost=Mathf.Min(Data.guards,Mathf.Max(0,enemy/35));Data.guards-=lost;int wood=35+Data.enemyLevel*10,stone=20+Data.enemyLevel*5,gold=25+Data.enemyLevel*8;Data.wood+=wood;Data.stone+=stone;Data.gold+=gold;Data.victories++;Data.enemyLevel++;Save();return "VICTORY! Power "+army+" vs "+enemy+". Lost "+lost+" guards. Loot: "+wood+" wood, "+stone+" stone, "+gold+" gold.";}else{int lost=Mathf.Min(Data.guards,Mathf.Max(1,(enemy-army)/12));Data.guards-=lost;Data.food=Mathf.Max(0,Data.food-15*lost);Data.defeats++;Save();return "DEFEAT. Power "+army+" vs "+enemy+". Lost "+lost+" guards and "+(15*lost)+" food. Train and upgrade before retrying.";}}
   public bool Scout(){if(Data.guards<1)return false;Data.guards--;Data.gold+=35;Data.stone+=20;Data.day++;Save();return true;}
  }
 }
