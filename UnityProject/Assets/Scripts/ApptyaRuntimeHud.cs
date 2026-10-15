@@ -114,7 +114,7 @@ namespace ApptyaKingdom
                 "\nPRODUCTION / 30s: WOOD +" + (5 * d.lumberLevel) + "  FOOD +" + (6 * d.farmLevel) +
                 "  STONE +" + (3 * d.quarryLevel) + "  GOLD +" + (2 * d.keepLevel) +
                 "\nBUILDINGS: LUMBER " + d.lumberLevel + "  FARM " + d.farmLevel + "  BARRACKS " + d.barracksLevel +
-                "  QUARRY " + d.quarryLevel + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions;
+                "  QUARRY " + d.quarryLevel + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions + "\n" + ApptyaGameState.Instance.TutorialObjective();
         }
 
         void ShowBattleResult(string result)
