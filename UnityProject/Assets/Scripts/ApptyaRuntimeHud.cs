@@ -20,6 +20,22 @@ namespace ApptyaKingdom
 
         void Start()
         {
+            // A duplicate HUD would create overlapping canvases and duplicate button actions.
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            // The HUD depends on initialized game data; fail clearly instead of throwing
+            // null-reference errors from every button if the starter scene is misconfigured.
+            if (ApptyaGameState.Instance == null || ApptyaGameState.Instance.Data == null)
+            {
+                Debug.LogError("Apptya Kingdom: game state is missing. Run Apptya Kingdom > Setup Starter Scene.");
+                enabled = false;
+                return;
+            }
+
             Instance = this;
             font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             var canvasObject = new GameObject("Apptya Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
