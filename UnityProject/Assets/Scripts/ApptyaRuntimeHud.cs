@@ -212,13 +212,13 @@ namespace ApptyaKingdom
             var state = ApptyaGameState.Instance;
             if (stats == null || state == null || state.Data == null) return;
             var d = state.Data;
-            stats.text = "APPTYA KINGDOM  |  KEEP " + d.keepLevel + (ApptyaGameState.Instance.IsUpgradeActive("keep") ? " (UP " + Mathf.CeilToInt(ApptyaGameState.Instance.UpgradeTimeRemaining("keep")) + "s)" : "") + "  |  DAY " + d.day + "  |  ENEMY LV " + d.enemyLevel +
+            stats.text = "APPTYA KINGDOM  |  KEEP " + d.keepLevel + (state.IsUpgradeActive("keep") ? " (UP " + Mathf.CeilToInt(state.UpgradeTimeRemaining("keep")) + "s)" : "") + "  |  DAY " + d.day + "  |  ENEMY LV " + d.enemyLevel +
                 "\nWOOD " + d.wood + "  FOOD " + d.food + "  STONE " + d.stone + "  GOLD " + d.gold +
-                "\nGUARDS " + d.guards + "/" + (d.barracksLevel * 5) + "  |  ARMY POWER " + ApptyaGameState.Instance.ArmyPower() +
+                "\nGUARDS " + d.guards + "/" + (d.barracksLevel * 5) + "  |  ARMY POWER " + state.ArmyPower() +
                 "\nPRODUCTION / 30s: WOOD +" + (5 * d.lumberLevel) + "  FOOD +" + (6 * d.farmLevel) +
                 "  STONE +" + (3 * d.quarryLevel) + "  GOLD +" + (2 * d.keepLevel) +
                 "\nBUILDINGS: " + UpgradeStatus("lumber", "LUMBER " + d.lumberLevel) + "  " + UpgradeStatus("farm", "FARM " + d.farmLevel) + "  " + UpgradeStatus("barracks", "BARRACKS " + d.barracksLevel) +
-                "  " + UpgradeStatus("quarry", "QUARRY " + d.quarryLevel) + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions + "\n" + ApptyaGameState.Instance.TutorialObjective();
+                "  " + UpgradeStatus("quarry", "QUARRY " + d.quarryLevel) + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions + "\n" + state.TutorialObjective();
         }
 
         string UpgradeStatus(string key, string label)
