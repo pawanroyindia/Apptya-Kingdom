@@ -7,7 +7,7 @@ This folder contains a starter Unity 6 project structure, a URP package manifest
 2. Install Android Build Support, Android SDK & NDK Tools, and OpenJDK through Unity Hub if Android builds are needed.
 3. Wait until packages finish resolving and scripts compile.
 4. In the Unity menu, select **Apptya Kingdom → Setup Starter Scene**.
-5. Press Play and inspect the Console.
+5. Select **Apptya Kingdom → Validate Project** to run the source/scene preflight and review warnings.\n6. Press Play and inspect the Console.
 
 ## Current gameplay slice
 - Procedural valley with river, bridge, roads, village decoration and enemy outpost.
