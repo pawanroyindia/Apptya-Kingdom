@@ -12,6 +12,7 @@ namespace ApptyaKingdom
         Renderer targetRenderer;
         Color originalColor;
         bool hasOriginalColor;
+        MaterialPropertyBlock colorBlock;
 
         public void Configure(string key, string label)
         {
@@ -33,7 +34,7 @@ namespace ApptyaKingdom
             targetRenderer = GetComponent<Renderer>();
             if (targetRenderer != null)
             {
-                originalColor = targetRenderer.material.color;
+                originalColor = targetRenderer.sharedMaterial != null ? targetRenderer.sharedMaterial.color : Color.white;
                 hasOriginalColor = true;
             }
         }
@@ -73,12 +74,18 @@ namespace ApptyaKingdom
         {
             CacheRenderer();
             if (targetRenderer == null || !hasOriginalColor) return;
-            targetRenderer.material.color = value ? Color.Lerp(originalColor, new Color(1f, .78f, .25f), .58f) : originalColor;
+            if (colorBlock == null) colorBlock = new MaterialPropertyBlock();
+            targetRenderer.GetPropertyBlock(colorBlock);
+            Color tint = value ? Color.Lerp(originalColor, new Color(1f, .78f, .25f), .58f) : originalColor;
+            colorBlock.SetColor("_Color", tint);
+            colorBlock.SetColor("_BaseColor", tint);
+            targetRenderer.SetPropertyBlock(colorBlock);
         }
 
         void OnDestroy()
         {
             if (selected == this) selected = null;
+            if (targetRenderer != null) targetRenderer.SetPropertyBlock(null);
         }
     }
 }
