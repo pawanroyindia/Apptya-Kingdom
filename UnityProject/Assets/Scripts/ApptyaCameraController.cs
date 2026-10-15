@@ -3,11 +3,12 @@ using UnityEngine.EventSystems;
 
 namespace ApptyaKingdom
 {
-    /// <summary>Basic mobile-friendly orbit and pinch-zoom controls for the kingdom view.</summary>
+    /// <summary>Mobile-friendly bounded kingdom panning and pinch-zoom controls.</summary>
     public class ApptyaCameraController : MonoBehaviour
     {
-        [SerializeField] float dragSensitivity = 0.18f;
+        [SerializeField] float panSensitivity = 0.0025f;
         [SerializeField] float zoomSensitivity = 0.025f;
+        [SerializeField] Vector2 horizontalBounds = new Vector2(13f, 13f);
         [SerializeField] float minDistance = 12f;
         [SerializeField] float maxDistance = 34f;
         [SerializeField] float minPitch = 22f;
@@ -78,10 +79,8 @@ namespace ApptyaKingdom
                 else if (t.phase == TouchPhase.Moved && !touchStartedOverUI && !pinchBlockedByUI)
                 {
                     Vector2 delta = t.position - previousTouch;
-                    yaw += delta.x * dragSensitivity;
-                    pitch = Mathf.Clamp(pitch - delta.y * dragSensitivity, minPitch, maxPitch);
+                    Pan(delta);
                     previousTouch = t.position;
-                    ApplyCamera();
                 }
                 return;
             }
@@ -99,10 +98,8 @@ namespace ApptyaKingdom
             {
                 Vector2 current = Input.mousePosition;
                 Vector2 delta = current - previousTouch;
-                yaw += delta.x * dragSensitivity;
-                pitch = Mathf.Clamp(pitch - delta.y * dragSensitivity, minPitch, maxPitch);
+                Pan(delta);
                 previousTouch = current;
-                ApplyCamera();
             }
             if (Input.GetMouseButtonUp(0)) wasDragging = false;
             float scroll = Input.mouseScrollDelta.y;
@@ -112,6 +109,20 @@ namespace ApptyaKingdom
                 distance = Mathf.Clamp(distance - scroll, minDistance, maxDistance);
                 ApplyCamera();
             }
+        }
+
+        void Pan(Vector2 screenDelta)
+        {
+            // Move parallel to the ground plane; clamp the focus so repeated drags cannot
+            // send the kingdom off-screen or leave the playable valley behind.
+            Quaternion heading = Quaternion.Euler(0f, yaw, 0f);
+            Vector3 right = heading * Vector3.right;
+            Vector3 forward = heading * Vector3.forward;
+            float scale = Mathf.Max(1f, distance) * panSensitivity;
+            focus += (-right * screenDelta.x - forward * screenDelta.y) * scale;
+            focus.x = Mathf.Clamp(focus.x, -horizontalBounds.x, horizontalBounds.x);
+            focus.z = Mathf.Clamp(focus.z, -horizontalBounds.y, horizontalBounds.y);
+            ApplyCamera();
         }
 
         void ApplyCamera()
