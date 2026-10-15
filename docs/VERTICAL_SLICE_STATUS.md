@@ -39,7 +39,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 ## Still needed before calling the vertical slice complete
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
 - Compile and test timed upgrade completion, save/reload countdown continuity, and edge cases in Unity.
-- Add troop training queue or squad presentation, and a visible practice/combat target in the world.
+- Add a troop training queue, richer troop/combat animation and a visible practice/combat target in the world; current squad presentation uses simple markers.
 - Test bounded camera pan/zoom gestures against HUD interactions in Unity Play Mode and on Android.
 - Improve authored art, animations, audio, lighting, terrain and mobile UI polish.
 - Test save/reload, screen scaling, performance and heat on real Android devices.
