@@ -71,6 +71,40 @@ def delimiters(path: Path) -> list[str]:
     return errors
 
 
+
+def gameplay_invariants() -> list[str]:
+    """Guard critical gameplay rules against accidental source regressions."""
+    errors: list[str] = []
+    state_path = ROOT / "UnityProject/Assets/Scripts/ApptyaGameState.cs"
+    if not state_path.is_file():
+        return errors
+    source = state_path.read_text(encoding="utf-8")
+
+    battle_start = source.find("public string AttackEnemy()")
+    tutorial_start = source.find("public int TutorialStep()", battle_start)
+    if battle_start < 0 or tutorial_start < 0:
+        errors.append("ApptyaGameState.cs: battle/tutorial methods are missing")
+    else:
+        battle = source[battle_start:tutorial_start]
+        victory_branch = battle.find("if(army>=enemy)")
+        tutorial_mark = battle.find("Data.tutorialBattled=true")
+        defeat_branch = battle.find("else{int lost=", victory_branch)
+        if victory_branch < 0 or tutorial_mark < 0 or defeat_branch < 0:
+            errors.append("ApptyaGameState.cs: battle victory/defeat flow could not be verified")
+        elif not (victory_branch < tutorial_mark < defeat_branch):
+            errors.append("ApptyaGameState.cs: only a victory should complete the battle tutorial step")
+
+    gather_start = source.find("public bool Gather(")
+    upgrade_start = source.find("public bool UpgradeKeep()", gather_start)
+    if gather_start < 0 or upgrade_start < 0:
+        errors.append("ApptyaGameState.cs: resource gathering API is missing")
+    else:
+        gather = source[gather_start:upgrade_start]
+        if "amount<=0" not in gather or "AddResourceSafely" not in gather:
+            errors.append("ApptyaGameState.cs: gathering must reject non-positive amounts and use overflow-safe resource additions")
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
     for relative in REQUIRED:
@@ -93,6 +127,7 @@ def main() -> int:
         errors.append("ProjectVersion.txt: expected Unity 6000.0.46f1")
     for path in sorted((ROOT / "UnityProject/Assets").rglob("*.cs")):
         errors.extend(delimiters(path))
+    errors.extend(gameplay_invariants())
     if errors:
         print("Apptya Kingdom source preflight FAILED:")
         print("\n".join(f"- {error}" for error in errors))
