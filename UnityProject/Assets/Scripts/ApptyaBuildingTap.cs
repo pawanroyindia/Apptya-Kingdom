@@ -10,8 +10,6 @@ namespace ApptyaKingdom
         [SerializeField] string displayName;
         static ApptyaBuildingTap selected;
         Renderer targetRenderer;
-        Color originalColor;
-        bool hasOriginalColor;
         MaterialPropertyBlock colorBlock;
 
         public void Configure(string key, string label)
@@ -32,11 +30,8 @@ namespace ApptyaKingdom
         {
             if (targetRenderer != null) return;
             targetRenderer = GetComponent<Renderer>();
-            if (targetRenderer != null)
-            {
-                originalColor = targetRenderer.sharedMaterial != null ? targetRenderer.sharedMaterial.color : Color.white;
-                hasOriginalColor = true;
-            }
+            // Keep only the renderer reference. Its shared material may change when a
+            // building upgrades, so selection tint must always derive from the current base.
         }
 
         void OnMouseDown()
@@ -76,10 +71,18 @@ namespace ApptyaKingdom
         void SetSelected(bool value)
         {
             CacheRenderer();
-            if (targetRenderer == null || !hasOriginalColor) return;
+            if (targetRenderer == null) return;
+            if (!value)
+            {
+                // Clear the selection override instead of restoring a cached color; the
+                // shared material may have changed since selection (for example on upgrade).
+                targetRenderer.SetPropertyBlock(null);
+                return;
+            }
             if (colorBlock == null) colorBlock = new MaterialPropertyBlock();
             targetRenderer.GetPropertyBlock(colorBlock);
-            Color tint = value ? Color.Lerp(originalColor, new Color(1f, .78f, .25f), .58f) : originalColor;
+            Color baseColor = targetRenderer.sharedMaterial != null ? targetRenderer.sharedMaterial.color : Color.white;
+            Color tint = Color.Lerp(baseColor, new Color(1f, .78f, .25f), .58f);
             colorBlock.SetColor("_Color", tint);
             colorBlock.SetColor("_BaseColor", tint);
             targetRenderer.SetPropertyBlock(colorBlock);
