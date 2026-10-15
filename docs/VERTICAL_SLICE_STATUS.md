@@ -15,6 +15,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Timed Keep and village-building upgrades: costs are charged at start, levels increase on completion, HUD displays remaining seconds, and active timers are periodically persisted to PlayerPrefs.
 - Upgrade timers that reach zero while the app is suspended are completed during save normalization on next load rather than silently cancelled.
 - Upgrade countdowns account for elapsed wall-clock time between saves, so timers can progress while the app is closed; recovered state is saved immediately after loading.
+- Passive resource production is granted for offline time, capped at eight hours per return, using saved building levels.
 - Two-finger camera zoom checks whether either touch is over the HUD, preventing pinch gestures on UI controls from moving the world camera.
 
 ## Still needed before calling the vertical slice complete
