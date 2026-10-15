@@ -1,0 +1,8 @@
+{
+  "appId": "com.apptya.kingdom",
+  "appName": "Apptya Kingdom",
+  "webDir": "prototype",
+  "server": {
+    "androidScheme": "https"
+  }
+}
