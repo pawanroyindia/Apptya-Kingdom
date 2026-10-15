@@ -45,19 +45,23 @@ namespace ApptyaKingdom {
   }
   public float UpgradeDuration(string type)
   {
+   if(Data==null)return 12f;
    int level=type=="keep"?Data.keepLevel:GetBuildingLevel(type);
    return Mathf.Clamp(12f*level,12f,120f);
   }
   public bool IsUpgradeActive(string type)
   {
+   if(Data==null)return false;
    switch(type){case "keep":return Data.keepUpgradeActive;case "lumber":return Data.lumberUpgradeActive;case "farm":return Data.farmUpgradeActive;case "barracks":return Data.barracksUpgradeActive;case "quarry":return Data.quarryUpgradeActive;default:return false;}
   }
   public float UpgradeTimeRemaining(string type)
   {
+   if(Data==null)return 0f;
    switch(type){case "keep":return Data.keepUpgradeRemaining;case "lumber":return Data.lumberUpgradeRemaining;case "farm":return Data.farmUpgradeRemaining;case "barracks":return Data.barracksUpgradeRemaining;case "quarry":return Data.quarryUpgradeRemaining;default:return 0f;}
   }
   public bool StartKeepUpgrade()
   {
+   if(Data==null)return false;
    if(Data.keepUpgradeActive||Data.keepLevel<1||Data.keepLevel>=10)return false;
    int w=80*Data.keepLevel,st=45*Data.keepLevel;if(Data.wood<w||Data.stone<st)return false;
    Data.wood-=w;Data.stone-=st;Data.keepUpgradeActive=true;Data.keepUpgradeRemaining=UpgradeDuration("keep");Data.keepUpgradeTargetLevel=Data.keepLevel+1;Save();return true;
@@ -69,7 +73,7 @@ namespace ApptyaKingdom {
   }
   public bool StartBuildingUpgrade(string type)
   {
-   if(IsUpgradeActive(type))return false;
+   if(Data==null||IsUpgradeActive(type))return false;
    switch(type){case "lumber":case "farm":case "barracks":case "quarry":break;default:return false;}
    int level=GetBuildingLevel(type);if(level<1||level>=5)return false;
    int w=35*level,st=20*level,g=10*level;if(Data.wood<w||Data.stone<st||Data.gold<g)return false;
