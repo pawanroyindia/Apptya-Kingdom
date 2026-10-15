@@ -66,6 +66,10 @@ namespace ApptyaKingdom
         void OnDestroy()
         {
             if (state != null) state.Changed -= Refresh;
+            if (goldMat) Destroy(goldMat);
+            if (slateMat) Destroy(slateMat);
+            if (bronzeMat) Destroy(bronzeMat);
+            if (crimsonMat) Destroy(crimsonMat);
         }
 
         void Refresh()
