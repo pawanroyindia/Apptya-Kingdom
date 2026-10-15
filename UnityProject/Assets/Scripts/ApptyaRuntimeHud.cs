@@ -7,12 +7,14 @@ namespace ApptyaKingdom
     /// <summary>Responsive, scrollable first-pass HUD for narrow Android screens.</summary>
     public class ApptyaRuntimeHud : MonoBehaviour
     {
+        public static ApptyaRuntimeHud Instance { get; private set; }
         Text stats, notice;
         Font font;
         GameObject actionPanel;
 
         void Start()
         {
+            Instance = this;
             font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             var canvasObject = new GameObject("Apptya Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = canvasObject.GetComponent<Canvas>();
@@ -102,6 +104,22 @@ namespace ApptyaKingdom
         void OnDestroy()
         {
             if (ApptyaGameState.Instance != null) ApptyaGameState.Instance.Changed -= Refresh;
+            if (Instance == this) Instance = null;
+        }
+
+        public void SelectBuilding(string key, string displayName)
+        {
+            var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null) return;
+            if (key == "keep")
+            {
+                int level = state.Data.keepLevel;
+                Say(displayName + " • Level " + level + "/10 • Upgrade: " + (80 * level) + " wood + " + (45 * level) + " stone. Use Upgrade Keep below.");
+                return;
+            }
+            int buildingLevel = state.GetBuildingLevel(key);
+            if (buildingLevel < 1) return;
+            Say(displayName + " • Level " + buildingLevel + "/5 • Upgrade: " + (35 * buildingLevel) + " wood + " + (20 * buildingLevel) + " stone + " + (10 * buildingLevel) + " gold. Use its upgrade action below.");
         }
 
         void Refresh()
