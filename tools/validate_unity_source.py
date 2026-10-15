@@ -159,6 +159,14 @@ def gameplay_invariants() -> list[str]:
     else:
         errors.append("ApptyaBuildingVisuals.cs: building visuals source is missing")
 
+    setup_path = ROOT / "UnityProject/Assets/Editor/ApptyaProjectSetup.cs"
+    if setup_path.is_file():
+        setup = setup_path.read_text(encoding="utf-8")
+        if "PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;" not in setup:
+            errors.append("ApptyaProjectSetup.cs: starter setup must configure portrait orientation for the current HUD")
+    else:
+        errors.append("ApptyaProjectSetup.cs: editor setup source is missing")
+
     camera_path = ROOT / "UnityProject/Assets/Scripts/ApptyaCameraController.cs"
     if camera_path.is_file():
         camera = camera_path.read_text(encoding="utf-8")
