@@ -29,7 +29,7 @@
 - Two-finger gestures over HUD controls do not zoom the world camera.
 - Tapping building walls, doors and rooftops selects the correct building; trees and decorative props do not intercept taps.
 - Soft shadows and ambient lighting remain performant on the target phone; tree canopies do not cast shadows.
-- No clipped UI on 720p and 1080p portrait displays.
+- No clipped UI on 720p and 1080p portrait displays, including camera cutouts/notches and system navigation areas (safe-area layout).
 - Test frame rate, heat, battery, memory and load time on a physical Android device.
 
 ## Honest status
