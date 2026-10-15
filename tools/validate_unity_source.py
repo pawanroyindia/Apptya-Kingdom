@@ -154,6 +154,8 @@ def gameplay_invariants() -> list[str]:
             errors.append("ApptyaBuildingVisuals.cs: enemy visual threat tier must be capped independently of gameplay level")
         if "visualThreatTier - 1" not in visuals:
             errors.append("ApptyaBuildingVisuals.cs: enemy roof scaling must use the capped visual tier")
+        if "guardMarkers = new GameObject[25]" not in visuals:
+            errors.append("ApptyaBuildingVisuals.cs: visible guard markers must cover the 25-guard barracks capacity")
     else:
         errors.append("ApptyaBuildingVisuals.cs: building visuals source is missing")
 
