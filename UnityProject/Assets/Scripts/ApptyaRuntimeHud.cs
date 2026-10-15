@@ -1,32 +1,220 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-namespace ApptyaKingdom {
- /// <summary>Functional first-pass HUD; replace with designed prefabs during UI art pass.</summary>
- public class ApptyaRuntimeHud:MonoBehaviour {
-  Text stats,notice; Font font;
-  void Start(){font=Resources.GetBuiltinResource<Font>("Arial.ttf");var cg=new GameObject("Apptya Canvas",typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));cg.GetComponent<Canvas>().renderMode=RenderMode.ScreenSpaceOverlay;cg.GetComponent<CanvasScaler>().uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;cg.GetComponent<CanvasScaler>().referenceResolution=new Vector2(1080,1920);cg.GetComponent<CanvasScaler>().matchWidthOrHeight=.5f;if(!FindObjectOfType<EventSystem>())new GameObject("EventSystem",typeof(EventSystem),typeof(StandaloneInputModule));var top=Panel(cg.transform,"Resource HUD",new Vector2(0,1),new Vector2(1,1),new Vector2(0,-110),new Vector2(0,190));stats=TextAt(top.transform,"Resources",new Vector2(.5f,.5f),Vector2.zero,new Vector2(1000,160),30,TextAnchor.MiddleCenter);var bot=Panel(cg.transform,"Action HUD",new Vector2(.5f,0),new Vector2(.5f,0),new Vector2(0,245),new Vector2(1020,500));ButtonAt(bot.transform,"Gather wood +25",new Vector2(-330,135),()=>{ApptyaGameState.Instance.Gather("wood",25);Say("Lumber camp delivered wood.");});ButtonAt(bot.transform,"Harvest food +30",new Vector2(0,135),()=>{ApptyaGameState.Instance.Gather("food",30);Say("Farm delivered food.");});ButtonAt(bot.transform,"Train guard",new Vector2(330,135),()=>Say(ApptyaGameState.Instance.TrainGuard()?"A guard joined the army.":"Need 25 food and 10 gold, and barracks capacity must remain."));ButtonAt(bot.transform,"Upgrade keep",new Vector2(-330,35),()=>UpgradeKeep());ButtonAt(bot.transform,"Scout wilds",new Vector2(0,35),()=>Say(ApptyaGameState.Instance.Scout()?"Scouts returned with loot.":"Train a guard first."));
-  ButtonAt(bot.transform,"Attack enemy",new Vector2(330,35),()=>ShowBattleResult(ApptyaGameState.Instance.AttackEnemy()),300);
-  ButtonAt(bot.transform,"Explore region",new Vector2(0,-130),()=>Say(ApptyaGameState.Instance.ExploreRegion()),300);ButtonAt(bot.transform,"Upgrade lumber",new Vector2(-360,-65),()=>Upgrade("lumber","Lumber Camp"),220);ButtonAt(bot.transform,"Upgrade farm",new Vector2(-120,-65),()=>Upgrade("farm","Farmstead"),220);ButtonAt(bot.transform,"Upgrade barracks",new Vector2(120,-65),()=>Upgrade("barracks","Barracks"),220);ButtonAt(bot.transform,"Upgrade quarry",new Vector2(360,-65),()=>Upgrade("quarry","Quarry"),220);notice=TextAt(bot.transform,"Chronicle",new Vector2(.5f,.5f),new Vector2(0,-190),new Vector2(950,65),22,TextAnchor.MiddleCenter);ApptyaGameState.Instance.Changed+=Refresh;Refresh();}
-  void OnDestroy(){if(ApptyaGameState.Instance!=null)ApptyaGameState.Instance.Changed-=Refresh;}
-  void Refresh(){if(stats==null)return;var d=ApptyaGameState.Instance.Data;stats.text="APPTYA KINGDOM  |  KEEP "+d.keepLevel+"  |  DAY "+d.day+"  |  ENEMY LV "+d.enemyLevel+"\nWOOD "+d.wood+"  FOOD "+d.food+"  STONE "+d.stone+"  GOLD "+d.gold+"  GUARDS "+d.guards+"/"+(d.barracksLevel*5)+"\nPRODUCTION / 30s:  WOOD +"+(5*d.lumberLevel)+"  FOOD +"+(6*d.farmLevel)+"  STONE +"+(3*d.quarryLevel)+"  GOLD +"+(2*d.keepLevel)+"\nBUILDINGS:  LUMBER "+d.lumberLevel+"  FARM "+d.farmLevel+"  BARRACKS "+d.barracksLevel+"  QUARRY "+d.quarryLevel+"\nBATTLES: WINS "+d.victories+"  LOSSES "+d.defeats+"  REGIONS "+d.exploredRegions;}
-  void ShowBattleResult(string result){
-   Say(result);
-   var old=GameObject.Find("Battle Result Overlay");if(old)Destroy(old);
-   var canvas=FindObjectOfType<Canvas>();if(!canvas)return;
-   var overlay=Panel(canvas.transform,"Battle Result Overlay",new Vector2(.08f,.27f),new Vector2(.92f,.73f),Vector2.zero,Vector2.zero);
-   var title=TextAt(overlay.transform,"Battle Title",new Vector2(.5f,1f),new Vector2(0,-55),new Vector2(700,80),34,TextAnchor.MiddleCenter);
-   title.text=result.StartsWith("VICTORY")?"VICTORY":"BATTLE REPORT";
-   title.color=result.StartsWith("VICTORY")?new Color(1f,.78f,.25f):Color.white;
-   var body=TextAt(overlay.transform,"Battle Details",new Vector2(.5f,.5f),new Vector2(0,0),new Vector2(760,220),24,TextAnchor.MiddleCenter);
-   body.text=result;body.horizontalOverflow=HorizontalWrapMode.Wrap;
-   ButtonAt(overlay.transform,"Continue",new Vector2(0,-150),()=>Destroy(overlay),220);
-  }
-  void Say(string s){if(notice)notice.text=s;}
-  void UpgradeKeep(){var state=ApptyaGameState.Instance;int level=state.Data.keepLevel;if(level>=10){Say("Keep is already at maximum level 10.");return;}int wood=80*level,stone=45*level;Say(state.UpgradeKeep()?"Keep upgraded to level "+(level+1)+"!":"Need "+wood+" wood and "+stone+" stone to upgrade the keep.");}
-  void Upgrade(string key,string label){var state=ApptyaGameState.Instance;int level=state.GetBuildingLevel(key);if(level>=5){Say(label+" is already at maximum level 5.");return;}Say(state.UpgradeBuilding(key)?label+" upgraded to level "+(level+1)+"!":"Need "+(35*level)+" wood, "+(20*level)+" stone and "+(10*level)+" gold.");}
-  GameObject Panel(Transform p,string n,Vector2 amin,Vector2 amax,Vector2 pos,Vector2 size){var g=new GameObject(n,typeof(RectTransform),typeof(Image));g.transform.SetParent(p,false);var r=g.GetComponent<RectTransform>();r.anchorMin=amin;r.anchorMax=amax;r.anchoredPosition=pos;r.sizeDelta=size;g.GetComponent<Image>().color=new Color(.035f,.075f,.13f,.94f);return g;}
-  Text TextAt(Transform p,string n,Vector2 a,Vector2 pos,Vector2 size,int fs,TextAnchor align){var g=new GameObject(n,typeof(RectTransform),typeof(Text));g.transform.SetParent(p,false);var r=g.GetComponent<RectTransform>();r.anchorMin=a;r.anchorMax=a;r.anchoredPosition=pos;r.sizeDelta=size;var t=g.GetComponent<Text>();t.font=font;t.fontSize=fs;t.alignment=align;t.color=Color.white;t.horizontalOverflow=HorizontalWrapMode.Wrap;return t;}
-  void ButtonAt(Transform p,string label,Vector2 pos,UnityEngine.Events.UnityAction action,float width=300){var g=new GameObject(label,typeof(RectTransform),typeof(Image),typeof(Button));g.transform.SetParent(p,false);var r=g.GetComponent<RectTransform>();r.anchorMin=r.anchorMax=new Vector2(.5f,.5f);r.anchoredPosition=pos;r.sizeDelta=new Vector2(width,78);g.GetComponent<Image>().color=new Color(.13f,.25f,.38f);g.GetComponent<Button>().onClick.AddListener(action);var tgo=new GameObject("Label",typeof(RectTransform),typeof(Text));tgo.transform.SetParent(g.transform,false);var tr=tgo.GetComponent<RectTransform>();tr.anchorMin=Vector2.zero;tr.anchorMax=Vector2.one;tr.offsetMin=tr.offsetMax=Vector2.zero;var t=tgo.GetComponent<Text>();t.font=font;t.fontSize=label.StartsWith("Upgrade ")&&width<300?17:22;t.fontStyle=FontStyle.Bold;t.alignment=TextAnchor.MiddleCenter;t.color=Color.white;t.text=label;}
- }
+
+namespace ApptyaKingdom
+{
+    /// <summary>Responsive, scrollable first-pass HUD for narrow Android screens.</summary>
+    public class ApptyaRuntimeHud : MonoBehaviour
+    {
+        Text stats, notice;
+        Font font;
+        GameObject actionPanel;
+
+        void Start()
+        {
+            font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            var canvasObject = new GameObject("Apptya Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var canvas = canvasObject.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = canvasObject.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1080, 1920);
+            scaler.matchWidthOrHeight = .5f;
+
+            if (!FindObjectOfType<EventSystem>())
+                new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+
+            var top = Panel(canvas.transform, "Resource HUD", new Vector2(0, 1), new Vector2(1, 1),
+                new Vector2(0, -12), new Vector2(0, 300));
+            stats = TextAt(top.transform, "Resources", new Vector2(.5f, .5f), Vector2.zero,
+                new Vector2(1000, 270), 25, TextAnchor.MiddleCenter);
+
+            actionPanel = Panel(canvas.transform, "Action HUD", new Vector2(.04f, 0), new Vector2(.96f, 0),
+                new Vector2(0, 18), new Vector2(0, 620));
+            notice = TextAt(actionPanel.transform, "Chronicle", new Vector2(.5f, 1f),
+                new Vector2(0, -42), new Vector2(900, 62), 20, TextAnchor.MiddleCenter);
+
+            var scrollObject = new GameObject("Action Scroll View", typeof(RectTransform), typeof(Image), typeof(ScrollRect));
+            scrollObject.transform.SetParent(actionPanel.transform, false);
+            var scrollRectTransform = scrollObject.GetComponent<RectTransform>();
+            scrollRectTransform.anchorMin = new Vector2(0, 0);
+            scrollRectTransform.anchorMax = new Vector2(1, 1);
+            scrollRectTransform.offsetMin = new Vector2(12, 12);
+            scrollRectTransform.offsetMax = new Vector2(-12, -90);
+            scrollObject.GetComponent<Image>().color = new Color(.025f, .05f, .09f, .35f);
+
+            var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(Mask));
+            viewport.transform.SetParent(scrollObject.transform, false);
+            var viewportRect = viewport.GetComponent<RectTransform>();
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.offsetMin = viewportRect.offsetMax = Vector2.zero;
+            viewport.GetComponent<Image>().color = new Color(1, 1, 1, .015f);
+            viewport.GetComponent<Mask>().showMaskGraphic = false;
+
+            var contentObject = new GameObject("Action Grid", typeof(RectTransform), typeof(GridLayoutGroup), typeof(ContentSizeFitter));
+            contentObject.transform.SetParent(viewport.transform, false);
+            var contentRect = contentObject.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0, 1);
+            contentRect.anchorMax = new Vector2(1, 1);
+            contentRect.pivot = new Vector2(.5f, 1);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = Vector2.zero;
+            var grid = contentObject.GetComponent<GridLayoutGroup>();
+            grid.padding = new RectOffset(8, 8, 8, 8);
+            grid.spacing = new Vector2(10, 10);
+            grid.cellSize = new Vector2(285, 82);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 3;
+            grid.childAlignment = TextAnchor.UpperCenter;
+            var fitter = contentObject.GetComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var scroll = scrollObject.GetComponent<ScrollRect>();
+            scroll.viewport = viewportRect;
+            scroll.content = contentRect;
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+
+            GridButton(contentObject.transform, "Gather wood +25", () => { ApptyaGameState.Instance.Gather("wood", 25); Say("Lumber Camp delivered wood."); });
+            GridButton(contentObject.transform, "Harvest food +30", () => { ApptyaGameState.Instance.Gather("food", 30); Say("Farm delivered food."); });
+            GridButton(contentObject.transform, "Train guard", () => Say(ApptyaGameState.Instance.TrainGuard() ? "A guard joined the army." : "Need 25 food, 10 gold and free barracks capacity."));
+            GridButton(contentObject.transform, "Upgrade keep", UpgradeKeep);
+            GridButton(contentObject.transform, "Scout wilds", () => Say(ApptyaGameState.Instance.Scout() ? "Scouts returned with loot." : "Train a guard first."));
+            GridButton(contentObject.transform, "Attack enemy", () => ShowBattleResult(ApptyaGameState.Instance.AttackEnemy()));
+            GridButton(contentObject.transform, "Explore region", () => Say(ApptyaGameState.Instance.ExploreRegion()));
+            GridButton(contentObject.transform, "Upgrade lumber", () => Upgrade("lumber", "Lumber Camp"));
+            GridButton(contentObject.transform, "Upgrade farm", () => Upgrade("farm", "Farmstead"));
+            GridButton(contentObject.transform, "Upgrade barracks", () => Upgrade("barracks", "Barracks"));
+            GridButton(contentObject.transform, "Upgrade quarry", () => Upgrade("quarry", "Quarry"));
+
+            ApptyaGameState.Instance.Changed += Refresh;
+            Refresh();
+        }
+
+        void OnDestroy()
+        {
+            if (ApptyaGameState.Instance != null) ApptyaGameState.Instance.Changed -= Refresh;
+        }
+
+        void Refresh()
+        {
+            if (stats == null || ApptyaGameState.Instance == null) return;
+            var d = ApptyaGameState.Instance.Data;
+            stats.text = "APPTYA KINGDOM  |  KEEP " + d.keepLevel + "  |  DAY " + d.day + "  |  ENEMY LV " + d.enemyLevel +
+                "\nWOOD " + d.wood + "  FOOD " + d.food + "  STONE " + d.stone + "  GOLD " + d.gold +
+                "\nGUARDS " + d.guards + "/" + (d.barracksLevel * 5) + "  |  ARMY POWER " + ApptyaGameState.Instance.ArmyPower() +
+                "\nPRODUCTION / 30s: WOOD +" + (5 * d.lumberLevel) + "  FOOD +" + (6 * d.farmLevel) +
+                "  STONE +" + (3 * d.quarryLevel) + "  GOLD +" + (2 * d.keepLevel) +
+                "\nBUILDINGS: LUMBER " + d.lumberLevel + "  FARM " + d.farmLevel + "  BARRACKS " + d.barracksLevel +
+                "  QUARRY " + d.quarryLevel + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions;
+        }
+
+        void ShowBattleResult(string result)
+        {
+            Say(result);
+            var old = GameObject.Find("Battle Result Overlay");
+            if (old) Destroy(old);
+            var canvas = FindObjectOfType<Canvas>();
+            if (!canvas) return;
+            var overlay = Panel(canvas.transform, "Battle Result Overlay", new Vector2(.06f, .28f),
+                new Vector2(.94f, .72f), Vector2.zero, Vector2.zero);
+            var title = TextAt(overlay.transform, "Battle Title", new Vector2(.5f, 1f),
+                new Vector2(0, -48), new Vector2(700, 70), 32, TextAnchor.MiddleCenter);
+            title.text = result.StartsWith("VICTORY") ? "VICTORY" : "BATTLE REPORT";
+            title.color = result.StartsWith("VICTORY") ? new Color(1f, .78f, .25f) : Color.white;
+            var body = TextAt(overlay.transform, "Battle Details", new Vector2(.5f, .5f),
+                Vector2.zero, new Vector2(760, 220), 23, TextAnchor.MiddleCenter);
+            body.text = result;
+            body.horizontalOverflow = HorizontalWrapMode.Wrap;
+            ButtonAt(overlay.transform, "Continue", new Vector2(0, -145), () => Destroy(overlay), 220);
+        }
+
+        void Say(string message) { if (notice) notice.text = message; }
+
+        void UpgradeKeep()
+        {
+            var state = ApptyaGameState.Instance;
+            int level = state.Data.keepLevel;
+            if (level >= 10) { Say("Keep is already at maximum level 10."); return; }
+            int wood = 80 * level, stone = 45 * level;
+            Say(state.UpgradeKeep() ? "Keep upgraded to level " + (level + 1) + "!" :
+                "Need " + wood + " wood and " + stone + " stone to upgrade the keep.");
+        }
+
+        void Upgrade(string key, string label)
+        {
+            var state = ApptyaGameState.Instance;
+            int level = state.GetBuildingLevel(key);
+            if (level >= 5) { Say(label + " is already at maximum level 5."); return; }
+            Say(state.UpgradeBuilding(key) ? label + " upgraded to level " + (level + 1) + "!" :
+                "Need " + (35 * level) + " wood, " + (20 * level) + " stone and " + (10 * level) + " gold.");
+        }
+
+        GameObject Panel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 size)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin; rect.anchorMax = anchorMax;
+            rect.anchoredPosition = position; rect.sizeDelta = size;
+            go.GetComponent<Image>().color = new Color(.035f, .075f, .13f, .94f);
+            return go;
+        }
+
+        Text TextAt(Transform parent, string name, Vector2 anchor, Vector2 position, Vector2 size, int fontSize, TextAnchor alignment)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = anchor;
+            rect.anchoredPosition = position; rect.sizeDelta = size;
+            var text = go.GetComponent<Text>();
+            text.font = font; text.fontSize = fontSize; text.alignment = alignment;
+            text.color = Color.white; text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            return text;
+        }
+
+        void GridButton(Transform parent, string label, UnityEngine.Events.UnityAction action)
+        {
+            var go = new GameObject(label, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+            go.transform.SetParent(parent, false);
+            go.GetComponent<LayoutElement>().preferredHeight = 82;
+            go.GetComponent<Image>().color = new Color(.13f, .25f, .38f);
+            go.GetComponent<Button>().onClick.AddListener(action);
+            var textObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(go.transform, false);
+            var rect = textObject.GetComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(5, 3); rect.offsetMax = new Vector2(-5, -3);
+            var text = textObject.GetComponent<Text>();
+            text.font = font; text.fontSize = 20; text.fontStyle = FontStyle.Bold;
+            text.alignment = TextAnchor.MiddleCenter; text.color = Color.white; text.text = label;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+        }
+
+        void ButtonAt(Transform parent, string label, Vector2 position, UnityEngine.Events.UnityAction action, float width)
+        {
+            var go = new GameObject(label, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
+            rect.anchoredPosition = position; rect.sizeDelta = new Vector2(width, 76);
+            go.GetComponent<Image>().color = new Color(.13f, .25f, .38f);
+            go.GetComponent<Button>().onClick.AddListener(action);
+            var textObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            textObject.transform.SetParent(go.transform, false);
+            var textRect = textObject.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero; textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = textRect.offsetMax = Vector2.zero;
+            var text = textObject.GetComponent<Text>();
+            text.font = font; text.fontSize = 22; text.fontStyle = FontStyle.Bold;
+            text.alignment = TextAnchor.MiddleCenter; text.color = Color.white; text.text = label;
+        }
+    }
 }
