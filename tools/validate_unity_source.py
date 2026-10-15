@@ -147,6 +147,9 @@ def gameplay_invariants() -> list[str]:
             errors.append("ApptyaRuntimeHud.cs: Changed event must be unsubscribed on destroy")
         if "ApptyaGameState.Instance.OfflineProgressApplied -= Say;" not in hud:
             errors.append("ApptyaRuntimeHud.cs: offline progress event must be unsubscribed on destroy")
+        for feedback in ("Could not gather wood.", "Could not harvest food.", "state == null || state.Data == null"):
+            if feedback not in hud:
+                errors.append(f"ApptyaRuntimeHud.cs: missing action failure guard/feedback: {feedback}")
     else:
         errors.append("ApptyaRuntimeHud.cs: HUD source is missing")
 
