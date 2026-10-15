@@ -91,6 +91,9 @@ namespace ApptyaKingdom
             GridButton(contentObject.transform, "Upgrade farm", () => Upgrade("farm", "Farmstead"));
             GridButton(contentObject.transform, "Upgrade barracks", () => Upgrade("barracks", "Barracks"));
             GridButton(contentObject.transform, "Upgrade quarry", () => Upgrade("quarry", "Quarry"));
+            GridButton(contentObject.transform, "Reward: First Victory", () => Say(ApptyaGameState.Instance.ClaimAchievement("first_victory")));
+            GridButton(contentObject.transform, "Reward: Explorer", () => Say(ApptyaGameState.Instance.ClaimAchievement("explorer")));
+            GridButton(contentObject.transform, "Reward: Keep Builder", () => Say(ApptyaGameState.Instance.ClaimAchievement("keep_builder")));
 
             ApptyaGameState.Instance.Changed += Refresh;
             Refresh();
