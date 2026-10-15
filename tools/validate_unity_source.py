@@ -104,13 +104,13 @@ def gameplay_invariants() -> list[str]:
             errors.append("ApptyaGameState.cs: gathering must reject non-positive amounts and use overflow-safe resource additions")
     # Guard troop training against free recruits and capacity overflows.
     train_start = source.find("public bool TrainGuard()")
-    army_start = source.find("public int ArmyPower()", train_start)
+    army_start = source.find("public string Research(", train_start)
     if train_start < 0 or army_start < 0:
         errors.append("ApptyaGameState.cs: guard training API is missing")
     else:
         train = source[train_start:army_start]
-        for required_rule in ("Data.guards>=Data.barracksLevel*5", "Data.food<25", "Data.gold<10",
-                              "Data.food-=25", "Data.gold-=10", "Data.guards++"):
+        for required_rule in ("Data.guards+Data.trainingQueueCount>=Data.barracksLevel*5", "Data.food<25", "Data.gold<10",
+                              "Data.food-=25", "Data.gold-=10", "Data.trainingQueueCount++", "GuardTrainingDuration()", "Save()"):
             if required_rule not in train:
                 errors.append(f"ApptyaGameState.cs: guard training is missing rule: {required_rule}")
 
@@ -142,6 +142,11 @@ def gameplay_invariants() -> list[str]:
         "PlayerPrefs.SetString(BackupKey,snapshot)",
         "loaded=TryReadSave(PlayerPrefs.GetString(BackupKey))",
         "AddResourceSafely(Data.wood,gainedWood+researchBonus)",
+        "Data.trainingQueueCount=Mathf.Clamp(Data.trainingQueueCount,0,Mathf.Max(0,Data.barracksLevel*5-Data.guards))",
+        "TickTrainingQueue(Time.deltaTime,ref timerChanged)",
+        "AdvanceTrainingQueueOffline(elapsed)",
+        "candidate.saveVersion>5",
+        "Data.saveVersion=5",
     ):
         if required_rule not in source:
             errors.append(f"ApptyaGameState.cs: save/offline-progression safeguard missing: {required_rule}")
@@ -217,6 +222,7 @@ def gameplay_invariants() -> list[str]:
                          "wood +", "food +", "stone +", "ClaimAchievement(string id)",
                          "ClaimAchievement(\"first_victory\")", "ClaimAchievement(\"explorer\")",
                          "ClaimAchievement(\"keep_builder\")",
+                         "Queue guard", "Guard added to training queue.", "Training queue ", "trainingQueueCount", "trainingRemaining",
                          "ApptyaGameState.Instance == null || ApptyaGameState.Instance.Data == null"):
             if required not in hud:
                 errors.append(f"ApptyaRuntimeHud.cs: required HUD safety/interaction feature missing: {required}")
