@@ -91,7 +91,8 @@ namespace ApptyaKingdom
             }
             if (Input.GetMouseButtonUp(0)) wasDragging = false;
             float scroll = Input.mouseScrollDelta.y;
-            if (Mathf.Abs(scroll) > 0.01f)
+            bool mouseOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            if (!mouseOverUI && Mathf.Abs(scroll) > 0.01f)
             {
                 distance = Mathf.Clamp(distance - scroll, minDistance, maxDistance);
                 ApplyCamera();
