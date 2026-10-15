@@ -163,8 +163,22 @@ namespace ApptyaKingdom {
   }
   public void Save(){WriteSaveSnapshot();Changed?.Invoke();}
   void WriteSaveSnapshot(){string snapshot=JsonUtility.ToJson(Data);string now=DateTime.UtcNow.Ticks.ToString();PlayerPrefs.SetString(BackupKey,snapshot);PlayerPrefs.SetString(BackupTimeKey,now);PlayerPrefs.SetString(Key,snapshot);PlayerPrefs.SetString(SaveTimeKey,now);PlayerPrefs.Save();}
+  static int AddResourceSafely(int current,int amount)
+  {
+   if(amount<=0)return Mathf.Max(0,current);
+   current=Mathf.Max(0,current);
+   return current>int.MaxValue-amount?int.MaxValue:current+amount;
+  }
   void ApplyOfflineUpgradeTime(){
    LastOfflineSummary=null;
+   // Offline production runs before the full load normalization, so sanitize the
+   // level fields here too; a damaged but parseable save must not overflow gains.
+   Data.keepLevel=Mathf.Clamp(Data.keepLevel,1,10);
+   Data.lumberLevel=Mathf.Clamp(Data.lumberLevel,1,5);
+   Data.farmLevel=Mathf.Clamp(Data.farmLevel,1,5);
+   Data.quarryLevel=Mathf.Clamp(Data.quarryLevel,1,5);
+   Data.wood=Mathf.Max(0,Data.wood);Data.food=Mathf.Max(0,Data.food);
+   Data.stone=Mathf.Max(0,Data.stone);Data.gold=Mathf.Max(0,Data.gold);
    if(!PlayerPrefs.HasKey(SaveTimeKey))return;
    long savedTicks;if(!long.TryParse(PlayerPrefs.GetString(SaveTimeKey),out savedTicks))return;
    long elapsedTicks=DateTime.UtcNow.Ticks-savedTicks;
@@ -177,7 +191,7 @@ namespace ApptyaKingdom {
     int gainedFood=productionIntervals*6*Data.farmLevel;
     int gainedStone=productionIntervals*3*Data.quarryLevel;
     int gainedGold=productionIntervals*2*Data.keepLevel;
-    Data.wood+=gainedWood;Data.food+=gainedFood;Data.stone+=gainedStone;Data.gold+=gainedGold;
+    Data.wood=AddResourceSafely(Data.wood,gainedWood);Data.food=AddResourceSafely(Data.food,gainedFood);Data.stone=AddResourceSafely(Data.stone,gainedStone);Data.gold=AddResourceSafely(Data.gold,gainedGold);
     LastOfflineSummary="While away: +"+gainedWood+" wood, +"+gainedFood+" food, +"+gainedStone+" stone, +"+gainedGold+" gold.";
    }
    if(Data.keepUpgradeActive)Data.keepUpgradeRemaining-=elapsed;
