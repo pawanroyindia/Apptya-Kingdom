@@ -294,6 +294,14 @@ namespace ApptyaKingdom
             go.transform.SetParent(parent, false);
             var rect = go.GetComponent<RectTransform>();
             rect.anchorMin = anchorMin; rect.anchorMax = anchorMax;
+            // Edge-anchored HUD panels must pivot on that edge; the default center pivot
+            // would push half the panel outside the safe area on portrait screens.
+            if (Mathf.Approximately(anchorMin.y, 1f) && Mathf.Approximately(anchorMax.y, 1f))
+                rect.pivot = new Vector2(.5f, 1f);
+            else if (Mathf.Approximately(anchorMin.y, 0f) && Mathf.Approximately(anchorMax.y, 0f))
+                rect.pivot = new Vector2(.5f, 0f);
+            else
+                rect.pivot = new Vector2(.5f, .5f);
             rect.anchoredPosition = position; rect.sizeDelta = size;
             go.GetComponent<Image>().color = new Color(.035f, .075f, .13f, .94f);
             return go;
