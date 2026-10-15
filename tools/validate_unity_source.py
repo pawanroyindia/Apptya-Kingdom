@@ -175,6 +175,8 @@ def gameplay_invariants() -> list[str]:
         tap = tap_path.read_text(encoding="utf-8")
         if "FindObjectsOfType<ApptyaBuildingTap>()" not in tap or "part.buildingKey == buildingKey" not in tap:
             errors.append("ApptyaBuildingTap.cs: selection must highlight all mesh parts sharing a building key")
+        if "targetRenderer.SetPropertyBlock(null);" not in tap or "targetRenderer.sharedMaterial.color" not in tap:
+            errors.append("ApptyaBuildingTap.cs: clearing selection must restore the current material color, including after upgrades")
         if "!IsPointerOverUI()" not in tap and "if (IsPointerOverUI()) return;" not in tap:
             errors.append("ApptyaBuildingTap.cs: world selection must ignore taps over UI")
     else:
