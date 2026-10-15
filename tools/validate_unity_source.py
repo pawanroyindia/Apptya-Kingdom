@@ -141,7 +141,7 @@ def gameplay_invariants() -> list[str]:
         "Mathf.Min(elapsed,28800f)",
         "PlayerPrefs.SetString(BackupKey,snapshot)",
         "loaded=TryReadSave(PlayerPrefs.GetString(BackupKey))",
-        "AddResourceSafely(Data.wood,gainedWood)",
+        "AddResourceSafely(Data.wood,gainedWood+productionIntervals*Data.economyResearch)",
     ):
         if required_rule not in source:
             errors.append(f"ApptyaGameState.cs: save/offline-progression safeguard missing: {required_rule}")
