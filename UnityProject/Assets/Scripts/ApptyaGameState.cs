@@ -161,8 +161,8 @@ namespace ApptyaKingdom {
    if(Data.quarryUpgradeActive && Data.quarryUpgradeRemaining<=0f){Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);Data.quarryUpgradeActive=false;Data.day=Mathf.Min(1000000,Data.day+1);Data.tutorialUpgraded=true;AppendOfflineSummary("Quarry upgrade completed (level "+Data.quarryLevel+").");}
    Data.saveVersion=3;
   }
-  public void Save(){WriteSaveSnapshot();Changed?.Invoke();}
-  void WriteSaveSnapshot(){string snapshot=JsonUtility.ToJson(Data);string now=DateTime.UtcNow.Ticks.ToString();PlayerPrefs.SetString(BackupKey,snapshot);PlayerPrefs.SetString(BackupTimeKey,now);PlayerPrefs.SetString(Key,snapshot);PlayerPrefs.SetString(SaveTimeKey,now);PlayerPrefs.Save();}
+  public void Save(){if(Data==null)return;WriteSaveSnapshot();Changed?.Invoke();}
+  void WriteSaveSnapshot(){if(Data==null)return;string snapshot=JsonUtility.ToJson(Data);string now=DateTime.UtcNow.Ticks.ToString();PlayerPrefs.SetString(BackupKey,snapshot);PlayerPrefs.SetString(BackupTimeKey,now);PlayerPrefs.SetString(Key,snapshot);PlayerPrefs.SetString(SaveTimeKey,now);PlayerPrefs.Save();}
   static float SanitizeTimer(float value)
   {
    return float.IsNaN(value)||float.IsInfinity(value)?0f:Mathf.Clamp(value,0f,86400f);
@@ -204,18 +204,19 @@ namespace ApptyaKingdom {
    if(Data.barracksUpgradeActive)Data.barracksUpgradeRemaining-=elapsed;
    if(Data.quarryUpgradeActive)Data.quarryUpgradeRemaining-=elapsed;
   }
-  public bool Gather(string type,int amount){if(amount<=0)return false;switch(type){case "wood":Data.wood=AddResourceSafely(Data.wood,amount);Data.tutorialGathered=true;break;case "food":Data.food=AddResourceSafely(Data.food,amount);Data.tutorialGathered=true;break;case "stone":Data.stone=AddResourceSafely(Data.stone,amount);Data.tutorialGathered=true;break;case "gold":Data.gold=AddResourceSafely(Data.gold,amount);Data.tutorialGathered=true;break;default:return false;}Save();return true;}
+  public bool Gather(string type,int amount){if(Data==null||amount<=0)return false;switch(type){case "wood":Data.wood=AddResourceSafely(Data.wood,amount);Data.tutorialGathered=true;break;case "food":Data.food=AddResourceSafely(Data.food,amount);Data.tutorialGathered=true;break;case "stone":Data.stone=AddResourceSafely(Data.stone,amount);Data.tutorialGathered=true;break;case "gold":Data.gold=AddResourceSafely(Data.gold,amount);Data.tutorialGathered=true;break;default:return false;}Save();return true;}
   public bool UpgradeKeep(){return StartKeepUpgrade();}
   public bool UpgradeBuilding(string type){return StartBuildingUpgrade(type);}
-  public int GetBuildingLevel(string type){switch(type){case "lumber":return Data.lumberLevel;case "farm":return Data.farmLevel;case "barracks":return Data.barracksLevel;case "quarry":return Data.quarryLevel;default:return 0;}}
-  public bool TrainGuard(){if(Data.guards>=Data.barracksLevel*5||Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;Data.guards++;Data.tutorialTrained=true;Save();return true;}
-  public int ArmyPower(){return Data.guards*10+Data.barracksLevel*4+Data.keepLevel*3;}
-  public int EnemyPower(){return 10+Data.enemyLevel*7;}
-  public string ExploreRegion(){if(Data.guards<1)return "Train at least one guard to explore.";Data.guards--;Data.exploredRegions=Mathf.Min(1000000,Data.exploredRegions+1);Data.day=Mathf.Min(1000000,Data.day+1);int reward=20+Data.exploredRegions*5;Data.wood=AddResourceSafely(Data.wood,reward);Data.stone=AddResourceSafely(Data.stone,10+Data.exploredRegions*2);Save();return "Region explored! Found "+reward+" wood and "+(10+Data.exploredRegions*2)+" stone. One guard was assigned to the expedition.";}
-  public string AttackEnemy(){if(Data.guards<1)return "Train guards before attacking.";int army=ArmyPower(),enemy=EnemyPower();Data.day=Mathf.Min(1000000,Data.day+1);Data.tutorialBattled=true;if(army>=enemy){int lost=Mathf.Min(Data.guards,Mathf.Max(0,enemy/45));Data.guards-=lost;int wood=35+Data.enemyLevel*10,stone=20+Data.enemyLevel*5,gold=25+Data.enemyLevel*8;Data.wood=AddResourceSafely(Data.wood,wood);Data.stone=AddResourceSafely(Data.stone,stone);Data.gold=AddResourceSafely(Data.gold,gold);Data.victories=Mathf.Min(1000000,Data.victories+1);Data.enemyLevel=Mathf.Min(100000,Data.enemyLevel+1);Save();return "VICTORY! Power "+army+" vs "+enemy+". Lost "+lost+" guards. Loot: "+wood+" wood, "+stone+" stone, "+gold+" gold.";}else{int lost=Mathf.Min(Data.guards,Mathf.Max(1,Mathf.CeilToInt((enemy-army)/18f)));Data.guards-=lost;Data.food=Mathf.Max(0,Data.food-15*lost);Data.defeats=Mathf.Min(1000000,Data.defeats+1);Save();return "DEFEAT. Power "+army+" vs "+enemy+". Lost "+lost+" guards and "+(15*lost)+" food. Train and upgrade before retrying.";}}
-  public int TutorialStep(){if(!Data.tutorialGathered)return 0;if(!Data.tutorialUpgraded)return 1;if(!Data.tutorialTrained)return 2;if(!Data.tutorialBattled)return 3;return 4;}
-  public string TutorialObjective(){switch(TutorialStep()){case 0:return "STEP 1/4 — Gather wood or food to prepare your kingdom.";case 1:return "STEP 2/4 — Upgrade the Keep or a resource building.";case 2:return "STEP 3/4 — Train at least one guard in the Barracks.";case 3:return "STEP 4/4 — Attack the enemy outpost to complete the first campaign loop.";default:return "TUTORIAL COMPLETE — Gather, build, train and fight. Expand your kingdom!";}}
+  public int GetBuildingLevel(string type){if(Data==null)return 0;switch(type){case "lumber":return Data.lumberLevel;case "farm":return Data.farmLevel;case "barracks":return Data.barracksLevel;case "quarry":return Data.quarryLevel;default:return 0;}}
+  public bool TrainGuard(){if(Data==null||Data.guards>=Data.barracksLevel*5||Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;Data.guards++;Data.tutorialTrained=true;Save();return true;}
+  public int ArmyPower(){return Data==null?0:Data.guards*10+Data.barracksLevel*4+Data.keepLevel*3;}
+  public int EnemyPower(){return Data==null?0:10+Data.enemyLevel*7;}
+  public string ExploreRegion(){if(Data==null)return "Game state is not initialized.";if(Data.guards<1)return "Train at least one guard to explore.";Data.guards--;Data.exploredRegions=Mathf.Min(1000000,Data.exploredRegions+1);Data.day=Mathf.Min(1000000,Data.day+1);int reward=20+Data.exploredRegions*5;Data.wood=AddResourceSafely(Data.wood,reward);Data.stone=AddResourceSafely(Data.stone,10+Data.exploredRegions*2);Save();return "Region explored! Found "+reward+" wood and "+(10+Data.exploredRegions*2)+" stone. One guard was assigned to the expedition.";}
+  public string AttackEnemy(){if(Data==null)return "Game state is not initialized.";if(Data.guards<1)return "Train guards before attacking.";int army=ArmyPower(),enemy=EnemyPower();Data.day=Mathf.Min(1000000,Data.day+1);Data.tutorialBattled=true;if(army>=enemy){int lost=Mathf.Min(Data.guards,Mathf.Max(0,enemy/45));Data.guards-=lost;int wood=35+Data.enemyLevel*10,stone=20+Data.enemyLevel*5,gold=25+Data.enemyLevel*8;Data.wood=AddResourceSafely(Data.wood,wood);Data.stone=AddResourceSafely(Data.stone,stone);Data.gold=AddResourceSafely(Data.gold,gold);Data.victories=Mathf.Min(1000000,Data.victories+1);Data.enemyLevel=Mathf.Min(100000,Data.enemyLevel+1);Save();return "VICTORY! Power "+army+" vs "+enemy+". Lost "+lost+" guards. Loot: "+wood+" wood, "+stone+" stone, "+gold+" gold.";}else{int lost=Mathf.Min(Data.guards,Mathf.Max(1,Mathf.CeilToInt((enemy-army)/18f)));Data.guards-=lost;Data.food=Mathf.Max(0,Data.food-15*lost);Data.defeats=Mathf.Min(1000000,Data.defeats+1);Save();return "DEFEAT. Power "+army+" vs "+enemy+". Lost "+lost+" guards and "+(15*lost)+" food. Train and upgrade before retrying.";}}
+  public int TutorialStep(){if(Data==null)return 0;if(!Data.tutorialGathered)return 0;if(!Data.tutorialUpgraded)return 1;if(!Data.tutorialTrained)return 2;if(!Data.tutorialBattled)return 3;return 4;}
+  public string TutorialObjective(){if(Data==null)return "Game state is not initialized.";switch(TutorialStep()){case 0:return "STEP 1/4 — Gather wood or food to prepare your kingdom.";case 1:return "STEP 2/4 — Upgrade the Keep or a resource building.";case 2:return "STEP 3/4 — Train at least one guard in the Barracks.";case 3:return "STEP 4/4 — Attack the enemy outpost to complete the first campaign loop.";default:return "TUTORIAL COMPLETE — Gather, build, train and fight. Expand your kingdom!";}}
   public string ClaimAchievement(string id){
+   if(Data==null)return "Game state is not initialized.";
    switch(id){
     case "first_victory":
      if(Data.victories<1)return "Win your first battle to unlock this reward.";
@@ -232,6 +233,6 @@ namespace ApptyaKingdom {
     default:return "Unknown achievement.";
    }
   }
-  public bool Scout(){if(Data.guards<1)return false;Data.guards--;Data.gold=AddResourceSafely(Data.gold,35);Data.stone=AddResourceSafely(Data.stone,20);Data.day=Mathf.Min(1000000,Data.day+1);Save();return true;}
+  public bool Scout(){if(Data==null||Data.guards<1)return false;Data.guards--;Data.gold=AddResourceSafely(Data.gold,35);Data.stone=AddResourceSafely(Data.stone,20);Data.day=Mathf.Min(1000000,Data.day+1);Save();return true;}
  }
 }
