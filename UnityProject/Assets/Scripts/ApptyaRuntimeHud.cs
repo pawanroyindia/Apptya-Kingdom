@@ -11,6 +11,8 @@ namespace ApptyaKingdom
         Text stats, notice;
         Font font;
         GameObject actionPanel;
+        string selectedBuildingKey;
+        string selectedBuildingName;
 
         void Start()
         {
@@ -96,6 +98,8 @@ namespace ApptyaKingdom
             GridButton(contentObject.transform, "Reward: First Victory", () => Say(ApptyaGameState.Instance.ClaimAchievement("first_victory")));
             GridButton(contentObject.transform, "Reward: Explorer", () => Say(ApptyaGameState.Instance.ClaimAchievement("explorer")));
             GridButton(contentObject.transform, "Reward: Keep Builder", () => Say(ApptyaGameState.Instance.ClaimAchievement("keep_builder")));
+            GridButton(contentObject.transform, "Upgrade selected", UpgradeSelectedBuilding);
+            GridButton(contentObject.transform, "Collect selected", CollectFromSelectedBuilding);
 
             ApptyaGameState.Instance.Changed += Refresh;
             Refresh();
@@ -111,6 +115,8 @@ namespace ApptyaKingdom
         {
             var state = ApptyaGameState.Instance;
             if (state == null || state.Data == null) return;
+            selectedBuildingKey = key;
+            selectedBuildingName = displayName;
             if (key == "keep")
             {
                 int level = state.Data.keepLevel;
@@ -153,6 +159,39 @@ namespace ApptyaKingdom
             body.text = result;
             body.horizontalOverflow = HorizontalWrapMode.Wrap;
             ButtonAt(overlay.transform, "Continue", new Vector2(0, -145), () => Destroy(overlay), 220);
+        }
+
+        void UpgradeSelectedBuilding()
+        {
+            if (string.IsNullOrEmpty(selectedBuildingKey))
+            {
+                Say("Tap the Keep or a village building first.");
+                return;
+            }
+            if (selectedBuildingKey == "keep") { UpgradeKeep(); return; }
+            Upgrade(selectedBuildingKey, selectedBuildingName);
+        }
+
+        void CollectFromSelectedBuilding()
+        {
+            if (string.IsNullOrEmpty(selectedBuildingKey))
+            {
+                Say("Tap the Lumber Camp, Farmstead or Quarry first.");
+                return;
+            }
+            string resource;
+            int amount;
+            switch (selectedBuildingKey)
+            {
+                case "lumber": resource = "wood"; amount = 25; break;
+                case "farm": resource = "food"; amount = 30; break;
+                case "quarry": resource = "stone"; amount = 20; break;
+                default:
+                    Say(selectedBuildingName + " does not produce a directly collectable resource.");
+                    return;
+            }
+            ApptyaGameState.Instance.Gather(resource, amount);
+            Say(selectedBuildingName + " delivered +" + amount + " " + resource + ".");
         }
 
         void Say(string message) { if (notice) notice.text = message; }
