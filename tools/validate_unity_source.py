@@ -190,9 +190,9 @@ def gameplay_invariants() -> list[str]:
     else:
         errors.append("ApptyaBuildingTap.cs: building tap source is missing")
 
-    if "Data.combatResearch=Mathf.Clamp(Data.combatResearch,0,5)" not in state or "Data.economyResearch=Mathf.Clamp(Data.economyResearch,0,5)" not in state or "Data.scoutingResearch=Mathf.Clamp(Data.scoutingResearch,0,5)" not in state:
+    if "Data.combatResearch=Mathf.Clamp(Data.combatResearch,0,5)" not in source or "Data.economyResearch=Mathf.Clamp(Data.economyResearch,0,5)" not in source or "Data.scoutingResearch=Mathf.Clamp(Data.scoutingResearch,0,5)" not in source:
         errors.append("ApptyaGameState.cs: research levels must be bounded during save normalization")
-    if "public string Research(string type)" not in state or "Data.guards*(10+Data.combatResearch*2)" not in state:
+    if "public string Research(string type)" not in source or "Data.guards*(10+Data.combatResearch*2)" not in source:
         errors.append("ApptyaGameState.cs: research must have a real gameplay effect")
 
     # HUD regression checks: keep touch actions scrollable and safe-area aware.
