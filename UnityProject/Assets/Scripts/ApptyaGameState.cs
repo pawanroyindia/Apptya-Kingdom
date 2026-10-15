@@ -7,16 +7,24 @@ namespace ApptyaKingdom {
   public int enemyLevel=1, victories=0, defeats=0, exploredRegions=0;
   public bool rewardFirstVictoryClaimed=false, rewardExplorerClaimed=false, rewardKeepClaimed=false;
   public bool tutorialGathered=false, tutorialUpgraded=false, tutorialTrained=false, tutorialBattled=false;
-  public int saveVersion=3;\n  public bool keepUpgradeActive=false;\n  public float keepUpgradeRemaining=0f;\n  public int keepUpgradeTargetLevel=0;\n  public bool lumberUpgradeActive=false, farmUpgradeActive=false, barracksUpgradeActive=false, quarryUpgradeActive=false;\n  public float lumberUpgradeRemaining=0f, farmUpgradeRemaining=0f, barracksUpgradeRemaining=0f, quarryUpgradeRemaining=0f;
+  public int saveVersion=3;
+  public bool keepUpgradeActive=false;
+  public float keepUpgradeRemaining=0f;
+  public int keepUpgradeTargetLevel=0;
+  public bool lumberUpgradeActive=false, farmUpgradeActive=false, barracksUpgradeActive=false, quarryUpgradeActive=false;
+  public float lumberUpgradeRemaining=0f, farmUpgradeRemaining=0f, barracksUpgradeRemaining=0f, quarryUpgradeRemaining=0f;
  }
  public class ApptyaGameState:MonoBehaviour {
   public static ApptyaGameState Instance {get;private set;} public KingdomSave Data {get;private set;} public event Action Changed;
   const string Key="apptya.kingdom.save.v1";
   float productionClock;
+  float upgradeUiClock;
+  float upgradeSaveClock;
   void Update()
   {
    if(Data==null)return;
    bool timerChanged=false;
+   bool anyUpgrade=Data.keepUpgradeActive||Data.lumberUpgradeActive||Data.farmUpgradeActive||Data.barracksUpgradeActive||Data.quarryUpgradeActive;
    if(Data.keepUpgradeActive){Data.keepUpgradeRemaining-=Time.deltaTime;timerChanged=true;if(Data.keepUpgradeRemaining<=0f)CompleteKeepUpgrade();}
    TickBuildingUpgrade("lumber",ref Data.lumberUpgradeActive,ref Data.lumberUpgradeRemaining,ref timerChanged);
    TickBuildingUpgrade("farm",ref Data.farmUpgradeActive,ref Data.farmUpgradeRemaining,ref timerChanged);
@@ -24,7 +32,13 @@ namespace ApptyaKingdom {
    TickBuildingUpgrade("quarry",ref Data.quarryUpgradeActive,ref Data.quarryUpgradeRemaining,ref timerChanged);
    productionClock+=Time.deltaTime;
    if(productionClock>=30f){productionClock-=30f;Data.wood+=5*Data.lumberLevel;Data.food+=6*Data.farmLevel;Data.stone+=3*Data.quarryLevel;Data.gold+=2*Data.keepLevel;Save();}
-   else if(timerChanged)Changed?.Invoke();
+   if(anyUpgrade && timerChanged)
+   {
+    upgradeUiClock+=Time.deltaTime;upgradeSaveClock+=Time.deltaTime;
+    if(upgradeUiClock>=1f){upgradeUiClock=0f;Changed?.Invoke();}
+    if(upgradeSaveClock>=5f){upgradeSaveClock=0f;PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();}
+   }
+   else {upgradeUiClock=0f;upgradeSaveClock=0f;}
   }
   public float UpgradeDuration(string type)
   {
@@ -90,21 +104,19 @@ namespace ApptyaKingdom {
    Data.day=Mathf.Max(1,Data.day);Data.enemyLevel=Mathf.Max(1,Data.enemyLevel);
    Data.victories=Mathf.Max(0,Data.victories);Data.defeats=Mathf.Max(0,Data.defeats);
    Data.exploredRegions=Mathf.Max(0,Data.exploredRegions);
-   Data.keepUpgradeRemaining=Mathf.Max(0f,Data.keepUpgradeRemaining);\n   Data.lumberUpgradeRemaining=Mathf.Max(0f,Data.lumberUpgradeRemaining);Data.farmUpgradeRemaining=Mathf.Max(0f,Data.farmUpgradeRemaining);Data.barracksUpgradeRemaining=Mathf.Max(0f,Data.barracksUpgradeRemaining);Data.quarryUpgradeRemaining=Mathf.Max(0f,Data.quarryUpgradeRemaining);\n   Data.saveVersion=3;
+   Data.keepUpgradeRemaining=Mathf.Max(0f,Data.keepUpgradeRemaining);
+   Data.lumberUpgradeRemaining=Mathf.Max(0f,Data.lumberUpgradeRemaining);Data.farmUpgradeRemaining=Mathf.Max(0f,Data.farmUpgradeRemaining);Data.barracksUpgradeRemaining=Mathf.Max(0f,Data.barracksUpgradeRemaining);Data.quarryUpgradeRemaining=Mathf.Max(0f,Data.quarryUpgradeRemaining);
+   if(Data.keepUpgradeActive && Data.keepUpgradeRemaining<=0f){Data.keepUpgradeActive=false;Data.keepUpgradeTargetLevel=0;}
+   if(Data.lumberUpgradeActive && Data.lumberUpgradeRemaining<=0f)Data.lumberUpgradeActive=false;
+   if(Data.farmUpgradeActive && Data.farmUpgradeRemaining<=0f)Data.farmUpgradeActive=false;
+   if(Data.barracksUpgradeActive && Data.barracksUpgradeRemaining<=0f)Data.barracksUpgradeActive=false;
+   if(Data.quarryUpgradeActive && Data.quarryUpgradeRemaining<=0f)Data.quarryUpgradeActive=false;
+   Data.saveVersion=3;
   }
   public void Save(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();Changed?.Invoke();}
   public bool Gather(string type,int amount){if(amount<=0)return false;switch(type){case "wood":Data.wood+=amount;Data.tutorialGathered=true;break;case "food":Data.food+=amount;Data.tutorialGathered=true;break;case "stone":Data.stone+=amount;Data.tutorialGathered=true;break;case "gold":Data.gold+=amount;Data.tutorialGathered=true;break;default:return false;}Save();return true;}
   public bool UpgradeKeep(){return StartKeepUpgrade();}
-  public bool UpgradeBuilding(string type){
-   // Validate first: invalid building keys must never spend resources.
-   switch(type){case "lumber":case "farm":case "barracks":case "quarry":break;default:return false;}
-   int level=GetBuildingLevel(type);if(level<1||level>=5)return false;
-   int w=35*level,s=20*level,g=10*level;
-   if(Data.wood<w||Data.stone<s||Data.gold<g)return false;
-   Data.wood-=w;Data.stone-=s;Data.gold-=g;
-   switch(type){case "lumber":Data.lumberLevel++;break;case "farm":Data.farmLevel++;break;case "barracks":Data.barracksLevel++;break;case "quarry":Data.quarryLevel++;break;}
-   Data.day++;Data.tutorialUpgraded=true;Save();return true;
-  }
+  public bool UpgradeBuilding(string type){return StartBuildingUpgrade(type);}
   public int GetBuildingLevel(string type){switch(type){case "lumber":return Data.lumberLevel;case "farm":return Data.farmLevel;case "barracks":return Data.barracksLevel;case "quarry":return Data.quarryLevel;default:return 0;}}
   public bool TrainGuard(){if(Data.guards>=Data.barracksLevel*5||Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;Data.guards++;Data.tutorialTrained=true;Save();return true;}
   public int ArmyPower(){return Data.guards*10+Data.barracksLevel*4+Data.keepLevel*3;}
