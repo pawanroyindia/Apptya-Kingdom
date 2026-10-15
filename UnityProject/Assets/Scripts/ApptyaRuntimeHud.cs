@@ -127,6 +127,9 @@ namespace ApptyaKingdom
             GridButton(contentObject.transform, "Reward: First Victory", () => ClaimAchievement("first_victory"));
             GridButton(contentObject.transform, "Reward: Explorer", () => ClaimAchievement("explorer"));
             GridButton(contentObject.transform, "Reward: Keep Builder", () => ClaimAchievement("keep_builder"));
+            GridButton(contentObject.transform, "Research: Combat", () => Say(ApptyaGameState.Instance == null ? "Game state is unavailable." : ApptyaGameState.Instance.Research("combat")));
+            GridButton(contentObject.transform, "Research: Economy", () => Say(ApptyaGameState.Instance == null ? "Game state is unavailable." : ApptyaGameState.Instance.Research("economy")));
+            GridButton(contentObject.transform, "Research: Cartography", () => Say(ApptyaGameState.Instance == null ? "Game state is unavailable." : ApptyaGameState.Instance.Research("scouting")));
             GridButton(contentObject.transform, "Upgrade selected", UpgradeSelectedBuilding);
             GridButton(contentObject.transform, "Collect selected", CollectFromSelectedBuilding);
             GridButton(contentObject.transform, "Attack selected", AttackSelectedTarget);
@@ -233,7 +236,7 @@ namespace ApptyaKingdom
             if (selectedBuildingKey == "barracks")
             {
                 selectionInfo.text = selectedBuildingName + " • Level " + buildingLevel + "/5 • Guards " +
-                    d.guards + "/" + (d.barracksLevel * 5) + " • Train 1 guard: 25 food + 10 gold" +
+                    d.guards + "/" + (d.barracksLevel * 5) + " • Combat bonus +"+(d.combatResearch*2)+" power/guard • Train 1 guard: 25 food + 10 gold" +
                     (state.IsUpgradeActive("barracks")
                         ? " • Upgrade: " + Mathf.CeilToInt(state.UpgradeTimeRemaining("barracks")) + "s remaining."
                         : buildingLevel >= 5 ? " • MAX LEVEL." : " • Next upgrade: " +
