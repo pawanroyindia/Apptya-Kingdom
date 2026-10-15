@@ -85,7 +85,7 @@ namespace ApptyaKingdom {
    switch(type){case "lumber":Data.lumberLevel=Mathf.Min(5,Data.lumberLevel+1);break;case "farm":Data.farmLevel=Mathf.Min(5,Data.farmLevel+1);break;case "barracks":Data.barracksLevel=Mathf.Min(5,Data.barracksLevel+1);break;case "quarry":Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);break;}
    Data.day++;Data.tutorialUpgraded=true;Save();
   }
-  void OnApplicationPause(bool paused){if(paused)PersistCurrentState();else if(Data!=null){ApplyOfflineUpgradeTime();NormalizeLoadedData();WriteSaveSnapshot();Changed?.Invoke();}}
+  void OnApplicationPause(bool paused){if(paused)PersistCurrentState();else if(Data!=null){ApplyOfflineUpgradeTime();NormalizeLoadedData();WriteSaveSnapshot();if(!string.IsNullOrEmpty(LastOfflineSummary))OfflineProgressApplied?.Invoke(LastOfflineSummary);Changed?.Invoke();}}
   void OnApplicationQuit(){PersistCurrentState();}
   void PersistCurrentState()
   {
@@ -115,8 +115,10 @@ namespace ApptyaKingdom {
    ApplyOfflineUpgradeTime();
    NormalizeLoadedData();
    WriteSaveSnapshot();
+   if(!string.IsNullOrEmpty(LastOfflineSummary))OfflineProgressApplied?.Invoke(LastOfflineSummary);
    Changed?.Invoke();
   }
+  void AppendOfflineSummary(string message){LastOfflineSummary=string.IsNullOrEmpty(LastOfflineSummary)?message:LastOfflineSummary+" "+message;}
   void NormalizeLoadedData()
   {
    // JsonUtility leaves fields absent from older save files at zero; repair them safely.
@@ -135,11 +137,11 @@ namespace ApptyaKingdom {
    Data.keepUpgradeRemaining=Mathf.Max(0f,Data.keepUpgradeRemaining);
    Data.lumberUpgradeRemaining=Mathf.Max(0f,Data.lumberUpgradeRemaining);Data.farmUpgradeRemaining=Mathf.Max(0f,Data.farmUpgradeRemaining);Data.barracksUpgradeRemaining=Mathf.Max(0f,Data.barracksUpgradeRemaining);Data.quarryUpgradeRemaining=Mathf.Max(0f,Data.quarryUpgradeRemaining);
    // Finish upgrades that expired while the app was suspended instead of silently cancelling them.
-   if(Data.keepUpgradeActive && Data.keepUpgradeRemaining<=0f){Data.keepLevel=Mathf.Clamp(Data.keepUpgradeTargetLevel>Data.keepLevel?Data.keepUpgradeTargetLevel:Data.keepLevel+1,Data.keepLevel,10);Data.keepUpgradeActive=false;Data.keepUpgradeTargetLevel=0;Data.day++;Data.tutorialUpgraded=true;}
-   if(Data.lumberUpgradeActive && Data.lumberUpgradeRemaining<=0f){Data.lumberLevel=Mathf.Min(5,Data.lumberLevel+1);Data.lumberUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;}
-   if(Data.farmUpgradeActive && Data.farmUpgradeRemaining<=0f){Data.farmLevel=Mathf.Min(5,Data.farmLevel+1);Data.farmUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;}
-   if(Data.barracksUpgradeActive && Data.barracksUpgradeRemaining<=0f){Data.barracksLevel=Mathf.Min(5,Data.barracksLevel+1);Data.barracksUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;}
-   if(Data.quarryUpgradeActive && Data.quarryUpgradeRemaining<=0f){Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);Data.quarryUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;}
+   if(Data.keepUpgradeActive && Data.keepUpgradeRemaining<=0f){Data.keepLevel=Mathf.Clamp(Data.keepUpgradeTargetLevel>Data.keepLevel?Data.keepUpgradeTargetLevel:Data.keepLevel+1,Data.keepLevel,10);Data.keepUpgradeActive=false;Data.keepUpgradeTargetLevel=0;Data.day++;Data.tutorialUpgraded=true;AppendOfflineSummary("Keep upgrade completed (level "+Data.keepLevel+").");}
+   if(Data.lumberUpgradeActive && Data.lumberUpgradeRemaining<=0f){Data.lumberLevel=Mathf.Min(5,Data.lumberLevel+1);Data.lumberUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;AppendOfflineSummary("Lumber Camp upgrade completed (level "+Data.lumberLevel+").");}
+   if(Data.farmUpgradeActive && Data.farmUpgradeRemaining<=0f){Data.farmLevel=Mathf.Min(5,Data.farmLevel+1);Data.farmUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;AppendOfflineSummary("Farmstead upgrade completed (level "+Data.farmLevel+").");}
+   if(Data.barracksUpgradeActive && Data.barracksUpgradeRemaining<=0f){Data.barracksLevel=Mathf.Min(5,Data.barracksLevel+1);Data.barracksUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;AppendOfflineSummary("Barracks upgrade completed (level "+Data.barracksLevel+").");}
+   if(Data.quarryUpgradeActive && Data.quarryUpgradeRemaining<=0f){Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);Data.quarryUpgradeActive=false;Data.day++;Data.tutorialUpgraded=true;AppendOfflineSummary("Quarry upgrade completed (level "+Data.quarryLevel+").");}
    Data.saveVersion=3;
   }
   public void Save(){WriteSaveSnapshot();Changed?.Invoke();}
@@ -160,7 +162,6 @@ namespace ApptyaKingdom {
     int gainedGold=productionIntervals*2*Data.keepLevel;
     Data.wood+=gainedWood;Data.food+=gainedFood;Data.stone+=gainedStone;Data.gold+=gainedGold;
     LastOfflineSummary="While away: +"+gainedWood+" wood, +"+gainedFood+" food, +"+gainedStone+" stone, +"+gainedGold+" gold.";
-    OfflineProgressApplied?.Invoke(LastOfflineSummary);
    }
    if(Data.keepUpgradeActive)Data.keepUpgradeRemaining-=elapsed;
    if(Data.lumberUpgradeActive)Data.lumberUpgradeRemaining-=elapsed;
