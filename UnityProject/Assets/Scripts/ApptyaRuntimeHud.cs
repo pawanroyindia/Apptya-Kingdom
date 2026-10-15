@@ -118,7 +118,17 @@ namespace ApptyaKingdom
             if (state == null || state.Data == null) return;
             selectedBuildingKey = key;
             selectedBuildingName = displayName;
-            if (state.IsUpgradeActive(key))\n            {\n                Say(displayName + " • Upgrade in progress: " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s remaining.");\n                return;\n            }\n            if (key == "enemy")
+            if (key == "keep" && state.IsUpgradeActive("keep"))
+            {
+                Say(displayName + " • Upgrade in progress: " + Mathf.CeilToInt(state.UpgradeTimeRemaining("keep")) + "s remaining.");
+                return;
+            }
+            if (key != "keep" && state.IsUpgradeActive(key))
+            {
+                Say(displayName + " • Upgrade in progress: " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s remaining.");
+                return;
+            }
+            if (key == "enemy")
             {
                 Say(displayName + " • Enemy level " + state.Data.enemyLevel + " • Enemy power " + state.EnemyPower() + ". Train guards and upgrade before attacking.");
                 return;
@@ -138,16 +148,22 @@ namespace ApptyaKingdom
         {
             if (stats == null || ApptyaGameState.Instance == null) return;
             var d = ApptyaGameState.Instance.Data;
-            stats.text = "APPTYA KINGDOM  |  KEEP " + d.keepLevel + "  |  DAY " + d.day + "  |  ENEMY LV " + d.enemyLevel +
+            stats.text = "APPTYA KINGDOM  |  KEEP " + d.keepLevel + (ApptyaGameState.Instance.IsUpgradeActive("keep") ? " (UP " + Mathf.CeilToInt(ApptyaGameState.Instance.UpgradeTimeRemaining("keep")) + "s)" : "") + "  |  DAY " + d.day + "  |  ENEMY LV " + d.enemyLevel +
                 "\nWOOD " + d.wood + "  FOOD " + d.food + "  STONE " + d.stone + "  GOLD " + d.gold +
                 "\nGUARDS " + d.guards + "/" + (d.barracksLevel * 5) + "  |  ARMY POWER " + ApptyaGameState.Instance.ArmyPower() +
                 "\nPRODUCTION / 30s: WOOD +" + (5 * d.lumberLevel) + "  FOOD +" + (6 * d.farmLevel) +
                 "  STONE +" + (3 * d.quarryLevel) + "  GOLD +" + (2 * d.keepLevel) +
-                "\nBUILDINGS: LUMBER " + d.lumberLevel + "  FARM " + d.farmLevel + "  BARRACKS " + d.barracksLevel +
-                "  QUARRY " + d.quarryLevel + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions + "\n" + ApptyaGameState.Instance.TutorialObjective();
+                "\nBUILDINGS: " + UpgradeStatus("lumber", "LUMBER " + d.lumberLevel) + "  " + UpgradeStatus("farm", "FARM " + d.farmLevel) + "  " + UpgradeStatus("barracks", "BARRACKS " + d.barracksLevel) +
+                "  " + UpgradeStatus("quarry", "QUARRY " + d.quarryLevel) + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions + "\n" + ApptyaGameState.Instance.TutorialObjective();
         }
 
-        string UpgradeStatus(string key, string label)\n        {\n            var state = ApptyaGameState.Instance;\n            return state.IsUpgradeActive(key) ? label + " " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s" : label + " READY";\n        }\n\n        void ShowBattleResult(string result)
+        string UpgradeStatus(string key, string label)
+        {
+            var state = ApptyaGameState.Instance;
+            return state.IsUpgradeActive(key) ? label + " " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s" : label + " READY";
+        }
+
+        void ShowBattleResult(string result)
         {
             Say(result);
             var old = GameObject.Find("Battle Result Overlay");
@@ -218,7 +234,8 @@ namespace ApptyaKingdom
             int level = state.Data.keepLevel;
             if (level >= 10) { Say("Keep is already at maximum level 10."); return; }
             int wood = 80 * level, stone = 45 * level;
-            Say(state.UpgradeKeep() ? "Keep upgraded to level " + (level + 1) + "!" :
+            if (state.IsUpgradeActive("keep")) { Say("Keep upgrade already in progress: " + Mathf.CeilToInt(state.UpgradeTimeRemaining("keep")) + "s remaining."); return; }
+            Say(state.UpgradeKeep() ? "Keep upgrade started. Level " + (level + 1) + " in " + Mathf.CeilToInt(state.UpgradeTimeRemaining("keep")) + " seconds." :
                 "Need " + wood + " wood and " + stone + " stone to upgrade the keep.");
         }
 
@@ -227,7 +244,8 @@ namespace ApptyaKingdom
             var state = ApptyaGameState.Instance;
             int level = state.GetBuildingLevel(key);
             if (level >= 5) { Say(label + " is already at maximum level 5."); return; }
-            Say(state.UpgradeBuilding(key) ? label + " upgraded to level " + (level + 1) + "!" :
+            if (state.IsUpgradeActive(key)) { Say(label + " upgrade already in progress: " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s remaining."); return; }
+            Say(state.UpgradeBuilding(key) ? label + " upgrade started. Level " + (level + 1) + " in " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + " seconds." :
                 "Need " + (35 * level) + " wood, " + (20 * level) + " stone and " + (10 * level) + " gold.");
         }
 
