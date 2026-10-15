@@ -230,6 +230,30 @@ namespace ApptyaKingdom
                 selectionInfo.text = selectedBuildingName + " • No building data available.";
                 return;
             }
+            if (selectedBuildingKey == "barracks")
+            {
+                selectionInfo.text = selectedBuildingName + " • Level " + buildingLevel + "/5 • Guards " +
+                    d.guards + "/" + (d.barracksLevel * 5) + " • Train 1 guard: 25 food + 10 gold" +
+                    (state.IsUpgradeActive("barracks")
+                        ? " • Upgrade: " + Mathf.CeilToInt(state.UpgradeTimeRemaining("barracks")) + "s remaining."
+                        : buildingLevel >= 5 ? " • MAX LEVEL." : " • Next upgrade: " +
+                            (35 * buildingLevel) + " wood + " + (20 * buildingLevel) + " stone + " +
+                            (10 * buildingLevel) + " gold.");
+                return;
+            }
+            if (selectedBuildingKey == "lumber" || selectedBuildingKey == "farm" || selectedBuildingKey == "quarry")
+            {
+                string output = selectedBuildingKey == "lumber" ? "wood +" + (5 * buildingLevel) + "/30s"
+                    : selectedBuildingKey == "farm" ? "food +" + (6 * buildingLevel) + "/30s"
+                    : "stone +" + (3 * buildingLevel) + "/30s";
+                selectionInfo.text = selectedBuildingName + " • Level " + buildingLevel + "/5 • " + output +
+                    (state.IsUpgradeActive(selectedBuildingKey)
+                        ? " • Upgrade: " + Mathf.CeilToInt(state.UpgradeTimeRemaining(selectedBuildingKey)) + "s remaining."
+                        : buildingLevel >= 5 ? " • MAX LEVEL." : " • Next upgrade: " +
+                            (35 * buildingLevel) + " wood + " + (20 * buildingLevel) + " stone + " +
+                            (10 * buildingLevel) + " gold.");
+                return;
+            }
             if (state.IsUpgradeActive(selectedBuildingKey))
                 selectionInfo.text = selectedBuildingName + " • Level " + buildingLevel + "/5 • Upgrade in progress: " +
                     Mathf.CeilToInt(state.UpgradeTimeRemaining(selectedBuildingKey)) + "s remaining.";
