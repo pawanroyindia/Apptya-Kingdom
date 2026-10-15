@@ -175,7 +175,8 @@ def gameplay_invariants() -> list[str]:
     if hud_path.is_file():
         hud = hud_path.read_text(encoding="utf-8")
         for required in ("ApplySafeArea()", "Screen.safeArea", "ScrollRect", "AttackSelectedTarget",
-                         "CollectFromSelectedBuilding", "UpgradeSelectedBuilding",
+                         "CollectFromSelectedBuilding", "UpgradeSelectedBuilding", "selectionInfo",
+                         "UpdateSelectionInfo()", "Selected Building Details",
                          "ApptyaGameState.Instance == null || ApptyaGameState.Instance.Data == null"):
             if required not in hud:
                 errors.append(f"ApptyaRuntimeHud.cs: required HUD safety/interaction feature missing: {required}")
