@@ -85,7 +85,7 @@ namespace ApptyaKingdom {
    switch(type){case "lumber":Data.lumberLevel=Mathf.Min(5,Data.lumberLevel+1);break;case "farm":Data.farmLevel=Mathf.Min(5,Data.farmLevel+1);break;case "barracks":Data.barracksLevel=Mathf.Min(5,Data.barracksLevel+1);break;case "quarry":Data.quarryLevel=Mathf.Min(5,Data.quarryLevel+1);break;}
    Data.day++;Data.tutorialUpgraded=true;Save();
   }
-  void OnApplicationPause(bool paused){if(paused)PersistCurrentState();else if(Data!=null){ApplyOfflineUpgradeTime();NormalizeLoadedData();WriteSaveSnapshot();if(!string.IsNullOrEmpty(LastOfflineSummary))OfflineProgressApplied?.Invoke(LastOfflineSummary);Changed?.Invoke();}}
+  void OnApplicationPause(bool paused){if(paused){productionClock=0f;PersistCurrentState();}else if(Data!=null){productionClock=0f;ApplyOfflineUpgradeTime();NormalizeLoadedData();WriteSaveSnapshot();if(!string.IsNullOrEmpty(LastOfflineSummary))OfflineProgressApplied?.Invoke(LastOfflineSummary);Changed?.Invoke();}}
   void OnApplicationQuit(){PersistCurrentState();}
   void PersistCurrentState()
   {
