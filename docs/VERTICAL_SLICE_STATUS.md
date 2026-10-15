@@ -26,7 +26,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Passive resource production is granted for offline time, capped at eight hours per return, using saved building levels.
 - The HUD reports the exact offline wood, food, stone and gold granted on return.
 - The return summary also lists any Keep or village-building upgrades completed while away.
-- Two-finger camera zoom checks whether either touch is over the HUD, preventing pinch gestures on UI controls from moving the world camera.
+- Two-finger camera zoom checks whether either touch is over the HUD, preventing pinch gestures on UI controls from moving the world camera.\n- Editor menu preflight checks required scripts, starter-scene presence, Build Settings inclusion and player orientation, and reports render-pipeline configuration warnings.\n- Procedural building materials select shaders according to the active render pipeline, avoiding unconditional use of URP/Lit when the project is running the built-in pipeline.
 
 ## Still needed before calling the vertical slice complete
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
