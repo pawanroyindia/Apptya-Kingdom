@@ -124,9 +124,9 @@ namespace ApptyaKingdom
             GridButton(contentObject.transform, "Upgrade farm", () => Upgrade("farm", "Farmstead"));
             GridButton(contentObject.transform, "Upgrade barracks", () => Upgrade("barracks", "Barracks"));
             GridButton(contentObject.transform, "Upgrade quarry", () => Upgrade("quarry", "Quarry"));
-            GridButton(contentObject.transform, "Reward: First Victory", () => Say(ApptyaGameState.Instance.ClaimAchievement("first_victory")));
-            GridButton(contentObject.transform, "Reward: Explorer", () => Say(ApptyaGameState.Instance.ClaimAchievement("explorer")));
-            GridButton(contentObject.transform, "Reward: Keep Builder", () => Say(ApptyaGameState.Instance.ClaimAchievement("keep_builder")));
+            GridButton(contentObject.transform, "Reward: First Victory", () => ClaimAchievement("first_victory"));
+            GridButton(contentObject.transform, "Reward: Explorer", () => ClaimAchievement("explorer"));
+            GridButton(contentObject.transform, "Reward: Keep Builder", () => ClaimAchievement("keep_builder"));
             GridButton(contentObject.transform, "Upgrade selected", UpgradeSelectedBuilding);
             GridButton(contentObject.transform, "Collect selected", CollectFromSelectedBuilding);
             GridButton(contentObject.transform, "Attack selected", AttackSelectedTarget);
@@ -343,6 +343,14 @@ namespace ApptyaKingdom
         }
 
         void Say(string message) { if (notice) notice.text = message; }
+
+        void ClaimAchievement(string id)
+        {
+            var state = ApptyaGameState.Instance;
+            Say(state == null || state.Data == null
+                ? "Game state is unavailable. Reopen the starter scene."
+                : state.ClaimAchievement(id));
+        }
 
         void UpgradeKeep()
         {
