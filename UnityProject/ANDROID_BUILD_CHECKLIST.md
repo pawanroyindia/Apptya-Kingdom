@@ -20,6 +20,9 @@
 - Train Guard spends food and gold only when affordable.
 - Scout action grants its reward once per button press.
 - Save survives app restart.
+- Upgrade countdown continues while the app is closed; an upgrade that expires offline completes exactly once after reopening.
+- Offline resource production is granted once per return and never exceeds the eight-hour cap.
+- Two-finger gestures over HUD controls do not zoom the world camera.
 - No clipped UI on 720p and 1080p portrait displays.
 - Test frame rate, heat, battery, memory and load time on a physical Android device.
 
