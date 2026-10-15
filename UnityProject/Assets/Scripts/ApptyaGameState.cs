@@ -202,7 +202,7 @@ namespace ApptyaKingdom {
     int gainedFood=productionIntervals*6*Data.farmLevel;
     int gainedStone=productionIntervals*3*Data.quarryLevel;
     int gainedGold=productionIntervals*2*Data.keepLevel;
-    Data.wood=AddResourceSafely(Data.wood,gainedWood);Data.food=AddResourceSafely(Data.food,gainedFood);Data.stone=AddResourceSafely(Data.stone,gainedStone);Data.gold=AddResourceSafely(Data.gold,gainedGold);
+    Data.wood=AddResourceSafely(Data.wood,gainedWood+productionIntervals*Data.economyResearch);Data.food=AddResourceSafely(Data.food,gainedFood+productionIntervals*Data.economyResearch);Data.stone=AddResourceSafely(Data.stone,gainedStone+productionIntervals*Data.economyResearch);Data.gold=AddResourceSafely(Data.gold,gainedGold);
     LastOfflineSummary="While away: +"+gainedWood+" wood, +"+gainedFood+" food, +"+gainedStone+" stone, +"+gainedGold+" gold.";
    }
    if(Data.keepUpgradeActive)Data.keepUpgradeRemaining-=elapsed;
