@@ -12,11 +12,12 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Gold-tint feedback for the selected building.
 - Selected-building upgrade and resource collection actions; selected enemy outpost can be attacked through a dedicated action.
 - Legacy save normalization for levels, troop count, day, progression counters and resource values.
+- Timed Keep and village-building upgrades: costs are charged at start, levels increase on completion, HUD displays remaining seconds, and active timers are periodically persisted to PlayerPrefs.
 
 ## Still needed before calling the vertical slice complete
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
 - Replace the notice-line inspection with a proper contextual building panel.
-- Implement timed upgrades with persistent completion state and clear progress feedback.
+- Compile and test timed upgrade completion, save/reload countdown continuity, and edge cases in Unity.
 - Add troop training queue or squad presentation, and a visible practice/combat target in the world.
 - Add bounded camera movement and test touch gestures against UI interactions.
 - Improve authored art, animations, audio, lighting, terrain and mobile UI polish.
