@@ -13,6 +13,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Redundant PlayerPrefs backup snapshot with fallback loading if the primary save cannot be parsed.
 - Resource gathering, building upgrades, guard training, scouting, exploration and enemy battle calculations.
 - Tap-to-inspect for Keep, Lumber Camp, Farmstead, Barracks, Quarry and enemy outpost.
+- Multiple visible parts of each building (including roof sections and doors) share the same interaction target, while decorative colliders are removed.
 - Gold-tint feedback for the selected building.
 - Keep and village-building roof ridges turn gold while their timed upgrades are running.
 - World-visible guard squad that updates when guards are trained or lost in battle/expeditions (up to ten individual markers).
