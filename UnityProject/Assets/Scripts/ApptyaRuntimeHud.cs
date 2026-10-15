@@ -115,7 +115,7 @@ namespace ApptyaKingdom
 
             GridButton(contentObject.transform, "Gather wood +25", () => { var state = ApptyaGameState.Instance; Say(state != null && state.Gather("wood", 25) ? "Lumber Camp delivered +25 wood." : "Could not gather wood. Game state is unavailable."); });
             GridButton(contentObject.transform, "Harvest food +30", () => { var state = ApptyaGameState.Instance; Say(state != null && state.Gather("food", 30) ? "Farm delivered +30 food." : "Could not harvest food. Game state is unavailable."); });
-            GridButton(contentObject.transform, "Train guard", () => { var state = ApptyaGameState.Instance; Say(state == null || state.Data == null ? "Game state is unavailable. Reopen the starter scene." : state.TrainGuard() ? "A guard joined the army." : "Need 25 food, 10 gold and free barracks capacity."); });
+            GridButton(contentObject.transform, "Queue guard", () => { var state = ApptyaGameState.Instance; Say(state == null || state.Data == null ? "Game state is unavailable. Reopen the starter scene." : state.TrainGuard() ? "Guard added to training queue." : "Need 25 food, 10 gold and free barracks capacity, including queued guards."); });
             GridButton(contentObject.transform, "Upgrade keep", UpgradeKeep);
             GridButton(contentObject.transform, "Scout wilds", () => { var state = ApptyaGameState.Instance; Say(state == null || state.Data == null ? "Game state is unavailable. Reopen the starter scene." : state.Scout() ? "Scouts returned with loot." : "Train a guard first."); });
             GridButton(contentObject.transform, "Attack enemy", () => { var state = ApptyaGameState.Instance; if (state == null || state.Data == null) { Say("Game state is unavailable. Reopen the starter scene."); return; } ShowBattleResult(state.AttackEnemy()); });
@@ -236,7 +236,7 @@ namespace ApptyaKingdom
             if (selectedBuildingKey == "barracks")
             {
                 selectionInfo.text = selectedBuildingName + " • Level " + buildingLevel + "/5 • Guards " +
-                    d.guards + "/" + (d.barracksLevel * 5) + " • Combat bonus +"+(d.combatResearch*2)+" power/guard • Train 1 guard: 25 food + 10 gold" +
+                    d.guards + "/" + (d.barracksLevel * 5) + " • Training queue " + d.trainingQueueCount + (d.trainingQueueCount > 0 ? " (" + Mathf.CeilToInt(d.trainingRemaining) + "s remaining)" : "") + " • Combat bonus ++(d.combatResearch*2)+" power/guard • Train 1 guard: 25 food + 10 gold" +
                     (state.IsUpgradeActive("barracks")
                         ? " • Upgrade: " + Mathf.CeilToInt(state.UpgradeTimeRemaining("barracks")) + "s remaining."
                         : buildingLevel >= 5 ? " • MAX LEVEL." : " • Next upgrade: " +
@@ -275,7 +275,7 @@ namespace ApptyaKingdom
             var d = state.Data;
             stats.text = "APPTYA KINGDOM  |  KEEP " + d.keepLevel + (state.IsUpgradeActive("keep") ? " (UP " + Mathf.CeilToInt(state.UpgradeTimeRemaining("keep")) + "s)" : "") + "  |  DAY " + d.day + "  |  ENEMY LV " + d.enemyLevel +
                 "\nWOOD " + d.wood + "  FOOD " + d.food + "  STONE " + d.stone + "  GOLD " + d.gold +
-                "\nGUARDS " + d.guards + "/" + (d.barracksLevel * 5) + "  |  ARMY POWER " + state.ArmyPower() +
+                "\nGUARDS " + d.guards + "/" + (d.barracksLevel * 5) + "  |  TRAINING " + d.trainingQueueCount + (d.trainingQueueCount > 0 ? " (" + Mathf.CeilToInt(d.trainingRemaining) + "s)" : "") + "  |  ARMY POWER " + state.ArmyPower() +
                 "\nRESEARCH: COMBAT " + d.combatResearch + "/5  ECONOMY " + d.economyResearch + "/5  CARTOGRAPHY " + d.scoutingResearch + "/5" +
                 "\nPRODUCTION / 30s: WOOD +" + (5 * d.lumberLevel + d.economyResearch) + "  FOOD +" + (6 * d.farmLevel + d.economyResearch) +
                 "  STONE +" + (3 * d.quarryLevel + d.economyResearch) + "  GOLD +" + (2 * d.keepLevel) +
