@@ -15,7 +15,7 @@ This folder contains a starter Unity 6 project structure, a URP package manifest
 - World-visible guard squad markers that respond to training and combat losses.
 - Gather, passive production, timed upgrades, guard training, scouting, exploration, battles and achievements.
 - Selected-building inspection, upgrade/collect actions, and dedicated enemy targeting.
-- PlayerPrefs persistence, upgrade timer recovery across app suspension, and capped eight-hour offline resource production.
+- PlayerPrefs persistence, upgrade timer recovery across app suspension, and capped eight-hour offline resource production. Backup snapshot recovery is included for unreadable primary save data.
 - Touch drag/orbit and pinch zoom, with HUD gestures protected from camera input.
 - Scrollable mobile HUD with resource, army, production, tutorial and battle information.
 
