@@ -103,12 +103,19 @@ namespace ApptyaKingdom
             GridButton(contentObject.transform, "Attack selected", AttackSelectedTarget);
 
             ApptyaGameState.Instance.Changed += Refresh;
+            ApptyaGameState.Instance.OfflineProgressApplied += Say;
             Refresh();
+            if (!string.IsNullOrEmpty(ApptyaGameState.Instance.LastOfflineSummary))
+                Say(ApptyaGameState.Instance.LastOfflineSummary);
         }
 
         void OnDestroy()
         {
-            if (ApptyaGameState.Instance != null) ApptyaGameState.Instance.Changed -= Refresh;
+            if (ApptyaGameState.Instance != null)
+            {
+                ApptyaGameState.Instance.Changed -= Refresh;
+                ApptyaGameState.Instance.OfflineProgressApplied -= Say;
+            }
             if (Instance == this) Instance = null;
         }
 
