@@ -27,7 +27,8 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - The HUD reports the exact offline wood, food, stone and gold granted on return.
 - The return summary also lists any Keep or village-building upgrades completed while away.
 - Two-finger camera zoom checks whether either touch is over the HUD, preventing pinch gestures on UI controls from moving the world camera.\n- Editor menu preflight checks required scripts, starter-scene presence, Build Settings inclusion and player orientation, and reports render-pipeline configuration warnings.
-- HUD panels use device safe-area insets and recalculate when screen size or insets change, helping avoid Android cutouts and system navigation bars.\n- Procedural building materials select shaders according to the active render pipeline, avoiding unconditional use of URP/Lit when the project is running the built-in pipeline.\n- Passive-production timer resets on app pause/resume so a partially elapsed 30-second production interval cannot immediately pay out again after offline rewards are reconciled.
+- HUD panels and the battle report overlay use device safe-area insets and recalculate when screen size or insets change, helping avoid Android cutouts and system navigation bars.
+- Editor preflight also checks that the starter-scene setup script exists.\n- Procedural building materials select shaders according to the active render pipeline, avoiding unconditional use of URP/Lit when the project is running the built-in pipeline.\n- Passive-production timer resets on app pause/resume so a partially elapsed 30-second production interval cannot immediately pay out again after offline rewards are reconciled.
 
 ## Still needed before calling the vertical slice complete
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
