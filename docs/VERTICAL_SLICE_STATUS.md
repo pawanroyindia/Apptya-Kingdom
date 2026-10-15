@@ -31,7 +31,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - HUD panels and the battle report overlay use device safe-area insets and recalculate when screen size or insets change, helping avoid Android cutouts and system navigation bars.
 - Top and bottom HUD panels use edge-aligned RectTransform pivots so their fixed heights extend into the safe area rather than clipping beyond its top or bottom.
 - Editor preflight also checks that the starter-scene setup script exists.
-- Procedural building materials select shaders according to the active render pipeline, avoiding unconditional use of URP/Lit when the project is running the built-in pipeline.
+- Procedural building materials select shaders according to the active render pipeline, avoiding unconditional use of URP/Lit when the project is running the built-in pipeline. The material factory now also tries a UI-compatible fallback and safely skips a material if no shader can be found, rather than constructing a Material with a potentially null shader.
 - Passive-production timer resets on app pause/resume so a partially elapsed 30-second production interval cannot immediately pay out again after offline rewards are reconciled.
 
 ## Still needed before calling the vertical slice complete
