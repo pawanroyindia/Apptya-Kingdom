@@ -109,6 +109,7 @@ namespace ApptyaKingdom {
    Data.wood=Mathf.Max(0,Data.wood);Data.food=Mathf.Max(0,Data.food);
    Data.stone=Mathf.Max(0,Data.stone);Data.gold=Mathf.Max(0,Data.gold);
    Data.keepLevel=Mathf.Clamp(Data.keepLevel,1,10);
+   if(Data.keepUpgradeActive)Data.keepUpgradeTargetLevel=Data.keepUpgradeTargetLevel>Data.keepLevel?Mathf.Clamp(Data.keepUpgradeTargetLevel,Data.keepLevel+1,10):Mathf.Min(10,Data.keepLevel+1);
    Data.lumberLevel=Mathf.Clamp(Data.lumberLevel,1,5);
    Data.farmLevel=Mathf.Clamp(Data.farmLevel,1,5);
    Data.barracksLevel=Mathf.Clamp(Data.barracksLevel,1,5);
