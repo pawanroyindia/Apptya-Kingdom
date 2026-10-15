@@ -11,6 +11,10 @@ namespace ApptyaKingdom
         Text stats, notice;
         Font font;
         GameObject actionPanel;
+        RectTransform safeArea;
+        Rect lastSafeArea;
+        int lastScreenWidth;
+        int lastScreenHeight;
         string selectedBuildingKey;
         string selectedBuildingName;
 
@@ -26,15 +30,20 @@ namespace ApptyaKingdom
             scaler.referenceResolution = new Vector2(1080, 1920);
             scaler.matchWidthOrHeight = .5f;
 
+            var safeAreaObject = new GameObject("Safe Area", typeof(RectTransform));
+            safeAreaObject.transform.SetParent(canvas.transform, false);
+            safeArea = safeAreaObject.GetComponent<RectTransform>();
+            ApplySafeArea();
+
             if (!FindObjectOfType<EventSystem>())
                 new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
-            var top = Panel(canvas.transform, "Resource HUD", new Vector2(0, 1), new Vector2(1, 1),
+            var top = Panel(safeArea.transform, "Resource HUD", new Vector2(0, 1), new Vector2(1, 1),
                 new Vector2(0, -12), new Vector2(0, 300));
             stats = TextAt(top.transform, "Resources", new Vector2(.5f, .5f), Vector2.zero,
                 new Vector2(1000, 270), 25, TextAnchor.MiddleCenter);
 
-            actionPanel = Panel(canvas.transform, "Action HUD", new Vector2(.04f, 0), new Vector2(.96f, 0),
+            actionPanel = Panel(safeArea.transform, "Action HUD", new Vector2(.04f, 0), new Vector2(.96f, 0),
                 new Vector2(0, 18), new Vector2(0, 620));
             notice = TextAt(actionPanel.transform, "Chronicle", new Vector2(.5f, 1f),
                 new Vector2(0, -42), new Vector2(900, 62), 20, TextAnchor.MiddleCenter);
@@ -107,6 +116,26 @@ namespace ApptyaKingdom
             Refresh();
             if (!string.IsNullOrEmpty(ApptyaGameState.Instance.LastOfflineSummary))
                 Say(ApptyaGameState.Instance.LastOfflineSummary);
+        }
+
+        void Update()
+        {
+            if (safeArea == null) return;
+            if (lastScreenWidth != Screen.width || lastScreenHeight != Screen.height || lastSafeArea != Screen.safeArea)
+                ApplySafeArea();
+        }
+
+        void ApplySafeArea()
+        {
+            if (safeArea == null) return;
+            Rect area = Screen.safeArea;
+            safeArea.anchorMin = new Vector2(area.xMin / Screen.width, area.yMin / Screen.height);
+            safeArea.anchorMax = new Vector2(area.xMax / Screen.width, area.yMax / Screen.height);
+            safeArea.offsetMin = Vector2.zero;
+            safeArea.offsetMax = Vector2.zero;
+            lastSafeArea = area;
+            lastScreenWidth = Screen.width;
+            lastScreenHeight = Screen.height;
         }
 
         void OnDestroy()
