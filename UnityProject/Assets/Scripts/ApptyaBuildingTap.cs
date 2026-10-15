@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace ApptyaKingdom
 {
@@ -39,11 +40,33 @@ namespace ApptyaKingdom
 
         void OnMouseDown()
         {
+            // Prevent world selection when a tap lands on a HUD button or scroll view.
+            // On touch devices, check the active finger IDs; the mouse-style check covers editor input.
+            if (IsPointerOverUI()) return;
             if (ApptyaRuntimeHud.Instance == null) return;
+
+            var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null) return;
             if (selected != null) selected.SetSelected(false);
             selected = this;
             SetSelected(true);
             ApptyaRuntimeHud.Instance.SelectBuilding(buildingKey, displayName);
+        }
+
+        bool IsPointerOverUI()
+        {
+            var eventSystem = EventSystem.current;
+            if (eventSystem == null) return false;
+            if (Input.touchCount > 0)
+            {
+                for (int i = 0; i < Input.touchCount; i++)
+                {
+                    if (eventSystem.IsPointerOverGameObject(Input.GetTouch(i).fingerId))
+                        return true;
+                }
+                return false;
+            }
+            return eventSystem.IsPointerOverGameObject();
         }
 
         void SetSelected(bool value)
