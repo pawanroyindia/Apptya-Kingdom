@@ -188,6 +188,7 @@ namespace ApptyaKingdom {
    Data.lumberLevel=Mathf.Clamp(Data.lumberLevel,1,5);
    Data.farmLevel=Mathf.Clamp(Data.farmLevel,1,5);
    Data.quarryLevel=Mathf.Clamp(Data.quarryLevel,1,5);
+   Data.combatResearch=Mathf.Clamp(Data.combatResearch,0,5);Data.economyResearch=Mathf.Clamp(Data.economyResearch,0,5);Data.scoutingResearch=Mathf.Clamp(Data.scoutingResearch,0,5);
    Data.wood=Mathf.Max(0,Data.wood);Data.food=Mathf.Max(0,Data.food);
    Data.stone=Mathf.Max(0,Data.stone);Data.gold=Mathf.Max(0,Data.gold);
    if(!PlayerPrefs.HasKey(SaveTimeKey))return;
