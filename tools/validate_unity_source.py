@@ -195,6 +195,15 @@ def gameplay_invariants() -> list[str]:
     if "public string Research(string type)" not in source or "Data.guards*(10+Data.combatResearch*2)" not in source:
         errors.append("ApptyaGameState.cs: research must have a real gameplay effect")
 
+    if "Data.combatResearch=Mathf.Clamp(Data.combatResearch,0,5)" not in source or "Data.economyResearch=Mathf.Clamp(Data.economyResearch,0,5)" not in source or "Data.scoutingResearch=Mathf.Clamp(Data.scoutingResearch,0,5)" not in source:
+        errors.append("ApptyaGameState.cs: research levels must be bounded during save normalization")
+    if "public string Research(string type)" not in source or "Data.guards*(10+Data.combatResearch*2)" not in source:
+        errors.append("ApptyaGameState.cs: research must have a real gameplay effect")
+    if 'LastOfflineSummary="While away: +"+(gainedWood+researchBonus)' not in source:
+        errors.append("ApptyaGameState.cs: offline summary must include economy research bonus")
+    if "int stoneReward=10+Data.exploredRegions*2+Data.scoutingResearch*3" not in source:
+        errors.append("ApptyaGameState.cs: cartography must affect both exploration resource rewards")
+
     # HUD regression checks: keep touch actions scrollable and safe-area aware.
     hud_path = ROOT / "UnityProject/Assets/Scripts/ApptyaRuntimeHud.cs"
     if hud_path.is_file():
