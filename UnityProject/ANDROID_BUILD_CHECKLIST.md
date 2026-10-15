@@ -27,6 +27,8 @@
 - Send the app to the background and resume it without killing the process; offline timers and capped resource production must reconcile once.
 - Offline resource production is granted once per return and never exceeds the eight-hour cap.
 - The HUD reports the actual offline resource amounts and does not repeat the same reward after another reload.
+- One-finger drags pan the kingdom within map bounds; pinch zoom works without hijacking HUD gestures.
+- Selected building details update level, upgrade cost, countdown and max-level state after gameplay changes.
 - Two-finger gestures over HUD controls do not zoom the world camera.
 - Tapping building walls, doors and rooftops selects the correct building; trees and decorative props do not intercept taps.
 - Soft shadows and ambient lighting remain performant on the target phone; tree canopies do not cast shadows.
