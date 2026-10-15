@@ -27,6 +27,8 @@
 - Offline resource production is granted once per return and never exceeds the eight-hour cap.
 - The HUD reports the actual offline resource amounts and does not repeat the same reward after another reload.
 - Two-finger gestures over HUD controls do not zoom the world camera.
+- Tapping building walls, doors and rooftops selects the correct building; trees and decorative props do not intercept taps.
+- Soft shadows and ambient lighting remain performant on the target phone; tree canopies do not cast shadows.
 - No clipped UI on 720p and 1080p portrait displays.
 - Test frame rate, heat, battery, memory and load time on a physical Android device.
 
