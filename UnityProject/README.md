@@ -1,14 +1,22 @@
-# Apptya Kingdom — Unity starter
+# Apptya Kingdom — Unity starter project
 
-This is an initial C# starter slice, not a complete Unity project export or tested APK.
+This folder contains a starter Unity 6 project structure, a URP package manifest, gameplay C# scripts, and an Editor utility that creates the starter scene.
 
-## Setup
-1. Install a supported Unity 6 editor through Unity Hub with Android Build Support, SDK/NDK tools and OpenJDK.
-2. Create a new 3D URP project.
-3. Copy `Assets/Scripts` from this folder into that project's `Assets/Scripts`.
-4. Create a scene and an empty GameObject called `Apptya Kingdom Bootstrap`; attach `ProceduralKingdomBootstrap.cs`.
-5. Press Play to generate a rough 3D blockout, game state and runtime touch HUD.
-6. Resolve any editor-version warnings/errors and test on a physical Android device before calling it built.
+## Create the starter scene
+1. Open this folder in Unity Hub using Unity 6.0.46f1 or a compatible Unity 6 release.
+2. Install Android Build Support, Android SDK & NDK Tools, and OpenJDK through Unity Hub if Android builds are needed.
+3. Wait until packages finish resolving and scripts compile.
+4. In the Unity menu, select **Apptya Kingdom → Setup Starter Scene**.
+5. Press Play and inspect the Console.
 
-## Limitations
-Procedural primitive geometry is temporary blockout, not production art. This repository does not yet contain Unity-generated project settings, a URP asset, authored 3D art, signing keys or a verified build. The HUD is functional scaffolding and requires a visual polish pass.
+## Current gameplay slice
+- Procedural valley with river and bridge.
+- Keep and four placeholder resource buildings.
+- Gather wood, harvest food, train guards, upgrade the keep, and scout for rewards.
+- Local save through PlayerPrefs.
+
+## Important limitations
+The environment and buildings are primitive blockout geometry, not final-quality 3D art. The project has not been compiled in Unity or tested on an Android device in this workflow. No APK has been built or verified. The generated scene and HUD require testing, UI refinement, and original art/animation work before release.
+
+## Android release
+Configure the application identifier, orientation, icon, signing, target API and graphics settings in Unity. Confirm Google's current Play policy and profile performance on actual target devices before publishing.
