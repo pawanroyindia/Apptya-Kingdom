@@ -127,13 +127,15 @@ namespace ApptyaKingdom
             if (royalBanner)
                 royalBanner.GetComponent<Renderer>().sharedMaterial = keepLevel >= 8 ? goldMat : crimsonMat;
 
-            // Enemy outpost becomes visually more threatening as the campaign advances.
+            // Visual threat scaling is deliberately capped: gameplay enemy levels can reach
+            // 100,000, but allowing that value to scale a mesh would create kilometre-sized art.
+            int visualThreatTier = Mathf.Clamp(state.Data.enemyLevel, 1, 12);
             var enemyRoof = FindNamed("Enemy outpost roof");
             if (enemyRoof)
             {
-                enemyRoof.transform.localScale = new Vector3(3.3f + (state.Data.enemyLevel - 1) * .12f,
-                    .3f, 2.6f + (state.Data.enemyLevel - 1) * .08f);
-                enemyRoof.GetComponent<Renderer>().sharedMaterial = state.Data.enemyLevel >= 5 ? crimsonMat : slateMat;
+                enemyRoof.transform.localScale = new Vector3(3.3f + (visualThreatTier - 1) * .12f,
+                    .3f, 2.6f + (visualThreatTier - 1) * .08f);
+                enemyRoof.GetComponent<Renderer>().sharedMaterial = visualThreatTier >= 5 ? crimsonMat : slateMat;
             }
             var enemyBanner = FindNamed("Enemy banner");
             if (enemyBanner)
