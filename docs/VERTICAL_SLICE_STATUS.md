@@ -14,6 +14,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Resource gathering, building upgrades, guard training, scouting, exploration and enemy battle calculations.
 - Tap-to-inspect for Keep, Lumber Camp, Farmstead, Barracks, Quarry and enemy outpost.
 - Gold-tint feedback for the selected building.
+- Keep and village-building roof ridges turn gold while their timed upgrades are running.
 - World-visible guard squad that updates when guards are trained or lost in battle/expeditions (up to ten individual markers).
 - Selected-building upgrade and resource collection actions; selected enemy outpost can be attacked through a dedicated action.
 - Legacy save normalization for levels, troop count, day, progression counters and resource values.
