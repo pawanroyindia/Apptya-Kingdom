@@ -24,6 +24,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - App background/resume also reconciles elapsed time, then immediately saves the recovered state to avoid duplicate offline rewards.
 - Passive resource production is granted for offline time, capped at eight hours per return, using saved building levels.
 - The HUD reports the exact offline wood, food, stone and gold granted on return.
+- The return summary also lists any Keep or village-building upgrades completed while away.
 - Two-finger camera zoom checks whether either touch is over the HUD, preventing pinch gestures on UI controls from moving the world camera.
 
 ## Still needed before calling the vertical slice complete
