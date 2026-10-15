@@ -16,6 +16,7 @@ namespace ApptyaKingdom
         readonly GameObject[][] markers = new GameObject[4][];
         Material goldMat, slateMat, bronzeMat, crimsonMat;
         Transform cachedRoot;
+        readonly GameObject[] guardMarkers = new GameObject[10];
 
         void Start()
         {
@@ -27,6 +28,19 @@ namespace ApptyaKingdom
             slateMat = new Material(shader) { color = new Color(.12f, .22f, .35f) };
             bronzeMat = new Material(shader) { color = new Color(.53f, .29f, .12f) };
             crimsonMat = new Material(shader) { color = new Color(.55f, .07f, .09f) };
+
+            // A small visible squad makes training and battle losses readable in the world.
+            for (int i = 0; i < guardMarkers.Length; i++)
+            {
+                var guard = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+                guard.name = "Kingdom guard " + (i + 1);
+                guard.transform.SetParent(cachedRoot, true);
+                guard.transform.localScale = new Vector3(.38f, .55f, .38f);
+                guard.GetComponent<Renderer>().sharedMaterial = bronzeMat;
+                var collider = guard.GetComponent<Collider>();
+                if (collider) Destroy(collider);
+                guardMarkers[i] = guard;
+            }
 
             for (int i = 0; i < 4; i++)
             {
@@ -55,6 +69,15 @@ namespace ApptyaKingdom
         void Refresh()
         {
             if (state == null || state.Data == null || markers[0] == null) return;
+            for (int i = 0; i < guardMarkers.Length; i++)
+            {
+                bool visible = i < Mathf.Min(state.Data.guards, guardMarkers.Length);
+                guardMarkers[i].SetActive(visible);
+                int column = i % 5;
+                int row = i / 5;
+                guardMarkers[i].transform.position = new Vector3(-9.2f + column * 1.1f, .55f, 9.4f + row * .9f);
+            }
+
             for (int i = 0; i < 4; i++)
             {
                 int level = state.GetBuildingLevel(keys[i]);
