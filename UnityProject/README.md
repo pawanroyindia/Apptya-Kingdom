@@ -13,8 +13,10 @@ This folder contains a starter Unity 6 project structure, a URP package manifest
 - Procedural valley with river, bridge, roads, village decoration and enemy outpost.
 - Keep and four resource/military buildings with visual level markers.
 - World-visible guard squad markers that respond to training and combat losses.
+- Warm soft-shadow lighting with tree-canopy shadow cost reduced for mobile.
 - Gather, passive production, timed upgrades, guard training, scouting, exploration, battles and achievements.
 - Selected-building inspection, upgrade/collect actions, and dedicated enemy targeting.
+- Taps on building walls, doors, roof sections and castle pieces map back to the same building; decorative colliders are removed.
 - PlayerPrefs persistence, upgrade timer recovery across app suspension, and capped eight-hour offline resource production. Backup snapshot recovery is included for unreadable primary save data.
 - Touch drag/orbit and pinch zoom, with HUD gestures protected from camera input.
 - Scrollable mobile HUD with resource, army, production, tutorial and battle information.
