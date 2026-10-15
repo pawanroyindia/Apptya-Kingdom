@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace ApptyaKingdom
 {
@@ -18,6 +19,7 @@ namespace ApptyaKingdom
         float distance = 27f;
         Vector2 previousTouch;
         bool wasDragging;
+        bool touchStartedOverUI;
 
         void Start()
         {
@@ -50,8 +52,12 @@ namespace ApptyaKingdom
             if (Input.touchCount == 1)
             {
                 Touch t = Input.GetTouch(0);
-                if (t.phase == TouchPhase.Began) previousTouch = t.position;
-                else if (t.phase == TouchPhase.Moved)
+                if (t.phase == TouchPhase.Began)
+                {
+                    previousTouch = t.position;
+                    touchStartedOverUI = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(t.fingerId);
+                }
+                else if (t.phase == TouchPhase.Moved && !touchStartedOverUI)
                 {
                     Vector2 delta = t.position - previousTouch;
                     yaw += delta.x * dragSensitivity;
@@ -61,9 +67,14 @@ namespace ApptyaKingdom
                 }
                 return;
             }
+            touchStartedOverUI = false;
 
             // Mouse fallback makes the camera easy to test in the Unity Editor.
-            if (Input.GetMouseButtonDown(0)) { previousTouch = Input.mousePosition; wasDragging = true; }
+            if (Input.GetMouseButtonDown(0))
+            {
+                previousTouch = Input.mousePosition;
+                wasDragging = EventSystem.current == null || !EventSystem.current.IsPointerOverGameObject();
+            }
             if (Input.GetMouseButton(0) && wasDragging)
             {
                 Vector2 current = Input.mousePosition;
