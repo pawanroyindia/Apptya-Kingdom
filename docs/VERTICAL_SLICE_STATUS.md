@@ -6,6 +6,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Procedural 3D valley blockout with Keep, four resource/military buildings, river, bridge, roads, trees and enemy outpost.
 - Orbit-style camera, touch drag, pinch zoom and editor mouse controls.
 - Scrollable action HUD with resources, production, army stats, tutorial objective, battle report and achievements.
+- Building status distinguishes active upgrade countdowns, idle buildings and maximum-level buildings.
 - Local PlayerPrefs save/load for kingdom progression.
 - Resource gathering, building upgrades, guard training, scouting, exploration and enemy battle calculations.
 - Tap-to-inspect for Keep, Lumber Camp, Farmstead, Barracks, Quarry and enemy outpost.
