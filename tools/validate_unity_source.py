@@ -102,6 +102,38 @@ def gameplay_invariants() -> list[str]:
         gather = source[gather_start:upgrade_start]
         if "amount<=0" not in gather or "AddResourceSafely" not in gather:
             errors.append("ApptyaGameState.cs: gathering must reject non-positive amounts and use overflow-safe resource additions")
+    # Guard troop training against free recruits and capacity overflows.
+    train_start = source.find("public bool TrainGuard()")
+    army_start = source.find("public int ArmyPower()", train_start)
+    if train_start < 0 or army_start < 0:
+        errors.append("ApptyaGameState.cs: guard training API is missing")
+    else:
+        train = source[train_start:army_start]
+        for required_rule in ("Data.guards>=Data.barracksLevel*5", "Data.food<25", "Data.gold<10",
+                              "Data.food-=25", "Data.gold-=10", "Data.guards++"):
+            if required_rule not in train:
+                errors.append(f"ApptyaGameState.cs: guard training is missing rule: {required_rule}")
+
+    # Scout must consume a guard and refuse when no guard is available.
+    scout_start = source.find("public bool Scout()")
+    if scout_start < 0:
+        errors.append("ApptyaGameState.cs: scouting API is missing")
+    else:
+        scout = source[scout_start:]
+        if "Data.guards<1" not in scout or "Data.guards--" not in scout or "Save()" not in scout:
+            errors.append("ApptyaGameState.cs: scouting must require and consume a guard, then save")
+
+    # Claimed achievements must not be claimable repeatedly.
+    achievement_start = source.find("public string ClaimAchievement(")
+    scout_start = source.find("public bool Scout()", achievement_start)
+    if achievement_start < 0 or scout_start < 0:
+        errors.append("ApptyaGameState.cs: achievement/scouting methods are missing")
+    else:
+        achievements = source[achievement_start:scout_start]
+        for claim_flag in ("rewardFirstVictoryClaimed", "rewardExplorerClaimed", "rewardKeepClaimed"):
+            if claim_flag not in achievements or "already claimed" not in achievements:
+                errors.append(f"ApptyaGameState.cs: achievement reward protection missing for {claim_flag}")
+
     return errors
 
 
