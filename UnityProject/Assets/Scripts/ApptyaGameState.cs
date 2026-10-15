@@ -7,6 +7,7 @@ namespace ApptyaKingdom {
   public int enemyLevel=1, victories=0, defeats=0, exploredRegions=0;
   public bool rewardFirstVictoryClaimed=false, rewardExplorerClaimed=false, rewardKeepClaimed=false;
   public bool tutorialGathered=false, tutorialUpgraded=false, tutorialTrained=false, tutorialBattled=false;
+  public int saveVersion=2;
  }
  public class ApptyaGameState:MonoBehaviour {
   public static ApptyaGameState Instance {get;private set;} public KingdomSave Data {get;private set;} public event Action Changed;
@@ -14,7 +15,29 @@ namespace ApptyaKingdom {
   float productionClock;
   void Update(){if(Data==null)return;productionClock+=Time.deltaTime;if(productionClock>=30f){productionClock-=30f;Data.wood+=5*Data.lumberLevel;Data.food+=6*Data.farmLevel;Data.stone+=3*Data.quarryLevel;Data.gold+=2*Data.keepLevel;Save();}}
   void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);Load();}
-  public void Load(){Data=PlayerPrefs.HasKey(Key)?JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(Key)):new KingdomSave();if(Data==null)Data=new KingdomSave();Changed?.Invoke();}
+  public void Load()
+  {
+   Data=PlayerPrefs.HasKey(Key)?JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(Key)):new KingdomSave();
+   if(Data==null)Data=new KingdomSave();
+   NormalizeLoadedData();
+   Changed?.Invoke();
+  }
+  void NormalizeLoadedData()
+  {
+   // JsonUtility leaves fields absent from older save files at zero; repair them safely.
+   Data.wood=Mathf.Max(0,Data.wood);Data.food=Mathf.Max(0,Data.food);
+   Data.stone=Mathf.Max(0,Data.stone);Data.gold=Mathf.Max(0,Data.gold);
+   Data.keepLevel=Mathf.Clamp(Data.keepLevel,1,10);
+   Data.lumberLevel=Mathf.Clamp(Data.lumberLevel,1,5);
+   Data.farmLevel=Mathf.Clamp(Data.farmLevel,1,5);
+   Data.barracksLevel=Mathf.Clamp(Data.barracksLevel,1,5);
+   Data.quarryLevel=Mathf.Clamp(Data.quarryLevel,1,5);
+   Data.guards=Mathf.Clamp(Data.guards,0,Data.barracksLevel*5);
+   Data.day=Mathf.Max(1,Data.day);Data.enemyLevel=Mathf.Max(1,Data.enemyLevel);
+   Data.victories=Mathf.Max(0,Data.victories);Data.defeats=Mathf.Max(0,Data.defeats);
+   Data.exploredRegions=Mathf.Max(0,Data.exploredRegions);
+   Data.saveVersion=2;
+  }
   public void Save(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();Changed?.Invoke();}
   public bool Gather(string type,int amount){if(amount<=0)return false;switch(type){case "wood":Data.wood+=amount;Data.tutorialGathered=true;break;case "food":Data.food+=amount;Data.tutorialGathered=true;break;case "stone":Data.stone+=amount;Data.tutorialGathered=true;break;case "gold":Data.gold+=amount;Data.tutorialGathered=true;break;default:return false;}Save();return true;}
   public bool UpgradeKeep(){if(Data.keepLevel<1||Data.keepLevel>=10)return false;int w=80*Data.keepLevel,s=45*Data.keepLevel;if(Data.wood<w||Data.stone<s)return false;Data.wood-=w;Data.stone-=s;Data.keepLevel++;Data.day++;Data.tutorialUpgraded=true;Save();return true;}
