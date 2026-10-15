@@ -19,7 +19,7 @@ namespace ApptyaKingdom
         Material goldMat, slateMat, bronzeMat, crimsonMat;
         Transform cachedRoot;
         Dictionary<string, GameObject> namedObjects;
-        readonly GameObject[] guardMarkers = new GameObject[10];
+        readonly GameObject[] guardMarkers = new GameObject[25];
 
         void Start()
         {
