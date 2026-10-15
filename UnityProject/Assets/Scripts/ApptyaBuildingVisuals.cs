@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace ApptyaKingdom
 {
@@ -24,8 +25,10 @@ namespace ApptyaKingdom
         {
             state = ApptyaGameState.Instance;
             cachedRoot = transform;
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
+            bool urpActive = GraphicsSettings.currentRenderPipeline != null;
+            var shader = Shader.Find(urpActive ? "Universal Render Pipeline/Lit" : "Standard");
+            if (shader == null) shader = Shader.Find(urpActive ? "Standard" : "Universal Render Pipeline/Lit");
+            if (shader == null) { Debug.LogError("Apptya Kingdom: no compatible shader found for building visuals."); enabled = false; return; }
             goldMat = new Material(shader) { color = new Color(.98f, .72f, .22f) };
             slateMat = new Material(shader) { color = new Color(.12f, .22f, .35f) };
             bronzeMat = new Material(shader) { color = new Color(.53f, .29f, .12f) };
