@@ -5,6 +5,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 ## Implemented in repository source
 - Procedural 3D valley blockout with Keep, four resource/military buildings, river, bridge, roads, trees and enemy outpost.
 - Warm directional lighting, soft shadows and tuned sky/equator/ground ambient colors in the procedural scene.
+- Decorative prop colliders are removed while building interaction colliders are preserved; tree canopies do not cast shadows to reduce mobile rendering cost.
 - Orbit-style camera, touch drag, pinch zoom and editor mouse controls.
 - Scrollable action HUD with resources, production, army stats, tutorial objective, battle report and achievements.
 - Building status distinguishes active upgrade countdowns, idle buildings and maximum-level buildings.
