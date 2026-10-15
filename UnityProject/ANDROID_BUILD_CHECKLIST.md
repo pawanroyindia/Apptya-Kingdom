@@ -21,6 +21,7 @@
 - Training guards visibly adds squad markers near the Barracks; battle losses and expeditions remove the corresponding markers.
 - Scout action grants its reward once per button press.
 - Save survives app restart.
+- Primary save corruption falls back to the backup snapshot without duplicating offline rewards.
 - Upgrade countdown continues while the app is closed; an upgrade that expires offline completes exactly once after reopening.
 - Send the app to the background and resume it without killing the process; offline timers and capped resource production must reconcile once.
 - Offline resource production is granted once per return and never exceeds the eight-hour cap.
