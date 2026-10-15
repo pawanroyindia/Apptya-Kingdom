@@ -17,6 +17,8 @@ namespace ApptyaKingdom {
  public class ApptyaGameState:MonoBehaviour {
   public static ApptyaGameState Instance {get;private set;} public KingdomSave Data {get;private set;} public event Action Changed; public event Action<string> OfflineProgressApplied; public string LastOfflineSummary {get;private set;}
   const string Key="apptya.kingdom.save.v1";
+  const string BackupKey="apptya.kingdom.save.backup.v1";
+  const string BackupTimeKey="apptya.kingdom.save.backupUtcTicks.v1";
   const string SaveTimeKey="apptya.kingdom.save.utcTicks.v1";
   float productionClock;
   float upgradeUiClock;
@@ -99,8 +101,17 @@ namespace ApptyaKingdom {
   void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);Load();}
   public void Load()
   {
-   Data=PlayerPrefs.HasKey(Key)?JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(Key)):new KingdomSave();
-   if(Data==null)Data=new KingdomSave();
+   KingdomSave loaded=null;
+   if(PlayerPrefs.HasKey(Key)){
+    try{loaded=JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(Key));}
+    catch(Exception){loaded=null;}
+   }
+   if(loaded==null && PlayerPrefs.HasKey(BackupKey)){
+    try{loaded=JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(BackupKey));}
+    catch(Exception){loaded=null;}
+    if(loaded!=null && PlayerPrefs.HasKey(BackupTimeKey))PlayerPrefs.SetString(SaveTimeKey,PlayerPrefs.GetString(BackupTimeKey));
+   }
+   Data=loaded??new KingdomSave();
    ApplyOfflineUpgradeTime();
    NormalizeLoadedData();
    WriteSaveSnapshot();
@@ -132,7 +143,7 @@ namespace ApptyaKingdom {
    Data.saveVersion=3;
   }
   public void Save(){WriteSaveSnapshot();Changed?.Invoke();}
-  void WriteSaveSnapshot(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.SetString(SaveTimeKey,DateTime.UtcNow.Ticks.ToString());PlayerPrefs.Save();}
+  void WriteSaveSnapshot(){string snapshot=JsonUtility.ToJson(Data);string now=DateTime.UtcNow.Ticks.ToString();PlayerPrefs.SetString(BackupKey,snapshot);PlayerPrefs.SetString(BackupTimeKey,now);PlayerPrefs.SetString(Key,snapshot);PlayerPrefs.SetString(SaveTimeKey,now);PlayerPrefs.Save();}
   void ApplyOfflineUpgradeTime(){
    LastOfflineSummary=null;
    if(!PlayerPrefs.HasKey(SaveTimeKey))return;
