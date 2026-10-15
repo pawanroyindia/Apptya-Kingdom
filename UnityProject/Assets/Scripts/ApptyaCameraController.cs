@@ -21,6 +21,7 @@ namespace ApptyaKingdom
         bool wasDragging;
         bool touchStartedOverUI;
         bool pinchBlockedByUI;
+        bool wasPinching;
 
         void Start()
         {
@@ -39,6 +40,7 @@ namespace ApptyaKingdom
             if (Input.touchCount == 2)
             {
                 wasDragging = false;
+                wasPinching = true;
                 Touch a = Input.GetTouch(0);
                 Touch b = Input.GetTouch(1);
                 // Do not zoom the world while a two-finger gesture is interacting with HUD controls.
@@ -59,6 +61,15 @@ namespace ApptyaKingdom
             if (Input.touchCount == 1)
             {
                 Touch t = Input.GetTouch(0);
+                // Reset the drag origin when one finger remains after a pinch, otherwise
+                // the stale pre-pinch position can cause a sudden camera jump.
+                if (wasPinching)
+                {
+                    previousTouch = t.position;
+                    touchStartedOverUI = pinchBlockedByUI;
+                    wasPinching = false;
+                    return;
+                }
                 if (t.phase == TouchPhase.Began)
                 {
                     previousTouch = t.position;
@@ -76,6 +87,7 @@ namespace ApptyaKingdom
             }
             touchStartedOverUI = false;
             pinchBlockedByUI = false;
+            wasPinching = false;
 
             // Mouse fallback makes the camera easy to test in the Unity Editor.
             if (Input.GetMouseButtonDown(0))
