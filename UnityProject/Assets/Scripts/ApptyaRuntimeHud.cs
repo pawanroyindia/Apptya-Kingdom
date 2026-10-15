@@ -11,6 +11,7 @@ namespace ApptyaKingdom
         Text stats, notice;
         Font font;
         GameObject actionPanel;
+        GameObject hudCanvasObject;
         RectTransform safeArea;
         Rect lastSafeArea;
         int lastScreenWidth;
@@ -38,8 +39,8 @@ namespace ApptyaKingdom
 
             Instance = this;
             font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            var canvasObject = new GameObject("Apptya Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            var canvas = canvasObject.GetComponent<Canvas>();
+            hudCanvasObject = new GameObject("Apptya Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var canvas = hudCanvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             var scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -162,6 +163,9 @@ namespace ApptyaKingdom
                 ApptyaGameState.Instance.OfflineProgressApplied -= Say;
             }
             if (Instance == this) Instance = null;
+            // The canvas is created at runtime as a sibling of this component, so clean it
+            // up explicitly if the HUD is removed without unloading the whole scene.
+            if (hudCanvasObject != null) Destroy(hudCanvasObject);
         }
 
         public void SelectBuilding(string key, string displayName)
