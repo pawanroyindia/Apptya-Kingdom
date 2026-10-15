@@ -14,13 +14,15 @@ namespace ApptyaKingdom {
   public void Load(){Data=PlayerPrefs.HasKey(Key)?JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(Key)):new KingdomSave();if(Data==null)Data=new KingdomSave();Changed?.Invoke();}
   public void Save(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();Changed?.Invoke();}
   public bool Gather(string type,int amount){if(amount<=0)return false;switch(type){case "wood":Data.wood+=amount;break;case "food":Data.food+=amount;break;case "stone":Data.stone+=amount;break;case "gold":Data.gold+=amount;break;default:return false;}Save();return true;}
-  public bool UpgradeKeep(){int w=80*Data.keepLevel,s=45*Data.keepLevel;if(Data.wood<w||Data.stone<s)return false;Data.wood-=w;Data.stone-=s;Data.keepLevel++;Data.day++;Save();return true;}
+  public bool UpgradeKeep(){if(Data.keepLevel<1||Data.keepLevel>=10)return false;int w=80*Data.keepLevel,s=45*Data.keepLevel;if(Data.wood<w||Data.stone<s)return false;Data.wood-=w;Data.stone-=s;Data.keepLevel++;Data.day++;Save();return true;}
   public bool UpgradeBuilding(string type){
+   // Validate first: invalid building keys must never spend resources.
+   switch(type){case "lumber":case "farm":case "barracks":case "quarry":break;default:return false;}
    int level=GetBuildingLevel(type);if(level<1||level>=5)return false;
    int w=35*level,s=20*level,g=10*level;
    if(Data.wood<w||Data.stone<s||Data.gold<g)return false;
    Data.wood-=w;Data.stone-=s;Data.gold-=g;
-   switch(type){case "lumber":Data.lumberLevel++;break;case "farm":Data.farmLevel++;break;case "barracks":Data.barracksLevel++;break;case "quarry":Data.quarryLevel++;break;default:return false;}
+   switch(type){case "lumber":Data.lumberLevel++;break;case "farm":Data.farmLevel++;break;case "barracks":Data.barracksLevel++;break;case "quarry":Data.quarryLevel++;break;}
    Data.day++;Save();return true;
   }
   public int GetBuildingLevel(string type){switch(type){case "lumber":return Data.lumberLevel;case "farm":return Data.farmLevel;case "barracks":return Data.barracksLevel;case "quarry":return Data.quarryLevel;default:return 0;}}
