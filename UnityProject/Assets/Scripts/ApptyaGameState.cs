@@ -16,7 +16,7 @@ namespace ApptyaKingdom {
   public void Load(){Data=PlayerPrefs.HasKey(Key)?JsonUtility.FromJson<KingdomSave>(PlayerPrefs.GetString(Key)):new KingdomSave();if(Data==null)Data=new KingdomSave();Changed?.Invoke();}
   public void Save(){PlayerPrefs.SetString(Key,JsonUtility.ToJson(Data));PlayerPrefs.Save();Changed?.Invoke();}
   public bool Gather(string type,int amount){if(amount<=0)return false;switch(type){case "wood":Data.wood+=amount;Data.tutorialGathered=true;break;case "food":Data.food+=amount;Data.tutorialGathered=true;break;case "stone":Data.stone+=amount;Data.tutorialGathered=true;break;case "gold":Data.gold+=amount;Data.tutorialGathered=true;break;default:return false;}Save();return true;}
-  public bool UpgradeKeep(){if(Data.keepLevel<1||Data.keepLevel>=10)return false;int w=80*Data.keepLevel,s=45*Data.keepLevel;if(Data.wood<w||Data.stone<s)return false;Data.wood-=w;Data.stone-=s;Data.keepLevel++;Data.day++;Save();return true;}
+  public bool UpgradeKeep(){if(Data.keepLevel<1||Data.keepLevel>=10)return false;int w=80*Data.keepLevel,s=45*Data.keepLevel;if(Data.wood<w||Data.stone<s)return false;Data.wood-=w;Data.stone-=s;Data.keepLevel++;Data.day++;Data.tutorialUpgraded=true;Save();return true;}
   public bool UpgradeBuilding(string type){
    // Validate first: invalid building keys must never spend resources.
    switch(type){case "lumber":case "farm":case "barracks":case "quarry":break;default:return false;}
