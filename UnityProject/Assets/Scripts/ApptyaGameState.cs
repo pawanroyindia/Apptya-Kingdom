@@ -103,6 +103,7 @@ namespace ApptyaKingdom {
    if(Data==null)Data=new KingdomSave();
    ApplyOfflineUpgradeTime();
    NormalizeLoadedData();
+   WriteSaveSnapshot();
    Changed?.Invoke();
   }
   void NormalizeLoadedData()
