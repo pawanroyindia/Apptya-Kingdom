@@ -13,6 +13,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Selected-building upgrade and resource collection actions; selected enemy outpost can be attacked through a dedicated action.
 - Legacy save normalization for levels, troop count, day, progression counters and resource values.
 - Timed Keep and village-building upgrades: costs are charged at start, levels increase on completion, HUD displays remaining seconds, and active timers are periodically persisted to PlayerPrefs.
+- Upgrade timers that reach zero while the app is suspended are completed during save normalization on next load rather than silently cancelled.
 
 ## Still needed before calling the vertical slice complete
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
