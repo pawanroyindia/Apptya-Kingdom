@@ -10,10 +10,14 @@ This folder contains a starter Unity 6 project structure, a URP package manifest
 5. Press Play and inspect the Console.
 
 ## Current gameplay slice
-- Procedural valley with river and bridge.
-- Keep and four placeholder resource buildings.
-- Gather wood, harvest food, train guards, upgrade the keep, and scout for rewards.
-- Local save through PlayerPrefs.
+- Procedural valley with river, bridge, roads, village decoration and enemy outpost.
+- Keep and four resource/military buildings with visual level markers.
+- World-visible guard squad markers that respond to training and combat losses.
+- Gather, passive production, timed upgrades, guard training, scouting, exploration, battles and achievements.
+- Selected-building inspection, upgrade/collect actions, and dedicated enemy targeting.
+- PlayerPrefs persistence, upgrade timer recovery across app suspension, and capped eight-hour offline resource production.
+- Touch drag/orbit and pinch zoom, with HUD gestures protected from camera input.
+- Scrollable mobile HUD with resource, army, production, tutorial and battle information.
 
 ## Important limitations
 The environment and buildings are primitive blockout geometry, not final-quality 3D art. The project has not been compiled in Unity or tested on an Android device in this workflow. No APK has been built or verified. The generated scene and HUD require testing, UI refinement, and original art/animation work before release.
