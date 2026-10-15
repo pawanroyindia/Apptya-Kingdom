@@ -8,7 +8,7 @@ namespace ApptyaKingdom
     public class ApptyaRuntimeHud : MonoBehaviour
     {
         public static ApptyaRuntimeHud Instance { get; private set; }
-        Text stats, notice;
+        Text stats, notice, selectionInfo;
         Font font;
         GameObject actionPanel;
         GameObject hudCanvasObject;
@@ -64,6 +64,9 @@ namespace ApptyaKingdom
                 new Vector2(0, 18), new Vector2(0, 620));
             notice = TextAt(actionPanel.transform, "Chronicle", new Vector2(.5f, 1f),
                 new Vector2(0, -42), new Vector2(900, 62), 20, TextAnchor.MiddleCenter);
+            selectionInfo = TextAt(actionPanel.transform, "Selected Building Details", new Vector2(.5f, 1f),
+                new Vector2(0, -104), new Vector2(900, 54), 17, TextAnchor.MiddleCenter);
+            selectionInfo.text = "Tap the Keep, a village building or the enemy outpost to inspect it.";
 
             var scrollObject = new GameObject("Action Scroll View", typeof(RectTransform), typeof(Image), typeof(ScrollRect));
             scrollObject.transform.SetParent(actionPanel.transform, false);
@@ -71,7 +74,7 @@ namespace ApptyaKingdom
             scrollRectTransform.anchorMin = new Vector2(0, 0);
             scrollRectTransform.anchorMax = new Vector2(1, 1);
             scrollRectTransform.offsetMin = new Vector2(12, 12);
-            scrollRectTransform.offsetMax = new Vector2(-12, -90);
+            scrollRectTransform.offsetMax = new Vector2(-12, -150);
             scrollObject.GetComponent<Image>().color = new Color(.025f, .05f, .09f, .35f);
 
             var viewport = new GameObject("Viewport", typeof(RectTransform), typeof(Image), typeof(Mask));
@@ -181,30 +184,61 @@ namespace ApptyaKingdom
             if (state == null || state.Data == null) return;
             selectedBuildingKey = key;
             selectedBuildingName = displayName;
-            if (key == "keep" && state.IsUpgradeActive("keep"))
+            UpdateSelectionInfo();
+            Say(displayName + " selected.");
+        }
+
+        void UpdateSelectionInfo()
+        {
+            if (selectionInfo == null) return;
+            var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null)
             {
-                Say(displayName + " • Upgrade in progress: " + Mathf.CeilToInt(state.UpgradeTimeRemaining("keep")) + "s remaining.");
+                selectionInfo.text = "Game state is unavailable. Reopen the starter scene.";
                 return;
             }
-            if (key != "keep" && state.IsUpgradeActive(key))
+            if (string.IsNullOrEmpty(selectedBuildingKey))
             {
-                Say(displayName + " • Upgrade in progress: " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s remaining.");
+                selectionInfo.text = "Tap the Keep, a village building or the enemy outpost to inspect it.";
                 return;
             }
-            if (key == "enemy")
+
+            var d = state.Data;
+            if (selectedBuildingKey == "enemy")
             {
-                Say(displayName + " • Enemy level " + state.Data.enemyLevel + " • Enemy power " + state.EnemyPower() + ". Train guards and upgrade before attacking.");
+                selectionInfo.text = selectedBuildingName + " • Level " + d.enemyLevel + " • Power " + state.EnemyPower() +
+                    " • Train guards and upgrade buildings before using Attack selected.";
                 return;
             }
-            if (key == "keep")
+            if (selectedBuildingKey == "keep")
             {
-                int level = state.Data.keepLevel;
-                Say(displayName + " • Level " + level + "/10 • Upgrade: " + (80 * level) + " wood + " + (45 * level) + " stone. Use Upgrade Keep below.");
+                int level = d.keepLevel;
+                if (state.IsUpgradeActive("keep"))
+                    selectionInfo.text = selectedBuildingName + " • Level " + level + "/10 • Upgrade in progress: " +
+                        Mathf.CeilToInt(state.UpgradeTimeRemaining("keep")) + "s remaining.";
+                else if (level >= 10)
+                    selectionInfo.text = selectedBuildingName + " • MAX LEVEL 10 • Keep fully upgraded.";
+                else
+                    selectionInfo.text = selectedBuildingName + " • Level " + level + "/10 • Next: " +
+                        (80 * level) + " wood + " + (45 * level) + " stone • Use Upgrade selected.";
                 return;
             }
-            int buildingLevel = state.GetBuildingLevel(key);
-            if (buildingLevel < 1) return;
-            Say(displayName + " • Level " + buildingLevel + "/5 • Upgrade: " + (35 * buildingLevel) + " wood + " + (20 * buildingLevel) + " stone + " + (10 * buildingLevel) + " gold. Use its upgrade action below.");
+
+            int buildingLevel = state.GetBuildingLevel(selectedBuildingKey);
+            if (buildingLevel < 1)
+            {
+                selectionInfo.text = selectedBuildingName + " • No building data available.";
+                return;
+            }
+            if (state.IsUpgradeActive(selectedBuildingKey))
+                selectionInfo.text = selectedBuildingName + " • Level " + buildingLevel + "/5 • Upgrade in progress: " +
+                    Mathf.CeilToInt(state.UpgradeTimeRemaining(selectedBuildingKey)) + "s remaining.";
+            else if (buildingLevel >= 5)
+                selectionInfo.text = selectedBuildingName + " • MAX LEVEL 5 • Building fully upgraded.";
+            else
+                selectionInfo.text = selectedBuildingName + " • Level " + buildingLevel + "/5 • Next: " +
+                    (35 * buildingLevel) + " wood + " + (20 * buildingLevel) + " stone + " +
+                    (10 * buildingLevel) + " gold • Use Upgrade selected.";
         }
 
         void Refresh()
@@ -219,6 +253,7 @@ namespace ApptyaKingdom
                 "  STONE +" + (3 * d.quarryLevel) + "  GOLD +" + (2 * d.keepLevel) +
                 "\nBUILDINGS: " + UpgradeStatus("lumber", "LUMBER " + d.lumberLevel) + "  " + UpgradeStatus("farm", "FARM " + d.farmLevel) + "  " + UpgradeStatus("barracks", "BARRACKS " + d.barracksLevel) +
                 "  " + UpgradeStatus("quarry", "QUARRY " + d.quarryLevel) + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions + "\n" + state.TutorialObjective();
+            UpdateSelectionInfo();
         }
 
         string UpgradeStatus(string key, string label)
