@@ -18,6 +18,7 @@
 - Gather / harvest buttons update resource counts.
 - Upgrade button spends resources and increases Keep level only when affordable.
 - Train Guard spends food and gold only when affordable.
+- Training guards visibly adds squad markers near the Barracks; battle losses and expeditions remove the corresponding markers.
 - Scout action grants its reward once per button press.
 - Save survives app restart.
 - Upgrade countdown continues while the app is closed; an upgrade that expires offline completes exactly once after reopening.
