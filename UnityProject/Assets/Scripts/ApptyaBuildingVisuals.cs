@@ -103,7 +103,7 @@ namespace ApptyaKingdom
                 }
 
                 var ridge = FindNamed(names[i] + " roof ridge");
-                if (ridge) ridge.GetComponent<Renderer>().sharedMaterial = level >= 4 ? goldMat : level >= 3 ? bronzeMat : slateMat;
+                if (ridge) ridge.GetComponent<Renderer>().sharedMaterial = state.IsUpgradeActive(keys[i]) ? goldMat : level >= 4 ? goldMat : level >= 3 ? bronzeMat : slateMat;
 
                 var door = FindNamed(names[i] + " front door");
                 if (door && level >= 5) door.GetComponent<Renderer>().sharedMaterial = goldMat;
@@ -115,7 +115,7 @@ namespace ApptyaKingdom
             {
                 hall.transform.localScale = new Vector3(5.2f + (keepLevel - 1) * .12f,
                     3.3f + (keepLevel - 1) * .22f, 4.3f + (keepLevel - 1) * .10f);
-                hall.GetComponent<Renderer>().sharedMaterial = keepLevel >= 7 ? goldMat : keepLevel >= 4 ? bronzeMat : slateMat;
+                hall.GetComponent<Renderer>().sharedMaterial = state.IsUpgradeActive("keep") ? goldMat : keepLevel >= 7 ? goldMat : keepLevel >= 4 ? bronzeMat : slateMat;
             }
 
             var gate = FindNamed("Keep gate");
