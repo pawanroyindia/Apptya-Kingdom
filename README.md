@@ -10,7 +10,8 @@ Apptya Kingdom is a mobile-first fantasy kingdom strategy game prototype built i
 - Guard training, scouting, enemy battles, and regional exploration
 - Tutorial progression and claimable achievement rewards
 - Local save snapshots with backup recovery and bounded offline progress
-- Runtime HUD with safe-area handling and building selection
+- Runtime HUD with safe-area handling, contextual building details and grouped selection highlights
+- Bounded touch camera panning and pinch zoom; up to 25 visible guard markers matching barracks capacity
 
 ## Open the Unity project
 
