@@ -34,7 +34,7 @@ namespace ApptyaKingdom {
    TickBuildingUpgrade("barracks",ref Data.barracksUpgradeActive,ref Data.barracksUpgradeRemaining,ref timerChanged);
    TickBuildingUpgrade("quarry",ref Data.quarryUpgradeActive,ref Data.quarryUpgradeRemaining,ref timerChanged);
    productionClock+=Time.deltaTime;
-   if(productionClock>=30f){productionClock-=30f;Data.wood+=5*Data.lumberLevel;Data.food+=6*Data.farmLevel;Data.stone+=3*Data.quarryLevel;Data.gold+=2*Data.keepLevel;Save();}
+   if(productionClock>=30f){productionClock-=30f;Data.wood=AddResourceSafely(Data.wood,5*Data.lumberLevel);Data.food=AddResourceSafely(Data.food,6*Data.farmLevel);Data.stone=AddResourceSafely(Data.stone,3*Data.quarryLevel);Data.gold=AddResourceSafely(Data.gold,2*Data.keepLevel);Save();}
    if(anyUpgrade && timerChanged)
    {
     upgradeUiClock+=Time.deltaTime;upgradeSaveClock+=Time.deltaTime;
@@ -200,15 +200,15 @@ namespace ApptyaKingdom {
    if(Data.barracksUpgradeActive)Data.barracksUpgradeRemaining-=elapsed;
    if(Data.quarryUpgradeActive)Data.quarryUpgradeRemaining-=elapsed;
   }
-  public bool Gather(string type,int amount){if(amount<=0)return false;switch(type){case "wood":Data.wood+=amount;Data.tutorialGathered=true;break;case "food":Data.food+=amount;Data.tutorialGathered=true;break;case "stone":Data.stone+=amount;Data.tutorialGathered=true;break;case "gold":Data.gold+=amount;Data.tutorialGathered=true;break;default:return false;}Save();return true;}
+  public bool Gather(string type,int amount){if(amount<=0)return false;switch(type){case "wood":Data.wood=AddResourceSafely(Data.wood,amount);Data.tutorialGathered=true;break;case "food":Data.food=AddResourceSafely(Data.food,amount);Data.tutorialGathered=true;break;case "stone":Data.stone=AddResourceSafely(Data.stone,amount);Data.tutorialGathered=true;break;case "gold":Data.gold=AddResourceSafely(Data.gold,amount);Data.tutorialGathered=true;break;default:return false;}Save();return true;}
   public bool UpgradeKeep(){return StartKeepUpgrade();}
   public bool UpgradeBuilding(string type){return StartBuildingUpgrade(type);}
   public int GetBuildingLevel(string type){switch(type){case "lumber":return Data.lumberLevel;case "farm":return Data.farmLevel;case "barracks":return Data.barracksLevel;case "quarry":return Data.quarryLevel;default:return 0;}}
   public bool TrainGuard(){if(Data.guards>=Data.barracksLevel*5||Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;Data.guards++;Data.tutorialTrained=true;Save();return true;}
   public int ArmyPower(){return Data.guards*10+Data.barracksLevel*4+Data.keepLevel*3;}
   public int EnemyPower(){return 10+Data.enemyLevel*7;}
-  public string ExploreRegion(){if(Data.guards<1)return "Train at least one guard to explore.";Data.guards--;Data.exploredRegions++;Data.day++;int reward=20+Data.exploredRegions*5;Data.wood+=reward;Data.stone+=10+Data.exploredRegions*2;Save();return "Region explored! Found "+reward+" wood and "+(10+Data.exploredRegions*2)+" stone. One guard was assigned to the expedition.";}
-  public string AttackEnemy(){if(Data.guards<1)return "Train guards before attacking.";int army=ArmyPower(),enemy=EnemyPower();Data.day++;Data.tutorialBattled=true;if(army>=enemy){int lost=Mathf.Min(Data.guards,Mathf.Max(0,enemy/45));Data.guards-=lost;int wood=35+Data.enemyLevel*10,stone=20+Data.enemyLevel*5,gold=25+Data.enemyLevel*8;Data.wood+=wood;Data.stone+=stone;Data.gold+=gold;Data.victories++;Data.enemyLevel++;Save();return "VICTORY! Power "+army+" vs "+enemy+". Lost "+lost+" guards. Loot: "+wood+" wood, "+stone+" stone, "+gold+" gold.";}else{int lost=Mathf.Min(Data.guards,Mathf.Max(1,Mathf.CeilToInt((enemy-army)/18f)));Data.guards-=lost;Data.food=Mathf.Max(0,Data.food-15*lost);Data.defeats++;Save();return "DEFEAT. Power "+army+" vs "+enemy+". Lost "+lost+" guards and "+(15*lost)+" food. Train and upgrade before retrying.";}}
+  public string ExploreRegion(){if(Data.guards<1)return "Train at least one guard to explore.";Data.guards--;Data.exploredRegions++;Data.day++;int reward=20+Data.exploredRegions*5;Data.wood=AddResourceSafely(Data.wood,reward);Data.stone=AddResourceSafely(Data.stone,10+Data.exploredRegions*2);Save();return "Region explored! Found "+reward+" wood and "+(10+Data.exploredRegions*2)+" stone. One guard was assigned to the expedition.";}
+  public string AttackEnemy(){if(Data.guards<1)return "Train guards before attacking.";int army=ArmyPower(),enemy=EnemyPower();Data.day++;Data.tutorialBattled=true;if(army>=enemy){int lost=Mathf.Min(Data.guards,Mathf.Max(0,enemy/45));Data.guards-=lost;int wood=35+Data.enemyLevel*10,stone=20+Data.enemyLevel*5,gold=25+Data.enemyLevel*8;Data.wood=AddResourceSafely(Data.wood,wood);Data.stone=AddResourceSafely(Data.stone,stone);Data.gold=AddResourceSafely(Data.gold,gold);Data.victories++;Data.enemyLevel++;Save();return "VICTORY! Power "+army+" vs "+enemy+". Lost "+lost+" guards. Loot: "+wood+" wood, "+stone+" stone, "+gold+" gold.";}else{int lost=Mathf.Min(Data.guards,Mathf.Max(1,Mathf.CeilToInt((enemy-army)/18f)));Data.guards-=lost;Data.food=Mathf.Max(0,Data.food-15*lost);Data.defeats++;Save();return "DEFEAT. Power "+army+" vs "+enemy+". Lost "+lost+" guards and "+(15*lost)+" food. Train and upgrade before retrying.";}}
   public int TutorialStep(){if(!Data.tutorialGathered)return 0;if(!Data.tutorialUpgraded)return 1;if(!Data.tutorialTrained)return 2;if(!Data.tutorialBattled)return 3;return 4;}
   public string TutorialObjective(){switch(TutorialStep()){case 0:return "STEP 1/4 — Gather wood or food to prepare your kingdom.";case 1:return "STEP 2/4 — Upgrade the Keep or a resource building.";case 2:return "STEP 3/4 — Train at least one guard in the Barracks.";case 3:return "STEP 4/4 — Attack the enemy outpost to complete the first campaign loop.";default:return "TUTORIAL COMPLETE — Gather, build, train and fight. Expand your kingdom!";}}
   public string ClaimAchievement(string id){
@@ -216,18 +216,18 @@ namespace ApptyaKingdom {
     case "first_victory":
      if(Data.victories<1)return "Win your first battle to unlock this reward.";
      if(Data.rewardFirstVictoryClaimed)return "First Victory reward already claimed.";
-     Data.rewardFirstVictoryClaimed=true;Data.gold+=100;Data.wood+=75;Save();return "Achievement claimed: +100 gold and +75 wood!";
+     Data.rewardFirstVictoryClaimed=true;Data.gold=AddResourceSafely(Data.gold,100);Data.wood=AddResourceSafely(Data.wood,75);Save();return "Achievement claimed: +100 gold and +75 wood!";
     case "explorer":
      if(Data.exploredRegions<3)return "Explore 3 regions to unlock this reward ("+Data.exploredRegions+"/3).";
      if(Data.rewardExplorerClaimed)return "Explorer reward already claimed.";
-     Data.rewardExplorerClaimed=true;Data.stone+=100;Data.food+=100;Save();return "Achievement claimed: +100 stone and +100 food!";
+     Data.rewardExplorerClaimed=true;Data.stone=AddResourceSafely(Data.stone,100);Data.food=AddResourceSafely(Data.food,100);Save();return "Achievement claimed: +100 stone and +100 food!";
     case "keep_builder":
      if(Data.keepLevel<3)return "Upgrade the Keep to level 3 to unlock this reward.";
      if(Data.rewardKeepClaimed)return "Keep Builder reward already claimed.";
-     Data.rewardKeepClaimed=true;Data.wood+=150;Data.gold+=75;Save();return "Achievement claimed: +150 wood and +75 gold!";
+     Data.rewardKeepClaimed=true;Data.wood=AddResourceSafely(Data.wood,150);Data.gold=AddResourceSafely(Data.gold,75);Save();return "Achievement claimed: +150 wood and +75 gold!";
     default:return "Unknown achievement.";
    }
   }
-  public bool Scout(){if(Data.guards<1)return false;Data.guards--;Data.gold+=35;Data.stone+=20;Data.day++;Save();return true;}
+  public bool Scout(){if(Data.guards<1)return false;Data.guards--;Data.gold=AddResourceSafely(Data.gold,35);Data.stone=AddResourceSafely(Data.stone,20);Data.day++;Save();return true;}
  }
 }
