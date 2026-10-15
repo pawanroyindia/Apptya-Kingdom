@@ -134,6 +134,22 @@ def gameplay_invariants() -> list[str]:
             if claim_flag not in achievements or "already claimed" not in achievements:
                 errors.append(f"ApptyaGameState.cs: achievement reward protection missing for {claim_flag}")
 
+    # HUD regression checks: keep touch actions scrollable and safe-area aware.
+    hud_path = ROOT / "UnityProject/Assets/Scripts/ApptyaRuntimeHud.cs"
+    if hud_path.is_file():
+        hud = hud_path.read_text(encoding="utf-8")
+        for required in ("ApplySafeArea()", "Screen.safeArea", "ScrollRect", "AttackSelectedTarget",
+                         "CollectFromSelectedBuilding", "UpgradeSelectedBuilding",
+                         "ApptyaGameState.Instance == null || ApptyaGameState.Instance.Data == null"):
+            if required not in hud:
+                errors.append(f"ApptyaRuntimeHud.cs: required HUD safety/interaction feature missing: {required}")
+        if "ApptyaGameState.Instance.Changed -= Refresh;" not in hud:
+            errors.append("ApptyaRuntimeHud.cs: Changed event must be unsubscribed on destroy")
+        if "ApptyaGameState.Instance.OfflineProgressApplied -= Say;" not in hud:
+            errors.append("ApptyaRuntimeHud.cs: offline progress event must be unsubscribed on destroy")
+    else:
+        errors.append("ApptyaRuntimeHud.cs: HUD source is missing")
+
     return errors
 
 
