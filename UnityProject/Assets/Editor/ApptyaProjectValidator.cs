@@ -25,6 +25,7 @@ namespace ApptyaKingdom.EditorTools
             CheckAsset<MonoScript>("Assets/Scripts/ApptyaCameraController.cs", errors);
             CheckAsset<MonoScript>("Assets/Scripts/ApptyaBuildingVisuals.cs", errors);
             CheckAsset<MonoScript>("Assets/Scripts/ApptyaBuildingTap.cs", errors);
+            CheckAsset<MonoScript>("Assets/Editor/ApptyaProjectSetup.cs", errors);
 
             if (!AssetDatabase.IsValidFolder("Assets/Scenes"))
                 errors.Add("Assets/Scenes folder is missing. Run Apptya Kingdom > Setup Starter Scene.");
