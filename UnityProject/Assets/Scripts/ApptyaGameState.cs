@@ -4,7 +4,8 @@ namespace ApptyaKingdom {
  [Serializable] public class KingdomSave {
   public int wood=120, food=150, stone=80, gold=100, keepLevel=1, guards=0, day=1;
   public int lumberLevel=1, farmLevel=1, barracksLevel=1, quarryLevel=1;
-  public int enemyLevel=1, victories=0, defeats=0, exploredRegions=0;\n  public bool rewardFirstVictoryClaimed=false, rewardExplorerClaimed=false, rewardKeepClaimed=false;
+  public int enemyLevel=1, victories=0, defeats=0, exploredRegions=0;
+  public bool rewardFirstVictoryClaimed=false, rewardExplorerClaimed=false, rewardKeepClaimed=false;
   public bool tutorialGathered=false, tutorialUpgraded=false, tutorialTrained=false, tutorialBattled=false;
  }
  public class ApptyaGameState:MonoBehaviour {
