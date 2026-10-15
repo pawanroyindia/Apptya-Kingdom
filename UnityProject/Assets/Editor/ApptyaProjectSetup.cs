@@ -46,11 +46,14 @@ namespace ApptyaKingdom.EditorTools
                 scenes.Add(starterEntry);
             EditorBuildSettings.scenes = scenes.ToArray();
 
+            // The current runtime HUD is designed for portrait Android screens.
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
+
             AssetDatabase.SaveAssets();
-            Debug.Log("[Apptya Kingdom] Starter scene created and added to Build Settings; existing scene entries were preserved.");
+            Debug.Log("[Apptya Kingdom] Starter scene created, enabled in Build Settings, and portrait orientation configured; existing scene entries were preserved.");
             EditorUtility.DisplayDialog(
                 "Apptya Kingdom",
-                "Starter scene created and enabled in Build Settings. Other scene entries were preserved. This is a gameplay blockout, not final art.",
+                "Starter scene created and enabled in Build Settings. Portrait orientation configured; other scene entries were preserved. This is a gameplay blockout, not final art.",
                 "OK");
         }
     }
