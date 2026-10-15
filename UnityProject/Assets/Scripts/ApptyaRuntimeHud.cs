@@ -118,7 +118,7 @@ namespace ApptyaKingdom
             if (state == null || state.Data == null) return;
             selectedBuildingKey = key;
             selectedBuildingName = displayName;
-            if (key == "enemy")
+            if (state.IsUpgradeActive(key))\n            {\n                Say(displayName + " • Upgrade in progress: " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s remaining.");\n                return;\n            }\n            if (key == "enemy")
             {
                 Say(displayName + " • Enemy level " + state.Data.enemyLevel + " • Enemy power " + state.EnemyPower() + ". Train guards and upgrade before attacking.");
                 return;
@@ -147,7 +147,7 @@ namespace ApptyaKingdom
                 "  QUARRY " + d.quarryLevel + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions + "\n" + ApptyaGameState.Instance.TutorialObjective();
         }
 
-        void ShowBattleResult(string result)
+        string UpgradeStatus(string key, string label)\n        {\n            var state = ApptyaGameState.Instance;\n            return state.IsUpgradeActive(key) ? label + " " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s" : label + " READY";\n        }\n\n        void ShowBattleResult(string result)
         {
             Say(result);
             var old = GameObject.Find("Battle Result Overlay");
