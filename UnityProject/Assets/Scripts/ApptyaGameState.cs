@@ -149,7 +149,7 @@ namespace ApptyaKingdom {
    Data.quarryLevel=Mathf.Clamp(Data.quarryLevel,1,5);
    Data.guards=Mathf.Clamp(Data.guards,0,Data.barracksLevel*5);
    Data.day=Mathf.Clamp(Data.day,1,1000000);Data.enemyLevel=Mathf.Clamp(Data.enemyLevel,1,100000);
-   Data.victories=Mathf.Max(0,Data.victories);Data.defeats=Mathf.Max(0,Data.defeats);
+   Data.victories=Mathf.Clamp(Data.victories,0,1000000);Data.defeats=Mathf.Clamp(Data.defeats,0,1000000);
    Data.exploredRegions=Mathf.Clamp(Data.exploredRegions,0,1000000);
    Data.keepUpgradeRemaining=SanitizeTimer(Data.keepUpgradeRemaining);
    Data.lumberUpgradeRemaining=SanitizeTimer(Data.lumberUpgradeRemaining);Data.farmUpgradeRemaining=SanitizeTimer(Data.farmUpgradeRemaining);Data.barracksUpgradeRemaining=SanitizeTimer(Data.barracksUpgradeRemaining);Data.quarryUpgradeRemaining=SanitizeTimer(Data.quarryUpgradeRemaining);
