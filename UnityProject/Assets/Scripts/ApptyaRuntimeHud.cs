@@ -160,6 +160,7 @@ namespace ApptyaKingdom
         string UpgradeStatus(string key, string label)
         {
             var state = ApptyaGameState.Instance;
+            if (state.GetBuildingLevel(key) >= 5) return label + " • MAX";
             return state.IsUpgradeActive(key) ? label + " • " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s" : label + " • IDLE";
         }
 
