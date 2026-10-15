@@ -151,6 +151,15 @@ namespace ApptyaKingdom
                         namedObjects.Add(child.name, child.gameObject);
             }
             GameObject found;
+            if (namedObjects.TryGetValue(name, out found) && found != null) return found;
+
+            // The procedural scene builder and this visual component can start in either
+            // order. If the first lookup happened before a building was created, refresh
+            // the cache so a later state change can still find that building.
+            var all = cachedRoot.GetComponentsInChildren<Transform>(true);
+            foreach (var child in all)
+                if (!namedObjects.ContainsKey(child.name))
+                    namedObjects.Add(child.name, child.gameObject);
             return namedObjects.TryGetValue(name, out found) ? found : null;
         }
     }
