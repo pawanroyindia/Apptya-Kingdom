@@ -112,11 +112,11 @@ namespace ApptyaKingdom
 
             GridButton(contentObject.transform, "Gather wood +25", () => { var state = ApptyaGameState.Instance; Say(state != null && state.Gather("wood", 25) ? "Lumber Camp delivered +25 wood." : "Could not gather wood. Game state is unavailable."); });
             GridButton(contentObject.transform, "Harvest food +30", () => { var state = ApptyaGameState.Instance; Say(state != null && state.Gather("food", 30) ? "Farm delivered +30 food." : "Could not harvest food. Game state is unavailable."); });
-            GridButton(contentObject.transform, "Train guard", () => Say(ApptyaGameState.Instance.TrainGuard() ? "A guard joined the army." : "Need 25 food, 10 gold and free barracks capacity."));
+            GridButton(contentObject.transform, "Train guard", () => { var state = ApptyaGameState.Instance; Say(state == null || state.Data == null ? "Game state is unavailable. Reopen the starter scene." : state.TrainGuard() ? "A guard joined the army." : "Need 25 food, 10 gold and free barracks capacity."); });
             GridButton(contentObject.transform, "Upgrade keep", UpgradeKeep);
-            GridButton(contentObject.transform, "Scout wilds", () => Say(ApptyaGameState.Instance.Scout() ? "Scouts returned with loot." : "Train a guard first."));
-            GridButton(contentObject.transform, "Attack enemy", () => ShowBattleResult(ApptyaGameState.Instance.AttackEnemy()));
-            GridButton(contentObject.transform, "Explore region", () => Say(ApptyaGameState.Instance.ExploreRegion()));
+            GridButton(contentObject.transform, "Scout wilds", () => { var state = ApptyaGameState.Instance; Say(state == null || state.Data == null ? "Game state is unavailable. Reopen the starter scene." : state.Scout() ? "Scouts returned with loot." : "Train a guard first."); });
+            GridButton(contentObject.transform, "Attack enemy", () => { var state = ApptyaGameState.Instance; if (state == null || state.Data == null) { Say("Game state is unavailable. Reopen the starter scene."); return; } ShowBattleResult(state.AttackEnemy()); });
+            GridButton(contentObject.transform, "Explore region", () => { var state = ApptyaGameState.Instance; Say(state == null || state.Data == null ? "Game state is unavailable. Reopen the starter scene." : state.ExploreRegion()); });
             GridButton(contentObject.transform, "Upgrade lumber", () => Upgrade("lumber", "Lumber Camp"));
             GridButton(contentObject.transform, "Upgrade farm", () => Upgrade("farm", "Farmstead"));
             GridButton(contentObject.transform, "Upgrade barracks", () => Upgrade("barracks", "Barracks"));
