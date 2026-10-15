@@ -24,7 +24,7 @@ namespace ApptyaKingdom {
    Data.day++;Save();return true;
   }
   public int GetBuildingLevel(string type){switch(type){case "lumber":return Data.lumberLevel;case "farm":return Data.farmLevel;case "barracks":return Data.barracksLevel;case "quarry":return Data.quarryLevel;default:return 0;}}
-  public bool TrainGuard(){if(Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;Data.guards++;Save();return true;}
+  public bool TrainGuard(){if(Data.guards>=Data.barracksLevel*5||Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;Data.guards++;Save();return true;}
   public bool Scout(){if(Data.guards<1)return false;Data.guards--;Data.gold+=35;Data.stone+=20;Data.day++;Save();return true;}
  }
 }
