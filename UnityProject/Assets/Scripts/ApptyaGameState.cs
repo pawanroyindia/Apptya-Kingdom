@@ -5,6 +5,7 @@ namespace ApptyaKingdom {
   public int wood=120, food=150, stone=80, gold=100, keepLevel=1, guards=0, day=1;
   public int lumberLevel=1, farmLevel=1, barracksLevel=1, quarryLevel=1;
   public int enemyLevel=1, victories=0, defeats=0, exploredRegions=0;
+  public int combatResearch=0, economyResearch=0, scoutingResearch=0;
   public bool rewardFirstVictoryClaimed=false, rewardExplorerClaimed=false, rewardKeepClaimed=false;
   public bool tutorialGathered=false, tutorialUpgraded=false, tutorialTrained=false, tutorialBattled=false;
   public int saveVersion=3;
@@ -34,7 +35,8 @@ namespace ApptyaKingdom {
    TickBuildingUpgrade("barracks",ref Data.barracksUpgradeActive,ref Data.barracksUpgradeRemaining,ref timerChanged);
    TickBuildingUpgrade("quarry",ref Data.quarryUpgradeActive,ref Data.quarryUpgradeRemaining,ref timerChanged);
    productionClock+=Time.deltaTime;
-   if(productionClock>=30f){productionClock-=30f;Data.wood=AddResourceSafely(Data.wood,5*Data.lumberLevel);Data.food=AddResourceSafely(Data.food,6*Data.farmLevel);Data.stone=AddResourceSafely(Data.stone,3*Data.quarryLevel);Data.gold=AddResourceSafely(Data.gold,2*Data.keepLevel);Save();}
+   if(productionClock>=30f){productionClock-=30f;Data.wood=AddResourceSafely(Data.wood,5*Data.lumberLevel);Data.food=AddResourceSafely(Data.food,6*Data.farmLevel);Data.stone=AddResourceSafely(Data.stone,3*Data.quarryLevel);Data.gold=AddResourceSafely(Data.gold,2*Data.keepLevel);
+    if(Data.economyResearch>0){int bonus=Data.economyResearch;Data.wood=AddResourceSafely(Data.wood,bonus);Data.food=AddResourceSafely(Data.food,bonus);Data.stone=AddResourceSafely(Data.stone,bonus);}Save();}
    if(anyUpgrade && timerChanged)
    {
     upgradeUiClock+=Time.deltaTime;upgradeSaveClock+=Time.deltaTime;
@@ -155,6 +157,7 @@ namespace ApptyaKingdom {
    Data.day=Mathf.Clamp(Data.day,1,1000000);Data.enemyLevel=Mathf.Clamp(Data.enemyLevel,1,100000);
    Data.victories=Mathf.Clamp(Data.victories,0,1000000);Data.defeats=Mathf.Clamp(Data.defeats,0,1000000);
    Data.exploredRegions=Mathf.Clamp(Data.exploredRegions,0,1000000);
+   Data.combatResearch=Mathf.Clamp(Data.combatResearch,0,5);Data.economyResearch=Mathf.Clamp(Data.economyResearch,0,5);Data.scoutingResearch=Mathf.Clamp(Data.scoutingResearch,0,5);
    Data.keepUpgradeRemaining=SanitizeTimer(Data.keepUpgradeRemaining);
    Data.lumberUpgradeRemaining=SanitizeTimer(Data.lumberUpgradeRemaining);Data.farmUpgradeRemaining=SanitizeTimer(Data.farmUpgradeRemaining);Data.barracksUpgradeRemaining=SanitizeTimer(Data.barracksUpgradeRemaining);Data.quarryUpgradeRemaining=SanitizeTimer(Data.quarryUpgradeRemaining);
    // Finish upgrades that expired while the app was suspended instead of silently cancelling them.
@@ -213,9 +216,28 @@ namespace ApptyaKingdom {
   public bool UpgradeBuilding(string type){return StartBuildingUpgrade(type);}
   public int GetBuildingLevel(string type){if(Data==null)return 0;switch(type){case "lumber":return Data.lumberLevel;case "farm":return Data.farmLevel;case "barracks":return Data.barracksLevel;case "quarry":return Data.quarryLevel;default:return 0;}}
   public bool TrainGuard(){if(Data==null||Data.guards>=Data.barracksLevel*5||Data.food<25||Data.gold<10)return false;Data.food-=25;Data.gold-=10;Data.guards++;Data.tutorialTrained=true;Save();return true;}
-  public int ArmyPower(){return Data==null?0:Data.guards*10+Data.barracksLevel*4+Data.keepLevel*3;}
+  public string Research(string type)
+  {
+   if(Data==null)return "Game state is not initialized.";
+   int level;string label;
+   switch(type)
+   {
+    case "combat":level=Data.combatResearch;label="Combat Drills";break;
+    case "economy":level=Data.economyResearch;label="Efficient Production";break;
+    case "scouting":level=Data.scoutingResearch;label="Cartography";break;
+    default:return "Unknown research.";
+   }
+   if(level>=5)return label+" is already at maximum level 5.";
+   int woodCost=60*(level+1),stoneCost=40*(level+1),goldCost=25*(level+1);
+   if(Data.wood<woodCost||Data.stone<stoneCost||Data.gold<goldCost)
+    return "Research needs "+woodCost+" wood, "+stoneCost+" stone and "+goldCost+" gold.";
+   Data.wood-=woodCost;Data.stone-=stoneCost;Data.gold-=goldCost;
+   switch(type){case "combat":Data.combatResearch++;break;case "economy":Data.economyResearch++;break;case "scouting":Data.scoutingResearch++;break;}
+   Save();return label+" researched to level "+(level+1)+".";
+  }
+  public int ArmyPower(){return Data==null?0:Data.guards*(10+Data.combatResearch*2)+Data.barracksLevel*4+Data.keepLevel*3;}
   public int EnemyPower(){return Data==null?0:10+Data.enemyLevel*7;}
-  public string ExploreRegion(){if(Data==null)return "Game state is not initialized.";if(Data.guards<1)return "Train at least one guard to explore.";Data.guards--;Data.exploredRegions=Mathf.Min(1000000,Data.exploredRegions+1);Data.day=Mathf.Min(1000000,Data.day+1);int reward=20+Data.exploredRegions*5;Data.wood=AddResourceSafely(Data.wood,reward);Data.stone=AddResourceSafely(Data.stone,10+Data.exploredRegions*2);Save();return "Region explored! Found "+reward+" wood and "+(10+Data.exploredRegions*2)+" stone. One guard was assigned to the expedition.";}
+  public string ExploreRegion(){if(Data==null)return "Game state is not initialized.";if(Data.guards<1)return "Train at least one guard to explore.";Data.guards--;Data.exploredRegions=Mathf.Min(1000000,Data.exploredRegions+1);Data.day=Mathf.Min(1000000,Data.day+1);int reward=20+Data.exploredRegions*5+Data.scoutingResearch*10;Data.wood=AddResourceSafely(Data.wood,reward);Data.stone=AddResourceSafely(Data.stone,10+Data.exploredRegions*2);Save();return "Region explored! Found "+reward+" wood and "+(10+Data.exploredRegions*2)+" stone. One guard was assigned to the expedition.";}
   public string AttackEnemy(){if(Data==null)return "Game state is not initialized.";if(Data.guards<1)return "Train guards before attacking.";int army=ArmyPower(),enemy=EnemyPower();Data.day=Mathf.Min(1000000,Data.day+1);if(army>=enemy){Data.tutorialBattled=true;int lost=Mathf.Min(Data.guards,Mathf.Max(0,enemy/45));Data.guards-=lost;int wood=35+Data.enemyLevel*10,stone=20+Data.enemyLevel*5,gold=25+Data.enemyLevel*8;Data.wood=AddResourceSafely(Data.wood,wood);Data.stone=AddResourceSafely(Data.stone,stone);Data.gold=AddResourceSafely(Data.gold,gold);Data.victories=Mathf.Min(1000000,Data.victories+1);Data.enemyLevel=Mathf.Min(100000,Data.enemyLevel+1);Save();return "VICTORY! Power "+army+" vs "+enemy+". Lost "+lost+" guards. Loot: "+wood+" wood, "+stone+" stone, "+gold+" gold.";}else{int lost=Mathf.Min(Data.guards,Mathf.Max(1,Mathf.CeilToInt((enemy-army)/18f)));Data.guards-=lost;Data.food=Mathf.Max(0,Data.food-15*lost);Data.defeats=Mathf.Min(1000000,Data.defeats+1);Save();return "DEFEAT. Power "+army+" vs "+enemy+". Lost "+lost+" guards and "+(15*lost)+" food. Train and upgrade before retrying.";}}
   public int TutorialStep(){if(Data==null)return 0;if(!Data.tutorialGathered)return 0;if(!Data.tutorialUpgraded)return 1;if(!Data.tutorialTrained)return 2;if(!Data.tutorialBattled)return 3;return 4;}
   public string TutorialObjective(){if(Data==null)return "Game state is not initialized.";switch(TutorialStep()){case 0:return "STEP 1/4 — Gather wood or food to prepare your kingdom.";case 1:return "STEP 2/4 — Upgrade the Keep or a resource building.";case 2:return "STEP 3/4 — Train at least one guard in the Barracks.";case 3:return "STEP 4/4 — Attack the enemy outpost to complete the first campaign loop.";default:return "TUTORIAL COMPLETE — Gather, build, train and fight. Expand your kingdom!";}}
@@ -237,6 +259,6 @@ namespace ApptyaKingdom {
     default:return "Unknown achievement.";
    }
   }
-  public bool Scout(){if(Data==null||Data.guards<1)return false;Data.guards--;Data.gold=AddResourceSafely(Data.gold,35);Data.stone=AddResourceSafely(Data.stone,20);Data.day=Mathf.Min(1000000,Data.day+1);Save();return true;}
+  public bool Scout(){if(Data==null||Data.guards<1)return false;Data.guards--;Data.gold=AddResourceSafely(Data.gold,35+Data.scoutingResearch*5);Data.stone=AddResourceSafely(Data.stone,20+Data.scoutingResearch*3);Data.day=Mathf.Min(1000000,Data.day+1);Save();return true;}
  }
 }
