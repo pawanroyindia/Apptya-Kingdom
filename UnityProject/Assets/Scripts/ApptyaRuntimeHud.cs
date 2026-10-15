@@ -207,7 +207,8 @@ namespace ApptyaKingdom
             if (old) Destroy(old);
             var canvas = FindObjectOfType<Canvas>();
             if (!canvas) return;
-            var overlay = Panel(canvas.transform, "Battle Result Overlay", new Vector2(.06f, .28f),
+            Transform overlayParent = safeArea != null ? safeArea.transform : canvas.transform;
+            var overlay = Panel(overlayParent, "Battle Result Overlay", new Vector2(.06f, .28f),
                 new Vector2(.94f, .72f), Vector2.zero, Vector2.zero);
             var title = TextAt(overlay.transform, "Battle Title", new Vector2(.5f, 1f),
                 new Vector2(0, -48), new Vector2(700, 70), 32, TextAnchor.MiddleCenter);
