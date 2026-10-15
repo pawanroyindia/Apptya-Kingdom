@@ -139,6 +139,14 @@ namespace ApptyaKingdom {
    long elapsedTicks=DateTime.UtcNow.Ticks-savedTicks;
    if(elapsedTicks<=0)return;
    float elapsed=(float)(elapsedTicks/(double)TimeSpan.TicksPerSecond);
+   // Keep offline income bounded to eight hours to limit runaway resource accumulation.
+   int productionIntervals=Mathf.FloorToInt(Mathf.Min(elapsed,28800f)/30f);
+   if(productionIntervals>0){
+    Data.wood+=productionIntervals*5*Data.lumberLevel;
+    Data.food+=productionIntervals*6*Data.farmLevel;
+    Data.stone+=productionIntervals*3*Data.quarryLevel;
+    Data.gold+=productionIntervals*2*Data.keepLevel;
+   }
    if(Data.keepUpgradeActive)Data.keepUpgradeRemaining-=elapsed;
    if(Data.lumberUpgradeActive)Data.lumberUpgradeRemaining-=elapsed;
    if(Data.farmUpgradeActive)Data.farmUpgradeRemaining-=elapsed;
