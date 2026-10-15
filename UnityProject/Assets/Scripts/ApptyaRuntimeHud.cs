@@ -146,6 +146,13 @@ namespace ApptyaKingdom
         {
             if (safeArea == null) return;
             Rect area = Screen.safeArea;
+            // Avoid invalid anchors before display dimensions are initialized.
+            if (Screen.width <= 0 || Screen.height <= 0)
+            {
+                safeArea.anchorMin = Vector2.zero;
+                safeArea.anchorMax = Vector2.one;
+                return;
+            }
             safeArea.anchorMin = new Vector2(area.xMin / Screen.width, area.yMin / Screen.height);
             safeArea.anchorMax = new Vector2(area.xMax / Screen.width, area.yMax / Screen.height);
             safeArea.offsetMin = Vector2.zero;
@@ -202,8 +209,9 @@ namespace ApptyaKingdom
 
         void Refresh()
         {
-            if (stats == null || ApptyaGameState.Instance == null) return;
-            var d = ApptyaGameState.Instance.Data;
+            var state = ApptyaGameState.Instance;
+            if (stats == null || state == null || state.Data == null) return;
+            var d = state.Data;
             stats.text = "APPTYA KINGDOM  |  KEEP " + d.keepLevel + (ApptyaGameState.Instance.IsUpgradeActive("keep") ? " (UP " + Mathf.CeilToInt(ApptyaGameState.Instance.UpgradeTimeRemaining("keep")) + "s)" : "") + "  |  DAY " + d.day + "  |  ENEMY LV " + d.enemyLevel +
                 "\nWOOD " + d.wood + "  FOOD " + d.food + "  STONE " + d.stone + "  GOLD " + d.gold +
                 "\nGUARDS " + d.guards + "/" + (d.barracksLevel * 5) + "  |  ARMY POWER " + ApptyaGameState.Instance.ArmyPower() +
@@ -260,7 +268,13 @@ namespace ApptyaKingdom
                 Say("Tap the enemy outpost first to select it as your target.");
                 return;
             }
-            ShowBattleResult(ApptyaGameState.Instance.AttackEnemy());
+            var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null)
+            {
+                Say("Game state is unavailable. Reopen the starter scene.");
+                return;
+            }
+            ShowBattleResult(state.AttackEnemy());
         }
 
         void CollectFromSelectedBuilding()
@@ -281,8 +295,16 @@ namespace ApptyaKingdom
                     Say(selectedBuildingName + " does not produce a directly collectable resource.");
                     return;
             }
-            ApptyaGameState.Instance.Gather(resource, amount);
-            Say(selectedBuildingName + " delivered +" + amount + " " + resource + ".");
+            var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null)
+            {
+                Say("Game state is unavailable. Reopen the starter scene.");
+                return;
+            }
+            if (state.Gather(resource, amount))
+                Say(selectedBuildingName + " delivered +" + amount + " " + resource + ".");
+            else
+                Say("Could not collect resources. Try again.");
         }
 
         void Say(string message) { if (notice) notice.text = message; }
@@ -290,6 +312,11 @@ namespace ApptyaKingdom
         void UpgradeKeep()
         {
             var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null)
+            {
+                Say("Game state is unavailable. Reopen the starter scene.");
+                return;
+            }
             int level = state.Data.keepLevel;
             if (level >= 10) { Say("Keep is already at maximum level 10."); return; }
             int wood = 80 * level, stone = 45 * level;
@@ -301,6 +328,11 @@ namespace ApptyaKingdom
         void Upgrade(string key, string label)
         {
             var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null)
+            {
+                Say("Game state is unavailable. Reopen the starter scene.");
+                return;
+            }
             int level = state.GetBuildingLevel(key);
             if (level >= 5) { Say(label + " is already at maximum level 5."); return; }
             if (state.IsUpgradeActive(key)) { Say(label + " upgrade already in progress: " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s remaining."); return; }
