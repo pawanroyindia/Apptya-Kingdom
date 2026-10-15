@@ -4,7 +4,8 @@
 - Open the UnityProject folder with Unity 6.0.46f1 or a compatible Unity 6 editor.
 - In Unity Hub, include Android Build Support, Android SDK & NDK Tools, and OpenJDK.
 - Wait for Package Manager and script compilation to finish. Resolve all Console errors before continuing.
-- Use **Apptya Kingdom → Setup Starter Scene** to create the starter scene.\n- Run **Apptya Kingdom → Validate Project** and resolve reported errors; review warnings before gameplay testing.
+- Use **Apptya Kingdom → Setup Starter Scene** to create the starter scene.
+- Run **Apptya Kingdom → Validate Project** and resolve reported errors; review warnings before gameplay testing.
 
 ## Android player settings
 - Switch Build Profile / Build Settings to Android.
