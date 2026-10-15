@@ -160,7 +160,7 @@ namespace ApptyaKingdom
         string UpgradeStatus(string key, string label)
         {
             var state = ApptyaGameState.Instance;
-            return state.IsUpgradeActive(key) ? label + " " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s" : label + " READY";
+            return state.IsUpgradeActive(key) ? label + " • " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s" : label + " • IDLE";
         }
 
         void ShowBattleResult(string result)
@@ -191,6 +191,7 @@ namespace ApptyaKingdom
                 return;
             }
             if (selectedBuildingKey == "keep") { UpgradeKeep(); return; }
+            if (selectedBuildingKey == "enemy") { Say("The enemy outpost cannot be upgraded. Use Attack selected."); return; }
             Upgrade(selectedBuildingKey, selectedBuildingName);
         }
 
