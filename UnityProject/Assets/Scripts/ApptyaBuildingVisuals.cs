@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace ApptyaKingdom
@@ -16,6 +17,7 @@ namespace ApptyaKingdom
         readonly GameObject[][] markers = new GameObject[4][];
         Material goldMat, slateMat, bronzeMat, crimsonMat;
         Transform cachedRoot;
+        Dictionary<string, GameObject> namedObjects;
         readonly GameObject[] guardMarkers = new GameObject[10];
 
         void Start()
@@ -133,10 +135,16 @@ namespace ApptyaKingdom
 
         GameObject FindNamed(string name)
         {
-            var all = cachedRoot.GetComponentsInChildren<Transform>(true);
-            foreach (var child in all)
-                if (child.name == name) return child.gameObject;
-            return null;
+            if (namedObjects == null)
+            {
+                namedObjects = new Dictionary<string, GameObject>();
+                var all = cachedRoot.GetComponentsInChildren<Transform>(true);
+                foreach (var child in all)
+                    if (!namedObjects.ContainsKey(child.name))
+                        namedObjects.Add(child.name, child.gameObject);
+            }
+            GameObject found;
+            return namedObjects.TryGetValue(name, out found) ? found : null;
         }
     }
 }
