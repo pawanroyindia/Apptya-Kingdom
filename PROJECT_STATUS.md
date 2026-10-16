@@ -25,7 +25,9 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Daily reward system with real-world daily reset, a seven-day streak, resource rewards, a seventh-day bonus, duplicate-claim protection, visible reset countdown, and save/load persistence.
 - [x] Sequential campaign progression: each outpost unlocks only after the previous outpost is captured; locked attacks do not consume troops, and the HUD reports progress through the final campaign-complete state.
 - [x] Save normalization removes duplicate Keeps and enforces Barracks troop capacity, including queued-training capacity.
-- [x] Visible construction/outpost reveal effects, water ripples, exploration scout journey and marching guard squad during attacks.
+- [x] Visible construction/outpost reveal effects, finite tree-sway and staggered guard-idle animations, water ripples, exploration scout journey, marching guard squad, and expanding battle impact rings.
+- [x] Improved procedural model details: Keep windows, farmhouse doors, Barracks facade, Academy stained glass, troop helmets/shields, and Royal Captain level-up feedback.
+- [x] Added LAN co-op for one host and one guest: host/join by local IP, validated host-authoritative gameplay actions, shared kingdom snapshots, and client-side prevention of independent production/timer completion. Requires same Wi-Fi and UDP port 24567; public matchmaking is not included.
 - [x] Academy can be upgraded through the normal timed building system; duplicate Academies are rejected and sanitized from malformed saves.
 - [x] Sequential campaign gates now apply to scouting as well as attacks; repeated scouting cannot farm rewards or consume guards.
 
@@ -46,8 +48,8 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [ ] Physical-device installation, touch testing, and performance validation are post-export gates and cannot be claimed before an APK exists.
 
 ## Remaining non-blocking prototype scope
-- The world uses procedural low-poly meshes and a custom SVG app icon, not final production art assets. Sound effects are synthesized prototypes, not authored production audio.
-- The project remains a single-player prototype; multiplayer, authored music/audio, production art/animation, and physical Android device profiling are not implemented/verified.
+- The world still uses procedural low-poly meshes and a custom SVG app icon, not final production art assets. Sound effects and ambient music are synthesized prototypes, not authored production audio.
+- LAN co-op is implemented at source level, but live two-phone networking has not been verified. Internet matchmaking, dedicated servers, account identity, reconnect/session recovery, and anti-cheat are not implemented. Authored music/audio, production art/animation, and physical Android device profiling remain outstanding.
 - Campaign depth is currently limited to ten outposts, escalating enemy army encounters and the implemented prototype economy; there is no multiplayer, authored soundtrack, or production-quality sound design.
-- A successful headless check does not prove Android export, APK installation, or device compatibility.
+- A successful headless check does not prove Android export, APK installation, LAN connectivity between physical phones, or device compatibility.
 - The APK workflow has not been run and no APK has been generated. This is intentional. Do not run the manual APK workflow unless the user explicitly asks after reviewing this checklist.
