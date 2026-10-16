@@ -286,6 +286,20 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 		_add_cone(root, 0.82, 0.72, Vector3(0, 1.12, 0), "#9b4d3d")
 		_add_box(root, Vector3(0.23, 0.5, 0.08), Vector3(0, 0.34, 0.54), "#e2c88a")
 		_add_textured_level_marker(root, level, Vector3(0.42, 1.25, -0.3), "#f5d779")
+	elif kind == "Lumber Camp":
+		_add_box(root, Vector3(1.2, 0.8, 1.0), Vector3(0, 0.42, 0), "#8a6242")
+		_add_cone(root, 0.86, 0.68, Vector3(0, 1.12, 0), "#5d6b4c")
+		for i in range(3):
+			var log := _add_cylinder(root, 0.13, 0.85, Vector3(-0.2 + float(i) * 0.22, 0.18, 0.78), "#67462f")
+			log.rotation_degrees.x = 90
+		_add_textured_level_marker(root, level, Vector3(0.48, 1.25, -0.3), "#f5d779")
+	elif kind == "Quarry":
+		_add_box(root, Vector3(1.25, 0.18, 1.1), Vector3(0, 0.12, 0), "#6a6e6a")
+		_add_sphere(root, Vector3(-0.28, 0.48, -0.1), Vector3(0.45, 0.38, 0.42), "#a3aaa7")
+		_add_sphere(root, Vector3(0.24, 0.4, 0.2), Vector3(0.34, 0.3, 0.32), "#858c89")
+		_add_box(root, Vector3(0.12, 0.72, 0.12), Vector3(0.48, 0.55, -0.3), "#75563c")
+		_add_box(root, Vector3(0.58, 0.14, 0.18), Vector3(0.48, 0.88, -0.3), "#c0c5c2")
+		_add_textured_level_marker(root, level, Vector3(0.48, 1.15, -0.3), "#f5d779")
 	else:
 		_add_box(root, Vector3(0.8, 0.55, 0.8), Vector3(0, 0.32, 0), "#8a6242")
 	return root
