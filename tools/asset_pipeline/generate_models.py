@@ -240,6 +240,10 @@ def building(path,kind):
         add(cube("TowerDoor",(0,-0.54,0.58),(0.26,0.025,0.72),"wood",0.01))
     export_glb(path,objs)
 
+# Export every material's full albedo/normal/roughness map set, including reserve linen.
+for texture_key in PALETTES:
+    make_material(texture_key)
+
 character(os.path.join(OUT,"royal_captain.glb"),True)
 character(os.path.join(OUT,"kingdom_guard.glb"),False)
 building(os.path.join(OUT,"keep.glb"),"keep")
