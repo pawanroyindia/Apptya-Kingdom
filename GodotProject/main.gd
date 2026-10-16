@@ -448,7 +448,7 @@ func _refresh_ui() -> void:
 			elif tiles[selected_tile] == "Keep":
 				production = "Keep produces %d gold and 1 wood per tick" % keep_level
 			elif tiles[selected_tile] == "Academy":
-				production = "Research discount: %d%% on all research costs" % int(minf(0.35, float(tile_levels[selected_tile]) * 0.05) * 100.0)
+				production = "Research discount: %d%% on all research costs" % int(minf(0.25, float(tile_levels[selected_tile]) * 0.05) * 100.0)
 			var upgrade_note := ""
 			if building_upgrade_finish_unix > int(Time.get_unix_time_from_system()) and building_upgrade_tile == selected_tile:
 				upgrade_note = " Building upgrade completes in %ds." % (building_upgrade_finish_unix - int(Time.get_unix_time_from_system()))
@@ -688,7 +688,7 @@ func _build_academy() -> void:
 	tiles[selected_tile] = "Academy"
 	gold -= 120
 	wood -= 45
-	status_message = "Academy built. Each Academy level reduces research costs by 5%, up to 35%."
+	status_message = "Academy built. Each Academy level reduces research costs by 5%, up to 25%."
 	_play_sound("build")
 	_persist_game()
 	_refresh_ui()
@@ -1116,7 +1116,7 @@ func _research(research_type: String) -> void:
 			status_message = "Combat research level %d requires Barracks level %d." % [required_level, required_level]
 			_refresh_ui()
 			return
-	var academy_discount := minf(0.35, float(_get_academy_level()) * 0.05)
+	var academy_discount := minf(0.25, float(_get_academy_level()) * 0.05)
 	var wood_cost := ceili(60 * required_level * (1.0 - academy_discount))
 	var stone_cost := ceili(40 * required_level * (1.0 - academy_discount))
 	var gold_cost := ceili(25 * required_level * (1.0 - academy_discount))
