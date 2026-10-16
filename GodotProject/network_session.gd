@@ -113,6 +113,8 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 	for key in ["gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry"]:
 		if int(snapshot[key]) < 0 or int(snapshot[key]) > 2000000000:
 			return false
+	if int(snapshot["guards"]) != int(snapshot["infantry"]) + int(snapshot["archers"]) + int(snapshot["cavalry"]):
+		return false
 	if int(snapshot["keep_level"]) < 1 or int(snapshot["keep_level"]) > 10 or int(snapshot["hero_level"]) < 1 or int(snapshot["hero_level"]) > 20:
 		return false
 	if not (snapshot["tiles"] is Array) or snapshot["tiles"].size() != 9:
