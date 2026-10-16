@@ -1464,6 +1464,7 @@ func _explore_region() -> void:
 	stone += stone_reward
 	if is_instance_valid(world_view):
 		world_view.play_exploration()
+	_play_sound("scout")
 	status_message = "Region explored! Found %d wood and %d stone. One guard was assigned to the expedition." % [wood_reward, stone_reward]
 	_persist_game()
 	_refresh_ui()
