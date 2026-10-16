@@ -628,6 +628,7 @@ func play_attack(target_index: int, victory: bool) -> void:
 				_add_cylinder(soldier_model, 0.035, 0.82, Vector3(0.37, 0.55, 0), "#8a6748")
 				_add_cone(soldier_model, 0.065, 0.2, Vector3(0.37, 1.02, 0), "#cbd2d5")
 		add_child(soldier)
+		articulated_rigs.append(rig_data)
 		var destination := target_position + Vector3(lane * 0.55, 0.0, 1.1 + float(int(i / 3)) * 0.4)
 		var march := create_tween()
 		march.tween_property(soldier, "position", destination, 0.68 + float(i) * 0.055).set_delay(float(i) * 0.045).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
