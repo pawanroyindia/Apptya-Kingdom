@@ -276,12 +276,21 @@ namespace ApptyaKingdom
             stats.text = "APPTYA KINGDOM  |  KEEP " + d.keepLevel + (state.IsUpgradeActive("keep") ? " (UP " + Mathf.CeilToInt(state.UpgradeTimeRemaining("keep")) + "s)" : "") + "  |  DAY " + d.day + "  |  ENEMY LV " + d.enemyLevel +
                 "\nWOOD " + d.wood + "  FOOD " + d.food + "  STONE " + d.stone + "  GOLD " + d.gold +
                 "\nGUARDS " + d.guards + "/" + (d.barracksLevel * 5) + "  |  ARMY POWER " + state.ArmyPower() +
-                "\nRESEARCH: COMBAT " + d.combatResearch + "/5  ECONOMY " + d.economyResearch + "/5  CARTOGRAPHY " + d.scoutingResearch + "/5" +
+                "\nRESEARCH: COMBAT " + d.combatResearch + "/5 (" + ResearchRequirement(d.combatResearch, true) + ")  ECONOMY " + d.economyResearch + "/5 (" + ResearchRequirement(d.economyResearch, false) + ")  CARTOGRAPHY " + d.scoutingResearch + "/5 (" + ResearchRequirement(d.scoutingResearch, false) + ")" +
                 "\nPRODUCTION / 30s: WOOD +" + (5 * d.lumberLevel + d.economyResearch) + "  FOOD +" + (6 * d.farmLevel + d.economyResearch) +
                 "  STONE +" + (3 * d.quarryLevel + d.economyResearch) + "  GOLD +" + (2 * d.keepLevel) +
                 "\nBUILDINGS: " + UpgradeStatus("lumber", "LUMBER " + d.lumberLevel) + "  " + UpgradeStatus("farm", "FARM " + d.farmLevel) + "  " + UpgradeStatus("barracks", "BARRACKS " + d.barracksLevel) +
                 "  " + UpgradeStatus("quarry", "QUARRY " + d.quarryLevel) + "\nBATTLES: WINS " + d.victories + "  LOSSES " + d.defeats + "  REGIONS " + d.exploredRegions + "\n" + state.TutorialObjective();
             UpdateSelectionInfo();
+        }
+
+        string ResearchRequirement(int currentLevel, bool combat)
+        {
+            if (currentLevel >= 5) return "MAX";
+            int requiredLevel = currentLevel + 1;
+            return combat
+                ? "next needs Keep " + requiredLevel + " + Barracks " + requiredLevel
+                : "next needs Keep " + requiredLevel;
         }
 
         string UpgradeStatus(string key, string label)
