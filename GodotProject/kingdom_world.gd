@@ -535,6 +535,21 @@ func _rebuild_outposts() -> void:
 			_add_cone(root, 0.22, 0.36, Vector3(side * 0.55, 1.62, -0.48), "#504b46")
 		_add_box(root, Vector3(0.07, 1.1, 0.07), Vector3(0.25, 1.45, 0.3), "#5e4935")
 		_add_box(root, Vector3(0.55, 0.38, 0.06), Vector3(0.52, 1.63, 0.3), banner_color)
+		# Each campaign region has a distinct enemy doctrine silhouette, so scouting identifies the threat visually.
+		match posmod(i, 3):
+			0:
+				_add_box(root, Vector3(1.9, 0.16, 0.22), Vector3(0, 0.9, -0.78), "#625f58")
+				_add_box(root, Vector3(0.22, 1.05, 0.22), Vector3(-0.78, 0.88, 0.42), "#a49c89")
+				_add_box(root, Vector3(0.22, 1.05, 0.22), Vector3(0.78, 0.88, 0.42), "#a49c89")
+			1:
+				_add_box(root, Vector3(1.05, 0.16, 0.9), Vector3(0, 1.0, -0.15), "#8b6a49")
+				_add_box(root, Vector3(0.12, 1.35, 0.12), Vector3(-0.36, 1.0, -0.15), "#5e4935")
+				_add_box(root, Vector3(0.12, 1.35, 0.12), Vector3(0.36, 1.0, -0.15), "#5e4935")
+				_add_cylinder(root, 0.035, 0.8, Vector3(0.0, 1.6, 0.35), "#bca46e")
+			2:
+				_add_cone(root, 0.62, 0.78, Vector3(-0.48, 0.62, 0.62), "#8d5540")
+				_add_cone(root, 0.48, 0.62, Vector3(0.48, 0.52, 0.62), "#7c4838")
+				_add_box(root, Vector3(0.72, 0.12, 0.12), Vector3(0, 0.18, 0.88), "#67462f")
 		if i == selected_outpost:
 			var target_ring := _add_cylinder(root, 1.45, 0.045, Vector3(0, 0.08, 0), "#f1d38a")
 			var pulse := create_tween().set_loops(3)
