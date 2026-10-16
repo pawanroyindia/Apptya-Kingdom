@@ -751,6 +751,16 @@ func _run_tests() -> void:
 	if archer_counter["chance"] <= cavalry_vs_fort["chance"]:
 		_fail("The Fortified Hold enemy doctrine did not reward the correct troop counter.")
 		return
+	var cavalry_counter_vs_bow: Dictionary = combat_rules.resolve_outpost(0, 0, 3, 0, 0, 0, 1, 1, 1, 1, true)
+	var infantry_vs_bow: Dictionary = combat_rules.resolve_outpost(3, 0, 0, 0, 0, 0, 1, 1, 1, 1, true)
+	if cavalry_counter_vs_bow["chance"] <= infantry_vs_bow["chance"]:
+		_fail("The Longbow Nest enemy doctrine did not reward the correct troop counter.")
+		return
+	var infantry_counter_vs_mounted: Dictionary = combat_rules.resolve_outpost(3, 0, 0, 0, 0, 0, 1, 1, 1, 2, true)
+	var archers_vs_mounted: Dictionary = combat_rules.resolve_outpost(0, 3, 0, 0, 0, 0, 1, 1, 1, 2, true)
+	if infantry_counter_vs_mounted["chance"] <= archers_vs_mounted["chance"]:
+		_fail("The Mounted Raiders enemy doctrine did not reward the correct troop counter.")
+		return
 	var army_battle: Dictionary = combat_rules.resolve_enemy_army(100, 0, 0, 100, 5, 20, 10, 5, 1)
 	if army_battle["chance"] < 90 or army_battle["loss_losses"] > 100:
 		_fail("Combat director did not scale an overwhelming army advantage or bound casualties.")
