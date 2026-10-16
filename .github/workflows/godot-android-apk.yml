@@ -1,7 +1,7 @@
 name: Godot Android APK
 
 on:
-  # One-time approved build trigger; remove the push trigger after this run completes.
+  # Build and verify the debug APK whenever Android export configuration changes.
   push:
     branches: [main]
     paths:
@@ -90,15 +90,15 @@ jobs:
 
       - name: Verify APK file and archive
         run: |
-          test -s GodotProject/build/Android/ApptyaKingdom.apk
-          unzip -t GodotProject/build/Android/ApptyaKingdom.apk
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose GodotProject/build/Android/ApptyaKingdom.apk
+          test -s GodotProject/build/ApptyaKingdom.apk
+          unzip -t GodotProject/build/ApptyaKingdom.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose GodotProject/build/ApptyaKingdom.apk
 
       - name: Upload APK
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: apptya-kingdom-godot-apk
-          path: GodotProject/build/Android/ApptyaKingdom.apk
+          path: GodotProject/build/ApptyaKingdom.apk
           if-no-files-found: warn
           retention-days: 14
