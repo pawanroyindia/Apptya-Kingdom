@@ -4,6 +4,8 @@ var building_nodes: Array[Node3D] = []
 var outpost_nodes: Array[Node3D] = []
 var guard_nodes: Array[Node3D] = []
 var selected_outpost := 0
+var selected_tile_index := 4
+var tile_highlight: Node3D
 var current_tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
 var current_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 var current_keep_level := 1
@@ -18,24 +20,41 @@ func _ready() -> void:
 	_rebuild_outposts()
 	_rebuild_guards()
 
-func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, defeated: PackedInt32Array, target: int) -> void:
-	current_tiles.clear()
+func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, defeated: PackedInt32Array, target: int, selected_tile: int) -> void:
+	var next_tiles: Array[String] = []
 	for tile in tile_data:
-		current_tiles.append(str(tile))
-	if current_tiles.size() != 9:
-		current_tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
-	current_levels = level_data.duplicate()
-	if current_levels.size() != 9:
-		current_levels = PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
-	current_keep_level = clampi(keep_level, 1, 99)
-	current_guards = maxi(guards, 0)
-	current_outposts = defeated.duplicate()
-	if current_outposts.size() != 3:
-		current_outposts = PackedInt32Array([0, 0, 0])
-	selected_outpost = clampi(target, 0, 2)
-	_rebuild_buildings()
-	_rebuild_outposts()
-	_rebuild_guards()
+		next_tiles.append(str(tile))
+	if next_tiles.size() != 9:
+		next_tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
+	var next_levels := level_data.duplicate()
+	if next_levels.size() != 9:
+		next_levels = PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
+	var next_outposts := defeated.duplicate()
+	if next_outposts.size() != 3:
+		next_outposts = PackedInt32Array([0, 0, 0])
+	var next_keep_level := clampi(keep_level, 1, 99)
+	var next_guards := maxi(guards, 0)
+	var next_target := clampi(target, 0, 2)
+	var next_selected_tile := clampi(selected_tile, 0, 8)
+	var buildings_changed := current_tiles != next_tiles or current_levels != next_levels or current_keep_level != next_keep_level
+	var outposts_changed := current_outposts != next_outposts or selected_outpost != next_target
+	var guards_changed := current_guards != next_guards
+	var tile_selection_changed := selected_tile_index != next_selected_tile
+	current_tiles = next_tiles
+	current_levels = next_levels
+	current_keep_level = next_keep_level
+	current_guards = next_guards
+	current_outposts = next_outposts
+	selected_outpost = next_target
+	selected_tile_index = next_selected_tile
+	if buildings_changed:
+		_rebuild_buildings()
+	if outposts_changed:
+		_rebuild_outposts()
+	if guards_changed:
+		_rebuild_guards()
+	if tile_selection_changed:
+		_update_tile_highlight()
 
 func _build_environment() -> void:
 	var environment_node := WorldEnvironment.new()
@@ -71,6 +90,13 @@ func _build_terrain() -> void:
 		_add_box(self, Vector3(3.45, 0.08, 3.45), Vector3(x, -0.055, z), tile_colors[i])
 		_add_box(self, Vector3(0.055, 0.025, 3.45), Vector3(x + 1.72, 0.01, z), "#b6a77a")
 		_add_box(self, Vector3(3.45, 0.025, 0.055), Vector3(x, 0.01, z + 1.72), "#b6a77a")
+	tile_highlight = Node3D.new()
+	add_child(tile_highlight)
+	_add_box(tile_highlight, Vector3(3.45, 0.035, 0.07), Vector3(0, 0.03, -1.69), "#f1d38a")
+	_add_box(tile_highlight, Vector3(3.45, 0.035, 0.07), Vector3(0, 0.03, 1.69), "#f1d38a")
+	_add_box(tile_highlight, Vector3(0.07, 0.035, 3.45), Vector3(-1.69, 0.03, 0), "#f1d38a")
+	_add_box(tile_highlight, Vector3(0.07, 0.035, 3.45), Vector3(1.69, 0.03, 0), "#f1d38a")
+	_update_tile_highlight()
 
 	# A river and crossing make the valley readable as a place, not only a menu.
 	_add_box(self, Vector3(1.45, 0.035, 29), Vector3(7.25, -0.04, -1), "#4c9eb5")
@@ -86,6 +112,12 @@ func _build_landmarks() -> void:
 	_add_box(self, Vector3(0.6, 0.035, 11.5), Vector3(0, 0.03, 0), "#c2ae7b")
 	_add_box(self, Vector3(7.8, 0.035, 0.6), Vector3(3.5, 0.035, 2.1), "#c2ae7b")
 	_add_box(self, Vector3(0.55, 0.035, 8.0), Vector3(7.25, 0.035, -4.0), "#c2ae7b")
+
+func _update_tile_highlight() -> void:
+	if is_instance_valid(tile_highlight):
+		var x := float(selected_tile_index % 3 - 1) * 3.7
+		var z := float(int(selected_tile_index / 3) - 1) * 3.7
+		tile_highlight.position = Vector3(x, 0.09, z)
 
 func _rebuild_buildings() -> void:
 	for node in building_nodes:
