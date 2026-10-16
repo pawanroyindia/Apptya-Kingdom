@@ -5,6 +5,9 @@ signal tile_selected(index: int)
 var building_nodes: Array[Node3D] = []
 var outpost_nodes: Array[Node3D] = []
 var guard_nodes: Array[Node3D] = []
+var hero_model: Node3D
+var hero_level_label: Label3D
+var current_hero_level := 1
 var selected_outpost := 0
 var selected_tile_index := 4
 var tile_highlight: Node3D
@@ -37,6 +40,30 @@ func _ready() -> void:
 	_rebuild_buildings()
 	_rebuild_outposts()
 	_rebuild_guards()
+	_build_hero_model()
+
+func set_hero_level(level: int) -> void:
+	current_hero_level = clampi(level, 1, 20)
+	if is_instance_valid(hero_level_label):
+		hero_level_label.text = "ROYAL CAPTAIN • LV %d" % current_hero_level
+
+func _build_hero_model() -> void:
+	hero_model = Node3D.new()
+	hero_model.name = "RoyalCaptain"
+	hero_model.position = Vector3(-1.55, 0.08, 1.8)
+	_add_box(hero_model, Vector3(0.42, 0.62, 0.25), Vector3(0, 0.74, 0), "#c9a84f")
+	_add_capsule(hero_model, Vector3(0, 0.65, 0), "#b48b38")
+	_add_sphere(hero_model, Vector3(0, 1.28, 0), Vector3(0.25, 0.25, 0.25), "#d9b18c")
+	_add_cone(hero_model, 0.28, 0.35, Vector3(0, 1.56, 0), "#e3bd59")
+	_add_box(hero_model, Vector3(0.1, 0.62, 0.1), Vector3(0.31, 0.82, 0), "#cbd2d5")
+	_add_box(hero_model, Vector3(0.36, 0.4, 0.08), Vector3(-0.28, 0.78, 0.06), "#8f3936")
+	hero_level_label = Label3D.new()
+	hero_level_label.text = "ROYAL CAPTAIN • LV %d" % current_hero_level
+	hero_level_label.position = Vector3(0, 1.95, 0)
+	hero_level_label.font_size = 24
+	hero_level_label.modulate = Color("#ffe3a0")
+	hero_model.add_child(hero_level_label)
+	add_child(hero_model)
 
 func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, infantry: int, archers: int, cavalry: int, defeated: PackedInt32Array, scouted: PackedInt32Array, target: int, selected_tile: int) -> void:
 	var next_tiles: Array[String] = []
