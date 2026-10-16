@@ -82,9 +82,9 @@ func _process(delta: float) -> void:
 		if is_instance_valid(left_arm):
 			left_arm.rotation.x = -gait * 0.72 + idle * 0.035
 		if is_instance_valid(right_arm):
-			right_arm.rotation.x = gait * 0.72 + idle * 0.035
+			right_arm.rotation.x = (-1.15 + sin(animation_clock * 16.0) * 0.58) if bool(rig.get("combat", false)) else (gait * 0.72 + idle * 0.035)
 		if is_instance_valid(torso):
-			torso.rotation.z = sin(animation_clock * 1.1 + float(rig.get("offset", 0.0))) * 0.025
+			torso.rotation.z = sin(animation_clock * (16.0 if bool(rig.get("combat", false)) else 1.1) + float(rig.get("offset", 0.0))) * (0.075 if bool(rig.get("combat", false)) else 0.025)
 	if is_instance_valid(hero_model):
 		hero_model.position.y = 0.08 + sin(animation_clock * 1.6) * 0.025
 		hero_model.rotation_degrees.y = sin(animation_clock * 0.42) * 2.0
@@ -597,6 +597,7 @@ func play_attack(target_index: int, victory: bool) -> void:
 	var squad_size := mini(5, maxi(3, current_guards))
 	for i in range(squad_size):
 		var soldier := Node3D.new()
+		soldier.name = "AttackUnit_%02d" % i
 		var lane := float(i % 3) - 1.0
 		soldier.position = Vector3(lane * 0.48, 0.08, 1.0 + float(int(i / 3)) * 0.45)
 		var troop_type := "infantry"
@@ -604,47 +605,49 @@ func play_attack(target_index: int, victory: bool) -> void:
 			troop_type = "archer"
 		elif i >= current_infantry + current_archers:
 			troop_type = "cavalry"
+		var rig_data: Dictionary = {}
 		if troop_type == "cavalry":
 			_add_box(soldier, Vector3(0.55, 0.38, 0.85), Vector3(0, 0.48, 0), "#8c6845")
-			_add_capsule(soldier, Vector3(0, 1.12, 0.05), "#b58b49")
-			_add_sphere(soldier, Vector3(0, 1.75, 0.05), Vector3(0.22, 0.22, 0.22), "#d9b18c")
+			_add_sphere(soldier, Vector3(0, 0.72, -0.38), Vector3(0.26, 0.22, 0.3), "#8c6845")
+			for leg_x in [-0.18, 0.18]:
+				for leg_z in [-0.25, 0.25]:
+					_add_box(soldier, Vector3(0.09, 0.32, 0.09), Vector3(leg_x, 0.2, leg_z), "#6b4b35")
+			var rider := _create_articulated_character("#8c6845", "#b58b49", "#6b4b35", false, 0.66)
+			rider.position = Vector3(0, 0.75, -0.05)
+			soldier.add_child(rider)
+			rig_data = rider.get_meta("rig_data")
 		else:
 			var uniform_color := "#526e9c" if troop_type == "infantry" else "#648d55"
-			_add_capsule(soldier, Vector3(0, 0.55, 0), uniform_color)
-			_add_sphere(soldier, Vector3(0, 1.2, 0), Vector3(0.22, 0.22, 0.22), "#d9b18c")
+			var soldier_model := _create_articulated_character(uniform_color, "#bca46e" if troop_type == "infantry" else "#648d55", "#8f3936" if troop_type == "infantry" else "#435c3a", false, 0.82)
+			soldier.add_child(soldier_model)
+			rig_data = soldier_model.get_meta("rig_data")
 			if troop_type == "infantry":
-				_add_box(soldier, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
-				_add_box(soldier, Vector3(0.34, 0.4, 0.12), Vector3(-0.22, 0.58, 0.08), "#8c6845")
-				_add_box(soldier, Vector3(0.08, 0.08, 0.15), Vector3(-0.22, 0.58, 0.15), "#d8bd76")
+				_add_box(soldier_model, Vector3(0.16, 0.56, 0.07), Vector3(0.35, 0.45, 0), "#cbd2d5")
+				_add_box(soldier_model, Vector3(0.34, 0.42, 0.1), Vector3(-0.3, 0.55, 0.09), "#8c6845")
 			else:
-				_add_cylinder(soldier, 0.035, 0.7, Vector3(0.28, 0.78, 0), "#8a6748")
-				_add_box(soldier, Vector3(0.32, 0.26, 0.12), Vector3(-0.22, 0.65, 0.08), "#b7a16a")
-			_add_cone(soldier, 0.22, 0.18, Vector3(0, 1.39, 0), "#b8bfc4")
+				_add_cylinder(soldier_model, 0.035, 0.82, Vector3(0.37, 0.55, 0), "#8a6748")
+				_add_cone(soldier_model, 0.065, 0.2, Vector3(0.37, 1.02, 0), "#cbd2d5")
 		add_child(soldier)
 		var destination := target_position + Vector3(lane * 0.55, 0.0, 1.1 + float(int(i / 3)) * 0.4)
 		var march := create_tween()
 		march.tween_property(soldier, "position", destination, 0.68 + float(i) * 0.055).set_delay(float(i) * 0.045).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-		march.tween_callback(soldier.queue_free)
-
+		march.tween_callback(_set_rig_combat.bind(rig_data, true))
+		march.tween_interval(0.48)
+		march.tween_callback(_set_rig_combat.bind(rig_data, false))
+		march.tween_callback(_remove_temporary_rig.bind(soldier, rig_data))
 	var projectile := _add_sphere(self, Vector3(0, 1.25, 1.0), Vector3(0.25, 0.25, 0.25), "#f1d38a")
 	var tween := create_tween()
 	tween.tween_property(projectile, "position", target_position + Vector3(0, 1.2, 0), 0.72).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	tween.tween_callback(projectile.queue_free)
 	tween.tween_callback(_show_battle_flash.bind(target_position + Vector3(0, 1.0, 0), victory))
 
-func play_exploration() -> void:
-	var scout := Node3D.new()
-	scout.position = Vector3(0.0, 0.08, 1.2)
-	_add_capsule(scout, Vector3(0, 0.55, 0), "#6c8dbe")
-	_add_sphere(scout, Vector3(0, 1.2, 0), Vector3(0.22, 0.22, 0.22), "#d9b18c")
-	_add_box(scout, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
-	add_child(scout)
-	var destination := Vector3(-10.5, 0.08, -11.5)
-	var journey := create_tween()
-	journey.tween_property(scout, "position", destination, 0.9).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
-	journey.tween_callback(_show_battle_flash.bind(destination + Vector3(0, 1.0, 0), true))
-	journey.tween_callback(scout.queue_free)
+func _set_rig_combat(rig_data: Dictionary, enabled: bool) -> void:
+	rig_data["combat"] = enabled
 
+func _remove_temporary_rig(character: Node3D, rig_data: Dictionary) -> void:
+	articulated_rigs.erase(rig_data)
+	if is_instance_valid(character):
+		character.queue_free()
 func _show_battle_flash(position_value: Vector3, victory: bool) -> void:
 	var flash_color := "#e4d17e" if victory else "#b53d36"
 	var flash := _add_sphere(self, position_value, Vector3(0.2, 0.2, 0.2), flash_color)
