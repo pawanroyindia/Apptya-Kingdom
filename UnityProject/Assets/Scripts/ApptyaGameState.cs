@@ -30,7 +30,8 @@ namespace ApptyaKingdom {
   {
    if(Data==null)return;
    bool timerChanged=false;
-   bool anyUpgrade=Data.keepUpgradeActive||Data.lumberUpgradeActive||Data.farmUpgradeActive||Data.barracksUpgradeActive||Data.quarryUpgradeActive;
+   bool anyUpgrade=Data.keepUpgradeActive||Data.lumberUpgradeActive||Data.farmUpgradeActive||Data.barracksUpgradeActive||Data.quarryUpgradeActive||Data.queuedTroopCount>0;
+   if(Data.queuedTroopCount>0){Data.troopTrainingRemaining-=Time.deltaTime;timerChanged=true;}
    if(Data.keepUpgradeActive){Data.keepUpgradeRemaining-=Time.deltaTime;timerChanged=true;if(Data.keepUpgradeRemaining<=0f)CompleteKeepUpgrade();}
    TickBuildingUpgrade("lumber",ref Data.lumberUpgradeActive,ref Data.lumberUpgradeRemaining,ref timerChanged);
    TickBuildingUpgrade("farm",ref Data.farmUpgradeActive,ref Data.farmUpgradeRemaining,ref timerChanged);
@@ -238,9 +239,7 @@ namespace ApptyaKingdom {
   }
   void TickTroopTraining()
   {
-   if(Data==null||Data.queuedTroopCount<=0)return;
-   Data.troopTrainingRemaining-=Time.deltaTime;
-   if(Data.troopTrainingRemaining>0f)return;
+   if(Data==null||Data.queuedTroopCount<=0||Data.troopTrainingRemaining>0f)return;
    int count=Data.queuedTroopCount;
    switch(Data.queuedTroopType){case "infantry":Data.infantry+=count;break;case "archer":Data.archers+=count;break;case "cavalry":Data.cavalry+=count;break;}
    Data.guards=Data.infantry+Data.archers+Data.cavalry;Data.queuedTroopType="";Data.queuedTroopCount=0;Data.troopTrainingRemaining=0f;Data.tutorialTrained=true;Save();
