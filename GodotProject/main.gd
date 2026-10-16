@@ -1814,15 +1814,21 @@ func _normalize_save_data() -> void:
 		if outpost_defeated[i - 1] != 1:
 			outpost_defeated[i] = 0
 			region_scouted[i] = 0
-	# Keep all persisted timers tied to a valid operation and supported building.
+	# Keep all persisted timers tied to a valid operation and bounded duration.
+	# Legitimate upgrades take 15 seconds; reject corrupt far-future timestamps.
+	var now_unix := int(Time.get_unix_time_from_system())
 	if keep_upgrade_finish_unix <= 0 or keep_level >= 10:
 		keep_upgrade_finish_unix = 0
+	elif keep_upgrade_finish_unix > now_unix + 120:
+		keep_upgrade_finish_unix = now_unix + 15
 	if building_upgrade_finish_unix <= 0 or building_upgrade_tile < 0 or building_upgrade_tile >= tiles.size():
 		building_upgrade_finish_unix = 0
 		building_upgrade_tile = -1
 	elif tiles[building_upgrade_tile] not in ["Farm", "Mine", "Barracks", "Lumber Camp", "Quarry", "Academy"] or tile_levels[building_upgrade_tile] >= 5:
 		building_upgrade_finish_unix = 0
 		building_upgrade_tile = -1
+	elif building_upgrade_finish_unix > now_unix + 120:
+		building_upgrade_finish_unix = now_unix + 15
 	if queued_troop_count <= 0:
 		troop_training_finish_unix = 0
 		queued_troop_type = ""
@@ -1830,6 +1836,9 @@ func _normalize_save_data() -> void:
 		queued_troop_type = ""
 		queued_troop_count = 0
 		troop_training_finish_unix = 0
+	elif troop_training_finish_unix > now_unix + 120:
+		# The longest legal queue is five cavalry at 16 seconds each.
+		troop_training_finish_unix = now_unix + 80
 
 func _apply_offline_production(refresh_after: bool) -> void:
 	var now := int(Time.get_unix_time_from_system())
