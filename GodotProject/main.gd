@@ -951,6 +951,10 @@ func _scout() -> void:
 		status_message = "You need at least 1 guard to scout safely."
 	elif outpost_defeated[selected_outpost] == 1:
 		status_message = "This outpost is already captured. Select another region to explore."
+	elif selected_outpost > 0 and outpost_defeated[selected_outpost - 1] != 1:
+		status_message = "Outpost %d is locked. Capture Outpost %d before scouting it." % [selected_outpost + 1, selected_outpost]
+	elif region_scouted[selected_outpost] == 1:
+		status_message = "This region is already scouted. Choose the next unlocked outpost."
 	else:
 		_remove_troops(1)
 		_award_hero_xp(10)
@@ -958,11 +962,8 @@ func _scout() -> void:
 		gold += reward
 		wood += randi_range(5, 18) + scouting_research * 3
 		day = mini(day + 1, 1000000)
-		if region_scouted[selected_outpost] == 0:
-			region_scouted[selected_outpost] = 1
-			status_message = "Scouting revealed Threat %d at Outpost %d. Found %d gold and supplies." % [outpost_threat[selected_outpost], selected_outpost + 1, reward]
-		else:
-			status_message = "The region is already mapped. Scouting party returned with %d gold and supplies." % reward
+		region_scouted[selected_outpost] = 1
+		status_message = "Scouting revealed Threat %d at Outpost %d. Found %d gold and supplies." % [outpost_threat[selected_outpost], selected_outpost + 1, reward]
 		_award_achievement("scout", "First Scout", 25)
 		_persist_game()
 	_refresh_ui()
