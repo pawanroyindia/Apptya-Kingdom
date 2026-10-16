@@ -589,21 +589,35 @@ func _setup_audio() -> void:
 	sound_player = AudioStreamPlayer.new()
 	sound_player.bus = "Master"
 	add_child(sound_player)
+	# Prefer rendered stereo master WAVs from the asset pipeline; keep a safe offline fallback.
 	sound_streams = {
-		"gather": _make_game_effect("gather"),
-		"build": _make_game_effect("build"),
-		"victory": _make_game_effect("victory"),
-		"defeat": _make_game_effect("defeat"),
-		"train": _make_game_effect("train")
+		"gather": _load_production_audio("gather", _make_game_effect("gather")),
+		"build": _load_production_audio("build", _make_game_effect("build")),
+		"victory": _load_production_audio("victory", _make_game_effect("victory")),
+		"defeat": _load_production_audio("defeat", _make_game_effect("defeat")),
+		"train": _load_production_audio("train", _make_game_effect("train")),
+		"scout": _load_production_audio("scout", _make_game_effect("train"))
 	}
 	music_player = AudioStreamPlayer.new()
 	music_player.bus = "Master"
 	music_player.volume_db = -20.0
 	add_child(music_player)
-	music_stream = _make_ambient_music()
+	var production_music_path := "res://assets/production/audio/kingdom_theme.wav"
+	if ResourceLoader.exists(production_music_path):
+		music_stream = load(production_music_path) as AudioStreamWAV
+	else:
+		music_stream = _make_ambient_music()
 	music_player.stream = music_stream
 	if music_enabled:
 		music_player.play()
+
+func _load_production_audio(stem: String, fallback: AudioStreamWAV) -> AudioStreamWAV:
+	var path := "res://assets/production/audio/%s.wav" % stem
+	if ResourceLoader.exists(path):
+		var rendered := load(path) as AudioStreamWAV
+		if rendered:
+			return rendered
+	return fallback
 
 func _make_tone(frequency: float, duration: float) -> AudioStreamWAV:
 	# Retained as a compact fallback tone for future UI cues.
