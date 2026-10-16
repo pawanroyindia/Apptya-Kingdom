@@ -27,6 +27,21 @@ func _run_tests() -> void:
 	if game.world_view.camera_distance >= initial_distance:
 		_fail("Pinch zoom control did not zoom the camera.")
 		return
+	game.world_view.active_touches = {0: Vector2(100, 100), 1: Vector2(200, 100)}
+	game.world_view.touch_moved = {0: false, 1: false}
+	game.world_view.previous_pinch_distance = 100.0
+	var before_two_finger_zoom: float = game.world_view.camera_distance
+	var two_finger_drag := InputEventScreenDrag.new()
+	two_finger_drag.index = 1
+	two_finger_drag.position = Vector2(220, 100)
+	two_finger_drag.relative = Vector2(20, 0)
+	game.world_view._input(two_finger_drag)
+	if game.world_view.camera_distance >= before_two_finger_zoom:
+		_fail("Two-finger touch pinch did not zoom the 3D camera.")
+		return
+	game.world_view.active_touches.clear()
+	game.world_view.touch_moved.clear()
+	game.world_view.previous_pinch_distance = 0.0
 	game._select_tile(0)
 	var world_view_size: Vector2 = game.world_view.get_viewport().get_visible_rect().size
 	var picked_tile: int = game.world_view._pick_tile(world_view_size * 0.5)
