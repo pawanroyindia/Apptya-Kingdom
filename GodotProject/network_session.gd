@@ -3,7 +3,7 @@ extends Node
 signal status_changed(message: String)
 
 const PORT := 24567
-const MAX_CLIENTS := 2
+const MAX_CLIENTS := 1
 
 var game_root: Node
 var status_message := "Offline"
