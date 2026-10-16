@@ -120,6 +120,9 @@ def gameplay_invariants() -> list[str]:
         if required_rule not in source:
             errors.append(f"ApptyaGameState.cs: troop queue/class rule missing: {required_rule}")
 
+    if 'string composition=" Army: "+Data.infantry+" infantry, "+Data.archers+" archers, "+Data.cavalry+" cavalry."' not in source:
+        errors.append("ApptyaGameState.cs: battle result must report troop-class composition")
+
     # Scout must consume a guard and refuse when no guard is available.
     scout_start = source.find("public bool Scout()")
     if scout_start < 0:
@@ -164,7 +167,7 @@ def gameplay_invariants() -> list[str]:
             errors.append("ApptyaBuildingVisuals.cs: visible guard markers must cover the 25-guard barracks capacity")
         for troop_visual_rule in ("state.Data.infantry", "state.Data.archers", "state.Data.cavalry",
                                   "troopRenderer.sharedMaterial = i < state.Data.infantry",
-                                  "i < state.Data.infantry + state.Data.archers"):
+                                  "i < state.Data.infantry + state.Data.archers", "guardHomePositions[i] = new Vector3", "troopMotionClock * 2.2f", "Quaternion.Euler"):
             if troop_visual_rule not in visuals:
                 errors.append(f"ApptyaBuildingVisuals.cs: class-specific world troop presentation missing: {troop_visual_rule}")
     else:
