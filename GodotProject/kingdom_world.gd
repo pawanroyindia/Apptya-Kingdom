@@ -21,7 +21,10 @@ var mouse_moved := false
 var current_tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
 var current_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 var current_keep_level := 1
-var current_guards := 10
+var current_guards := 4
+var current_infantry := 4
+var current_archers := 0
+var current_cavalry := 0
 var current_outposts := PackedInt32Array([0, 0, 0])
 var current_scouted := PackedInt32Array([0, 0, 0])
 
@@ -33,7 +36,7 @@ func _ready() -> void:
 	_rebuild_outposts()
 	_rebuild_guards()
 
-func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, defeated: PackedInt32Array, scouted: PackedInt32Array, target: int, selected_tile: int) -> void:
+func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, infantry: int, archers: int, cavalry: int, defeated: PackedInt32Array, scouted: PackedInt32Array, target: int, selected_tile: int) -> void:
 	var next_tiles: Array[String] = []
 	for tile in tile_data:
 		next_tiles.append(str(tile))
@@ -50,16 +53,22 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 		next_scouted = PackedInt32Array([0, 0, 0])
 	var next_keep_level := clampi(keep_level, 1, 99)
 	var next_guards := maxi(guards, 0)
+	var next_infantry := maxi(infantry, 0)
+	var next_archers := maxi(archers, 0)
+	var next_cavalry := maxi(cavalry, 0)
 	var next_target := clampi(target, 0, 2)
 	var next_selected_tile := clampi(selected_tile, 0, 8)
 	var buildings_changed := current_tiles != next_tiles or current_levels != next_levels or current_keep_level != next_keep_level
 	var outposts_changed := current_outposts != next_outposts or current_scouted != next_scouted or selected_outpost != next_target
-	var guards_changed := current_guards != next_guards
+	var guards_changed := current_guards != next_guards or current_infantry != next_infantry or current_archers != next_archers or current_cavalry != next_cavalry
 	var tile_selection_changed := selected_tile_index != next_selected_tile
 	current_tiles = next_tiles
 	current_levels = next_levels
 	current_keep_level = next_keep_level
 	current_guards = next_guards
+	current_infantry = next_infantry
+	current_archers = next_archers
+	current_cavalry = next_cavalry
 	current_outposts = next_outposts
 	current_scouted = next_scouted
 	selected_outpost = next_target
