@@ -36,7 +36,7 @@ The workflow `.github/workflows/godot-android-apk.yml` builds a debug APK using 
 3. Run **Run workflow** only after explicit approval to build an APK. Source changes do not trigger APK builds.
 4. Open the completed run and download the `apptya-kingdom-godot-apk` artifact.
 
-The latest headless Godot integration run passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38854421615)), including project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, generated sound effects and looping ambient music, audio preference persistence, daily rewards, Academy timed upgrades and duplicate-save recovery, sequential campaign scouting/attack gates, duplicate-scout prevention, and the 256-mesh budget/stable-refresh checks. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
+The latest headless Godot integration run passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38854578607)), including project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, generated sound effects and looping ambient music, audio preference persistence, daily rewards, Academy timed upgrades and duplicate-save recovery, sequential campaign scouting/attack gates, duplicate-scout prevention, and the 256-mesh budget/stable-refresh checks. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
 
 ## Validation
 
