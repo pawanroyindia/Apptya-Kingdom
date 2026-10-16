@@ -31,6 +31,9 @@ func join_game(address: String) -> Error:
 	if clean_address.is_empty():
 		_set_status("Enter the host's local IP address first.")
 		return ERR_INVALID_PARAMETER
+	if not _is_lan_ipv4(clean_address):
+		_set_status("LAN-only co-op requires a private IPv4 address from the same Wi-Fi network.")
+		return ERR_INVALID_PARAMETER
 	var peer := ENetMultiplayerPeer.new()
 	var result := peer.create_client(clean_address, PORT)
 	if result != OK:
@@ -270,6 +273,16 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 	return true
 
 func _on_peer_connected(peer_id: int) -> void:
+	# Defend the host too: a manually modified client or port-forward must not
+	# turn the LAN-only session into a public-internet server.
+	if multiplayer.is_server():
+		var enet_peer := multiplayer.multiplayer_peer as ENetMultiplayerPeer
+		if enet_peer != null:
+			var remote_peer := enet_peer.get_peer(peer_id)
+			if remote_peer != null and not _is_lan_ipv4(remote_peer.get_remote_address()):
+				remote_peer.close()
+				_set_status("Rejected a non-LAN connection. Use the same Wi-Fi network.")
+				return
 	_set_status("Player %d joined the LAN kingdom." % peer_id)
 	if multiplayer.is_server():
 		call_deferred("_send_snapshot_to_peer", peer_id)
@@ -291,6 +304,22 @@ func _on_connection_failed() -> void:
 func _on_server_disconnected() -> void:
 	disconnect_game()
 	_set_status("Host disconnected. Your local kingdom remains available.")
+
+func _is_lan_ipv4(address: String) -> bool:
+	if not IP.is_valid_ip_address(address) or address.contains(":"):
+		return false
+	var octets := address.split(".")
+	if octets.size() != 4:
+		return false
+	for octet_text in octets:
+		if not octet_text.is_valid_int():
+			return false
+		var octet := int(octet_text)
+		if octet < 0 or octet > 255:
+			return false
+	var first := int(octets[0])
+	var second := int(octets[1])
+	return first == 10 or first == 127 or (first == 172 and second >= 16 and second <= 31) or (first == 192 and second == 168) or (first == 169 and second == 254)
 
 func _set_status(message: String) -> void:
 	status_message = message
