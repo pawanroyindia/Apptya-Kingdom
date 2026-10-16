@@ -40,6 +40,7 @@ var surface_noise: NoiseTexture2D
 var animated_flags: Array[MeshInstance3D] = []
 var animated_trees: Array[Node3D] = []
 var animated_guards: Array[Node3D] = []
+var articulated_rigs: Array[Dictionary] = []
 var animation_clock := 0.0
 
 func _ready() -> void:
@@ -60,9 +61,29 @@ func _process(delta: float) -> void:
 			animated_trees[i].rotation_degrees.z = sin(animation_clock * 0.65 + float(i) * 0.47) * 2.0
 	for i in range(animated_guards.size()):
 		if is_instance_valid(animated_guards[i]):
-			animated_guards[i].position.y = 0.08 + sin(animation_clock * 1.8 + float(i) * 0.8) * 0.035
+			animated_guards[i].position.y = 0.08 + sin(animation_clock * 1.8 + float(i) * 0.8) * 0.025
+	for rig_index in range(articulated_rigs.size()):
+		var rig: Dictionary = articulated_rigs[rig_index]
+		var phase: float = animation_clock * float(rig.get("speed", 5.2)) + float(rig.get("offset", 0.0))
+		var gait: float = sin(phase) * float(rig.get("walk", 0.0))
+		var idle: float = sin(animation_clock * 1.45 + float(rig.get("offset", 0.0)))
+		var left_leg: Node3D = rig.get("left_leg")
+		var right_leg: Node3D = rig.get("right_leg")
+		var left_arm: Node3D = rig.get("left_arm")
+		var right_arm: Node3D = rig.get("right_arm")
+		var torso: Node3D = rig.get("torso")
+		if is_instance_valid(left_leg):
+			left_leg.rotation.x = gait
+		if is_instance_valid(right_leg):
+			right_leg.rotation.x = -gait
+		if is_instance_valid(left_arm):
+			left_arm.rotation.x = -gait * 0.72 + idle * 0.035
+		if is_instance_valid(right_arm):
+			right_arm.rotation.x = gait * 0.72 + idle * 0.035
+		if is_instance_valid(torso):
+			torso.rotation.z = sin(animation_clock * 1.1 + float(rig.get("offset", 0.0))) * 0.025
 	if is_instance_valid(hero_model):
-		hero_model.position.y = 0.08 + sin(animation_clock * 1.6) * 0.035
+		hero_model.position.y = 0.08 + sin(animation_clock * 1.6) * 0.025
 		hero_model.rotation_degrees.y = sin(animation_clock * 0.42) * 2.0
 	for i in range(animated_flags.size() - 1, -1, -1):
 		var flag := animated_flags[i]
@@ -96,23 +117,78 @@ func _build_hero_model() -> void:
 	hero_model = Node3D.new()
 	hero_model.name = "RoyalCaptain"
 	hero_model.position = Vector3(-1.55, 0.08, 1.8)
-	_add_box(hero_model, Vector3(0.42, 0.62, 0.25), Vector3(0, 0.74, 0), "#c9a84f")
-	_add_capsule(hero_model, Vector3(0, 0.65, 0), "#b48b38")
-	_add_sphere(hero_model, Vector3(0, 1.28, 0), Vector3(0.25, 0.25, 0.25), "#d9b18c")
-	_add_cone(hero_model, 0.28, 0.35, Vector3(0, 1.56, 0), "#e3bd59")
-	_add_box(hero_model, Vector3(0.1, 0.62, 0.1), Vector3(0.31, 0.82, 0), "#cbd2d5")
-	_add_box(hero_model, Vector3(0.36, 0.4, 0.08), Vector3(-0.28, 0.78, 0.06), "#8f3936")
-	_add_box(hero_model, Vector3(0.34, 0.16, 0.08), Vector3(0, 0.56, 0.16), "#8f3936")
-	_add_box(hero_model, Vector3(0.16, 0.08, 0.08), Vector3(0, 0.83, 0.16), "#f1d38a")
-	_add_box(hero_model, Vector3(0.12, 0.16, 0.05), Vector3(-0.08, 1.3, 0.21), "#f1d38a")
+	var rig := _create_articulated_character("#c9a84f", "#b48b38", "#8f3936", true, 1.0)
+	for child in rig.get_children():
+		rig.remove_child(child)
+		hero_model.add_child(child)
+	var rig_data: Dictionary = rig.get_meta("rig_data")
+	rig.free()
+	articulated_rigs.append(rig_data)
 	hero_level_label = Label3D.new()
 	hero_level_label.text = "ROYAL CAPTAIN • LV %d" % current_hero_level
-	hero_level_label.position = Vector3(0, 1.95, 0)
+	hero_level_label.position = Vector3(0, 2.05, 0)
 	hero_level_label.font_size = 24
 	hero_level_label.modulate = Color("#ffe3a0")
 	hero_model.add_child(hero_level_label)
 	add_child(hero_model)
 
+func _create_articulated_character(uniform_color: String, armor_color: String, cloth_color: String, royal: bool, size_scale: float = 1.0) -> Node3D:
+	var character := Node3D.new()
+	character.scale = Vector3.ONE * size_scale
+	var torso := Node3D.new()
+	torso.name = "TorsoPivot"
+	torso.position = Vector3(0, 0.83, 0)
+	character.add_child(torso)
+	_add_capsule(torso, Vector3(0, 0.0, 0), uniform_color)
+	_add_box(torso, Vector3(0.43, 0.48, 0.3), Vector3(0, 0.0, 0), armor_color)
+	_add_box(torso, Vector3(0.46, 0.09, 0.32), Vector3(0, -0.21, 0), "#5b392b")
+	_add_box(torso, Vector3(0.48, 0.065, 0.34), Vector3(0, -0.17, 0), "#e4c77f" if royal else "#bca46e")
+	_add_sphere(torso, Vector3(0, -0.05, 0.17), Vector3(0.09, 0.08, 0.035), "#f1d38a")
+	var left_arm := Node3D.new()
+	left_arm.name = "LeftArmJoint"
+	left_arm.position = Vector3(-0.29, 0.15, 0)
+	torso.add_child(left_arm)
+	_add_capsule(left_arm, Vector3(0, -0.2, 0), armor_color)
+	_add_sphere(left_arm, Vector3(0, -0.4, 0.015), Vector3(0.095, 0.09, 0.09), "#d9b18c")
+	var right_arm := Node3D.new()
+	right_arm.name = "RightArmJoint"
+	right_arm.position = Vector3(0.29, 0.15, 0)
+	torso.add_child(right_arm)
+	_add_capsule(right_arm, Vector3(0, -0.2, 0), armor_color)
+	_add_sphere(right_arm, Vector3(0, -0.4, 0.015), Vector3(0.095, 0.09, 0.09), "#d9b18c")
+	_add_box(right_arm, Vector3(0.07, 0.25, 0.07), Vector3(0.0, -0.45, 0.0), "#bca46e")
+	_add_box(right_arm, Vector3(0.055, 0.5, 0.055), Vector3(0.0, -0.67, 0.0), "#cbd2d5")
+	_add_cone(right_arm, 0.095, 0.16, Vector3(0.0, -0.92, 0.0), "#e4c77f")
+	_add_box(torso, Vector3(0.42, 0.34, 0.055), Vector3(-0.25, 0.0, 0.2), cloth_color)
+	_add_box(torso, Vector3(0.42, 0.34, 0.055), Vector3(0.25, 0.0, 0.2), cloth_color)
+	var head := Node3D.new()
+	head.name = "HeadPivot"
+	head.position = Vector3(0, 0.38, 0)
+	torso.add_child(head)
+	_add_sphere(head, Vector3(0, 0.0, 0), Vector3(0.205, 0.235, 0.19), "#d9b18c")
+	_add_sphere(head, Vector3(-0.075, 0.015, 0.17), Vector3(0.026, 0.035, 0.018), "#382c27")
+	_add_sphere(head, Vector3(0.075, 0.015, 0.17), Vector3(0.026, 0.035, 0.018), "#382c27")
+	_add_box(head, Vector3(0.09, 0.025, 0.02), Vector3(0, -0.075, 0.18), "#6f3d32")
+	_add_sphere(head, Vector3(-0.22, -0.025, 0), Vector3(0.055, 0.11, 0.12), armor_color)
+	_add_sphere(head, Vector3(0.22, -0.025, 0), Vector3(0.055, 0.11, 0.12), armor_color)
+	_add_cone(head, 0.245, 0.22, Vector3(0, 0.19, 0), "#e3bd59" if royal else "#b8bfc4")
+	_add_box(head, Vector3(0.34, 0.06, 0.31), Vector3(0, 0.11, 0), "#e4c77f" if royal else "#858a83")
+	_add_sphere(head, Vector3(0, 0.23, 0), Vector3(0.055, 0.07, 0.055), "#f1d38a" if royal else "#b8bfc4")
+	var left_leg := Node3D.new()
+	left_leg.name = "LeftLegJoint"
+	left_leg.position = Vector3(-0.12, 0.46, 0)
+	character.add_child(left_leg)
+	_add_capsule(left_leg, Vector3(0, -0.16, 0), armor_color)
+	_add_box(left_leg, Vector3(0.15, 0.1, 0.25), Vector3(0, -0.32, 0.055), "#49352b")
+	var right_leg := Node3D.new()
+	right_leg.name = "RightLegJoint"
+	right_leg.position = Vector3(0.12, 0.46, 0)
+	character.add_child(right_leg)
+	_add_capsule(right_leg, Vector3(0, -0.16, 0), armor_color)
+	_add_box(right_leg, Vector3(0.15, 0.1, 0.25), Vector3(0, -0.32, 0.055), "#49352b")
+	var rig_data := {"left_leg": left_leg, "right_leg": right_leg, "left_arm": left_arm, "right_arm": right_arm, "torso": torso, "walk": 0.12 if royal else 0.42, "speed": 3.2 if royal else 5.2, "offset": randf_range(0.0, TAU)}
+	character.set_meta("rig_data", rig_data)
+	return character
 func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, infantry: int, archers: int, cavalry: int, defeated: PackedInt32Array, scouted: PackedInt32Array, target: int, selected_tile: int) -> void:
 	var next_tiles: Array[String] = []
 	for tile in tile_data:
