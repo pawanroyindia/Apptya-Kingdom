@@ -20,6 +20,8 @@ namespace ApptyaKingdom
         Transform cachedRoot;
         Dictionary<string, GameObject> namedObjects;
         readonly GameObject[] guardMarkers = new GameObject[25];
+        readonly Vector3[] guardHomePositions = new Vector3[25];
+        float troopMotionClock;
 
         void Start()
         {
@@ -66,6 +68,19 @@ namespace ApptyaKingdom
             Refresh();
         }
 
+        void Update()
+        {
+            troopMotionClock += Time.deltaTime;
+            for (int i = 0; i < guardMarkers.Length; i++)
+            {
+                var guard = guardMarkers[i];
+                if (guard == null || !guard.activeSelf) continue;
+                var p = guardHomePositions[i];
+                guard.transform.position = p + Vector3.up * (Mathf.Sin(troopMotionClock * 2.2f + i * .73f) * .045f);
+                guard.transform.rotation = Quaternion.Euler(0f, Mathf.Sin(troopMotionClock * 1.1f + i) * 4f, 0f);
+            }
+        }
+
         void OnDestroy()
         {
             if (state != null) state.Changed -= Refresh;
@@ -89,7 +104,8 @@ namespace ApptyaKingdom
                         i < state.Data.infantry + state.Data.archers + state.Data.cavalry ? crimsonMat : bronzeMat;
                 int column = i % 5;
                 int row = i / 5;
-                guardMarkers[i].transform.position = new Vector3(-9.2f + column * 1.1f, .55f, 9.4f + row * .9f);
+                guardHomePositions[i] = new Vector3(-9.2f + column * 1.1f, .55f, 9.4f + row * .9f);
+                guardMarkers[i].transform.position = guardHomePositions[i];
             }
 
             for (int i = 0; i < 4; i++)
