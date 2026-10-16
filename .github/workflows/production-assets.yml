@@ -55,7 +55,7 @@ jobs:
           print("APPTYA_ASSET_OUTPUTS_VALID")
           PY
 
-      - name: Import and smoke-test generated assets in Godot
+      - name: Import assets and run production plus gameplay regression tests
         shell: bash
         run: |
           set -euo pipefail
