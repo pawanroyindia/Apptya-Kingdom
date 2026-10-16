@@ -37,9 +37,9 @@ var building_upgrade_tile := -1
 var tutorial_step := 0
 var tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
 var tile_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
-var outpost_threat := PackedInt32Array([1, 2, 3])
-var outpost_defeated := PackedInt32Array([0, 0, 0])
-var region_scouted := PackedInt32Array([0, 0, 0])
+var outpost_threat := PackedInt32Array([1, 2, 3, 4, 5])
+var outpost_defeated := PackedInt32Array([0, 0, 0, 0, 0])
+var region_scouted := PackedInt32Array([0, 0, 0, 0, 0])
 var achievements := PackedStringArray()
 var status_message := "Your kingdom awaits your command."
 var resource_labels: Dictionary = {}
@@ -248,6 +248,10 @@ func _build_ui() -> void:
 		{"text": "Outpost 1\nThreat 1", "action": _select_outpost.bind(0)},
 		{"text": "Outpost 2\nThreat 2", "action": _select_outpost.bind(1)},
 		{"text": "Outpost 3\nThreat 3", "action": _select_outpost.bind(2)}
+	], outpost_buttons)
+	_add_button_row(column, [
+		{"text": "Outpost 4\nThreat 4", "action": _select_outpost.bind(3)},
+		{"text": "Outpost 5\nThreat 5", "action": _select_outpost.bind(4)}
 	], outpost_buttons)
 
 	var army_title := Label.new()
@@ -1034,12 +1038,12 @@ func _load_game() -> void:
 		for i in range(tile_levels.size()):
 			tile_levels[i] = clampi(int(loaded_levels[i]), 1, 5)
 	var loaded_outposts = config.get_value("kingdom", "outpost_defeated", outpost_defeated)
-	if (loaded_outposts is PackedInt32Array or loaded_outposts is Array) and loaded_outposts.size() == outpost_defeated.size():
-		for i in range(outpost_defeated.size()):
+	if (loaded_outposts is PackedInt32Array or loaded_outposts is Array) and loaded_outposts.size() > 0:
+		for i in range(mini(outpost_defeated.size(), loaded_outposts.size())):
 			outpost_defeated[i] = 1 if int(loaded_outposts[i]) == 1 else 0
 	var loaded_scouted = config.get_value("kingdom", "region_scouted", region_scouted)
-	if (loaded_scouted is PackedInt32Array or loaded_scouted is Array) and loaded_scouted.size() == region_scouted.size():
-		for i in range(region_scouted.size()):
+	if (loaded_scouted is PackedInt32Array or loaded_scouted is Array) and loaded_scouted.size() > 0:
+		for i in range(mini(region_scouted.size(), loaded_scouted.size())):
 			region_scouted[i] = 1 if int(loaded_scouted[i]) == 1 else 0
 	selected_outpost = clampi(int(config.get_value("kingdom", "selected_outpost", selected_outpost)), 0, outpost_threat.size() - 1)
 	tutorial_step = clampi(int(config.get_value("kingdom", "tutorial_step", tutorial_step)), 0, 4)
