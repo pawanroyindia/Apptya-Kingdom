@@ -48,7 +48,7 @@ func _run() -> void:
 					for alias in required_clips[clip]:
 						if normalized.contains(alias):
 							var animation := player.get_animation(clip_name)
-							if animation != null and animation.track_count > 0 and animation.length >= 0.25:
+							if animation != null and animation.get_track_count() > 0 and animation.length >= 0.25:
 								found = true
 				if not found:
 					_fail("Character GLB is missing a usable " + clip + " motion clip: " + model_name)
