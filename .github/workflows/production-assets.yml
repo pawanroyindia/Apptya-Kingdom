@@ -70,11 +70,17 @@ jobs:
             ffmpeg -hide_banner -loglevel error -y -i "$MODEL_DIR/audio/$sound.wav" -i "$SFX_DIR/$sample.ogg" -filter_complex "[0:a]volume=0.78[a];[1:a]volume=0.58[b];[a][b]amix=inputs=2:duration=shortest:dropout_transition=0:normalize=0,alimiter=limit=0.96[mix]" -map "[mix]" -ar 22050 -ac 2 -c:a pcm_s16le "/tmp/$sound-mixed.wav"
             mv "/tmp/$sound-mixed.wav" "$MODEL_DIR/audio/$sound.wav"
           done
+          MUSIC_DIR="$MODEL_DIR/source_music"
+          mkdir -p "$MUSIC_DIR"
+          curl --fail --location --retry 3 "https://opengameart.org/sites/default/files/once_upon_a_time_loop_0.mp3" --output "$MUSIC_DIR/once_upon_a_time_loop_0.mp3"
+          # This is a loopable CC0 orchestral fantasy track; convert without trimming so its loop point is preserved.
+          ffmpeg -hide_banner -loglevel error -y -i "$MUSIC_DIR/once_upon_a_time_loop_0.mp3" -af "volume=0.82" -ar 22050 -ac 2 -c:a pcm_s16le "$MODEL_DIR/audio/kingdom_theme.wav"
           cat > "$MODEL_DIR/ASSET_PROVENANCE.md" <<'EOF'
           # Third-party runtime assets
           - Character and gate-tower models: Quaternius, RPG Character Pack and Medieval Village MegaKit, CC0 1.0 Universal. Source repository snapshot: Hakhyun-Kim/constellation-defense at commit 8ad1c93e382e2a6a5755882c1b9b2922877fab6e. The GLB models are used without geometry or texture edits.
           - Sound samples: Kenney, RPG Audio / Impact Sounds selections, CC0 1.0 Universal. The source OGG files are retained in `source_sfx/`; each runtime WAV mixes one source sample with the project's original generated effect.
-          - Source: https://quaternius.com/packs/rpgcharacters.html ; https://quaternius.com/packs/medievalvillagemegakit.html ; https://kenney.nl/assets/rpg-audio ; https://kenney.nl/assets/impact-sounds
+          - Kingdom score: "Once Upon a Time (loop)" by TAD, CC0 1.0, from OpenGameArt; source MP3 is retained in `source_music/` and converted to the runtime WAV without trimming.
+          - Source: https://quaternius.com/packs/rpgcharacters.html ; https://quaternius.com/packs/medievalvillagemegakit.html ; https://kenney.nl/assets/rpg-audio ; https://kenney.nl/assets/impact-sounds ; https://opengameart.org/content/once-upon-a-time-loop
           EOF
 
       - name: Verify asset outputs and animation exports
