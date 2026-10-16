@@ -6,6 +6,13 @@ var guard_nodes: Array[Node3D] = []
 var selected_outpost := 0
 var selected_tile_index := 4
 var tile_highlight: Node3D
+var world_camera: Camera3D
+var camera_distance := 24.0
+var camera_yaw := 0.0
+var camera_elevation := 0.65
+var active_touches: Dictionary = {}
+var previous_pinch_distance := 0.0
+var mouse_orbiting := false
 var current_tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
 var current_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 var current_keep_level := 1
@@ -74,12 +81,62 @@ func _build_environment() -> void:
 	sun.shadow_enabled = true
 	add_child(sun)
 
-	var camera := Camera3D.new()
-	camera.position = Vector3(0, 14.5, 19)
-	camera.fov = 42
-	add_child(camera)
-	camera.look_at(Vector3(0, 0, -0.5), Vector3.UP)
-	camera.current = true
+	world_camera = Camera3D.new()
+	world_camera.fov = 42
+	add_child(world_camera)
+	_update_camera()
+	world_camera.current = true
+
+func _update_camera() -> void:
+	if not is_instance_valid(world_camera):
+		return
+	var horizontal := camera_distance * cos(camera_elevation)
+	world_camera.position = Vector3(sin(camera_yaw) * horizontal, camera_distance * sin(camera_elevation), cos(camera_yaw) * horizontal)
+	world_camera.look_at(Vector3(0, 0, -1), Vector3.UP)
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			active_touches[event.index] = event.position
+			if active_touches.size() == 2:
+				var points := active_touches.values()
+				previous_pinch_distance = points[0].distance_to(points[1])
+		else:
+			active_touches.erase(event.index)
+			if active_touches.size() < 2:
+				previous_pinch_distance = 0.0
+	elif event is InputEventScreenDrag:
+		if active_touches.size() >= 2:
+			active_touches[event.index] = event.position
+			var points := active_touches.values()
+			var pinch_distance := points[0].distance_to(points[1])
+			if previous_pinch_distance > 0.0:
+				camera_distance = clampf(camera_distance + (previous_pinch_distance - pinch_distance) * 0.035, 15.0, 34.0)
+				_update_camera()
+			previous_pinch_distance = pinch_distance
+			get_viewport().set_input_as_handled()
+		else:
+			camera_yaw -= event.relative.x * 0.005
+			camera_elevation = clampf(camera_elevation + event.relative.y * 0.003, 0.32, 1.05)
+			_update_camera()
+			get_viewport().set_input_as_handled()
+	elif event is InputEventMagnifyGesture:
+		camera_distance = clampf(camera_distance / maxf(event.factor, 0.1), 15.0, 34.0)
+		_update_camera()
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			mouse_orbiting = event.pressed
+		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			camera_distance = maxf(15.0, camera_distance - 1.5)
+			_update_camera()
+		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			camera_distance = minf(34.0, camera_distance + 1.5)
+			_update_camera()
+	elif event is InputEventMouseMotion and mouse_orbiting:
+		camera_yaw -= event.relative.x * 0.005
+		camera_elevation = clampf(camera_elevation + event.relative.y * 0.003, 0.32, 1.05)
+		_update_camera()
 
 func _build_terrain() -> void:
 	_add_box(self, Vector3(30, 0.35, 30), Vector3(0, -0.28, -1), "#668b52")
