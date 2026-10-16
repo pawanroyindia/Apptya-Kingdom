@@ -13,7 +13,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Redundant PlayerPrefs backup snapshot with fallback loading if the primary save cannot be parsed.
 - Resource gathering, building upgrades, guard training, scouting, exploration and enemy battle calculations.
 - Three persistent research branches (Combat Drills, Efficient Production and Cartography), each capped at level 5; combat improves army power, economy improves active/offline passive production, and cartography improves both wood and stone exploration rewards. Save schema version 6 normalizes research levels and practice progress before offline calculations, and offline return summaries include the economy research bonus.
-- Research progression now has building prerequisites: each next research level requires the Keep to reach that level, and Combat Drills also requires the Barracks to reach that level. The source preflight checks these progression gates.
+- A dedicated runtime Research Center overlay lists all three branches, current levels, next-level costs, prerequisites, locked/available state and branch effects; research actions refresh the overlay and HUD.\n- Research progression now has building prerequisites: each next research level requires the Keep to reach that level, and Combat Drills also requires the Barracks to reach that level. The source preflight checks these progression gates.
 - Tap-to-inspect for Keep, Lumber Camp, Farmstead, Barracks, Quarry and enemy outpost.
 - Multiple visible parts of each building (including roof sections and doors) share the same interaction target, while decorative colliders are removed.
 - Gold-tint feedback across all separately tappable mesh parts of the selected building.
@@ -43,7 +43,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
 - Compile and test timed upgrade completion, save/reload countdown continuity, and edge cases in Unity.
 - Replace capsule blockout markers with authored class-specific troop models and attack/march animations; replace the capsule dummy with an authored target model and add authored class-specific attack/march animations. Current motion is a subtle procedural idle sway, not a full animation system.
-- Expand research into a dedicated research screen with clearer per-technology costs, research-specific icons, and a more complete visual presentation; the HUD now shows next-level Keep/Barracks requirements, and game logic enforces them.
+- Add research-specific icon artwork and a more complete visual presentation to the Research Center; the functional overlay, costs, branch effects and prerequisite states are now implemented.
 - Test bounded camera pan/zoom gestures against HUD interactions in Unity Play Mode and on Android.
 - Improve authored art, animations, audio, lighting, terrain and mobile UI polish.
 - Test save/reload, screen scaling, performance and heat on real Android devices.
