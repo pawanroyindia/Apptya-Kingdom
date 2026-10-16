@@ -412,13 +412,14 @@ func _cycle_graphics_quality() -> void:
 
 func _apply_graphics_quality() -> void:
 	if is_instance_valid(world_viewport):
+		# Keep the SubViewportContainer stretched to the phone layout; scale only its 3D render resolution.
 		match graphics_quality:
 			"Low":
-				world_viewport.size = Vector2i(480, 270)
+				world_viewport.scaling_3d_scale = 0.75
 			"High":
-				world_viewport.size = Vector2i(800, 450)
+				world_viewport.scaling_3d_scale = 1.25
 			_:
-				world_viewport.size = Vector2i(640, 360)
+				world_viewport.scaling_3d_scale = 1.0
 	if is_instance_valid(world_view) and world_view.has_method("set_quality_preset"):
 		world_view.set_quality_preset(graphics_quality)
 
