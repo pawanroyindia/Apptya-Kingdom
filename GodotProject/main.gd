@@ -610,7 +610,8 @@ func _setup_audio() -> void:
 	if music_stream and not music_stream.data.is_empty():
 		music_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		music_stream.loop_begin = 0
-		music_stream.loop_end = music_stream.data.size() / (4 if music_stream.stereo else 2)
+		# Imported WAVs may use IMA-ADPCM; encoded byte size is not a sample-frame count.
+		music_stream.loop_end = int(round(music_stream.get_length() * music_stream.mix_rate))
 	music_player.stream = music_stream
 	if music_enabled:
 		music_player.play()
