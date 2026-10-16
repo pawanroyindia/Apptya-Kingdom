@@ -1,0 +1,4 @@
+# Third-party runtime assets
+- Character and gate-tower models: Quaternius, RPG Character Pack and Medieval Village MegaKit, CC0 1.0 Universal. Source repository snapshot: Hakhyun-Kim/constellation-defense at commit 8ad1c93e382e2a6a5755882c1b9b2922877fab6e. The GLB models are used without geometry or texture edits.
+- Sound samples: Kenney, RPG Audio / Impact Sounds selections, CC0 1.0 Universal. The source OGG files are retained in `source_sfx/`; each runtime WAV mixes one source sample with the project's original generated effect.
+- Source: https://quaternius.com/packs/rpgcharacters.html ; https://quaternius.com/packs/medievalvillagemegakit.html ; https://kenney.nl/assets/rpg-audio ; https://kenney.nl/assets/impact-sounds
