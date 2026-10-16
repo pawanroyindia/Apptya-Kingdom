@@ -76,5 +76,9 @@ jobs:
             echo "Generated assets already match repository."
           else
             git commit -m "Add generated UV-mapped kingdom assets and mixed audio pack"
-            git push
+            # Other source fixes can land while Blender and audio rendering run.
+            # Rebase the generated asset commit onto the latest main before publishing.
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
