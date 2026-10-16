@@ -385,6 +385,9 @@ func _run_tests() -> void:
 	if game.tiles[2] != "Academy" or game.gold != academy_gold_before - 120 or game.wood != academy_wood_before - 45:
 		_fail("Academy construction did not place the building or charge the correct resources.")
 		return
+	if game.world_view.building_nodes.size() != 9 or game.world_view.building_nodes[2].get_child_count() < 8:
+		_fail("Academy construction did not create its 3D building model.")
+		return
 	game.tile_levels[2] = 2
 	game._refresh_ui()
 	if not game.tile_detail_label.text.contains("Research discount: 10%"):
