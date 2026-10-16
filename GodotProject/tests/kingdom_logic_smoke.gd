@@ -333,6 +333,18 @@ func _run_tests() -> void:
 	if not game.quest_conqueror_claimed:
 		_fail("Frontier Conqueror quest did not unlock after three outposts were captured.")
 		return
+	for i in range(9):
+		game.outpost_defeated[i] = 1
+	game.outpost_defeated[9] = 0
+	game._refresh_ui()
+	if not game.campaign_label.text.contains("9/10") or game.campaign_label.text.contains("CAMPAIGN COMPLETE"):
+		_fail("Campaign HUD did not show nine of ten outposts before the final victory.")
+		return
+	game.outpost_defeated[9] = 1
+	game._refresh_ui()
+	if not game.campaign_label.text.contains("CAMPAIGN COMPLETE"):
+		_fail("Campaign HUD did not show completion after all ten outposts were secured.")
+		return
 
 	# Production must award resources and preserve the capped-offline economy.
 	var gold_before_tick: int = game.gold
