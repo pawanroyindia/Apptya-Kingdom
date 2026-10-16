@@ -447,7 +447,8 @@ func _get_outpost_description() -> String:
 		return "Outpost %d captured. It is secured and cannot be attacked again." % (selected_outpost + 1)
 	if region_scouted[selected_outpost] != 1:
 		return "Target: Outpost %d. This region is unexplored. Scout it to reveal enemy threat before attacking." % (selected_outpost + 1)
-	return "Scouted target: Outpost %d • Threat %d • Estimated success chance %d%% • Guards required: %d" % [selected_outpost + 1, threat, clampi(65 - threat * 12 + keep_level * 6 + guards / 2, 10, 90), 3 + threat]
+	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 + combat_research * 5 + practice_drills + archers * 2 + cavalry * 3, 10, 90)
+	return "Scouted target: Outpost %d • Threat %d • Estimated success chance %d%% • Guards required: %d" % [selected_outpost + 1, threat, chance, 3 + threat]
 
 func _select_outpost(index: int) -> void:
 	selected_outpost = clampi(index, 0, outpost_threat.size() - 1)
@@ -767,8 +768,8 @@ func _attack_outpost() -> void:
 		status_message = "Outpost %d requires at least %d guards." % [selected_outpost + 1, required_guards]
 		_refresh_ui()
 		return
-	_remove_troops(required_guards)
 	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 + combat_research * 5 + practice_drills + archers * 2 + cavalry * 3 - (0 if region_scouted[selected_outpost] == 1 else 15), 10, 90)
+	_remove_troops(required_guards)
 	var won_attack := randi_range(1, 100) <= chance
 	if is_instance_valid(world_view):
 		world_view.play_attack(selected_outpost, won_attack)
