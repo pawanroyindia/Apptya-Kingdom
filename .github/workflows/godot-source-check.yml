@@ -42,6 +42,103 @@ jobs:
         shell: bash
         run: |
           grep -q '^permissions/internet=true
+        shell: bash
+        run: |
+          set -o pipefail
+          /tmp/godot/Godot_v4.5.1-stable_linux.x86_64 --headless --path GodotProject --quit-after 5 2>&1 | tee /tmp/godot-run.log
+          if grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script" /tmp/godot-run.log | grep -v "resources still in use at exit"; then
+            echo "Godot runtime reported a script or resource error."
+            exit 1
+          fi
+
+      - name: Test kingdom gameplay and save recovery
+        shell: bash
+        run: |
+          set -o pipefail
+          /tmp/godot/Godot_v4.5.1-stable_linux.x86_64 --headless --path GodotProject --script res://tests/kingdom_logic_smoke.gd 2>&1 | tee /tmp/godot-gameplay-test.log
+          if grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script|APPTYA_GAMEPLAY_TEST_FAILED" /tmp/godot-gameplay-test.log | grep -v "resources still in use at exit"; then
+            echo "Gameplay test reported a failure."
+            exit 1
+          fi
+          grep -q "APPTYA_GAMEPLAY_TESTS_PASSED" /tmp/godot-gameplay-test.log
+
+      - name: Test LAN co-op host/client RPC round trip
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot/Godot_v4.5.1-stable_linux.x86_64
+          "$GODOT" --headless --path GodotProject --script res://tests/lan_network_probe.gd -- --host > /tmp/lan-host.log 2>&1 &
+          HOST_PID=$!
+          cleanup() { kill "$HOST_PID" 2>/dev/null || true; }
+          trap cleanup EXIT
+          for attempt in $(seq 1 50); do
+            if grep -q "LAN_HOST_READY" /tmp/lan-host.log; then break; fi
+            if ! kill -0 "$HOST_PID" 2>/dev/null; then cat /tmp/lan-host.log; exit 1; fi
+            sleep 0.1
+          done
+          if ! grep -q "LAN_HOST_READY" /tmp/lan-host.log; then cat /tmp/lan-host.log; echo "LAN host did not start."; exit 1; fi
+          set +e
+          "$GODOT" --headless --path GodotProject --script res://tests/lan_network_probe.gd -- --client 2>&1 | tee /tmp/lan-client.log
+          CLIENT_STATUS=${PIPESTATUS[0]}
+          set -e
+          if [[ "$CLIENT_STATUS" -ne 0 ]]; then cat /tmp/lan-host.log; exit "$CLIENT_STATUS"; fi
+          wait "$HOST_PID"
+          cat /tmp/lan-host.log
+          grep -q "LAN_CLIENT_PASS" /tmp/lan-client.log
+          grep -q "LAN_HOST_PASS" /tmp/lan-host.log
+ GodotProject/export_presets.cfg
+          grep -q '^exclude_filter=.*source_models' GodotProject/export_presets.cfg
+          grep -q 'source_sfx' GodotProject/export_presets.cfg
+          grep -q 'source_music' GodotProject/export_presets.cfg
+          grep -q 'textures/\*\*' GodotProject/export_presets.cfg
+
+      - name: Run project smoke test
+        shell: bash
+        run: |
+          set -o pipefail
+          /tmp/godot/Godot_v4.5.1-stable_linux.x86_64 --headless --path GodotProject --quit-after 5 2>&1 | tee /tmp/godot-run.log
+          if grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script" /tmp/godot-run.log | grep -v "resources still in use at exit"; then
+            echo "Godot runtime reported a script or resource error."
+            exit 1
+          fi
+
+      - name: Test kingdom gameplay and save recovery
+        shell: bash
+        run: |
+          set -o pipefail
+          /tmp/godot/Godot_v4.5.1-stable_linux.x86_64 --headless --path GodotProject --script res://tests/kingdom_logic_smoke.gd 2>&1 | tee /tmp/godot-gameplay-test.log
+          if grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script|APPTYA_GAMEPLAY_TEST_FAILED" /tmp/godot-gameplay-test.log | grep -v "resources still in use at exit"; then
+            echo "Gameplay test reported a failure."
+            exit 1
+          fi
+          grep -q "APPTYA_GAMEPLAY_TESTS_PASSED" /tmp/godot-gameplay-test.log
+
+      - name: Test LAN co-op host/client RPC round trip
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=/tmp/godot/Godot_v4.5.1-stable_linux.x86_64
+          "$GODOT" --headless --path GodotProject --script res://tests/lan_network_probe.gd -- --host > /tmp/lan-host.log 2>&1 &
+          HOST_PID=$!
+          cleanup() { kill "$HOST_PID" 2>/dev/null || true; }
+          trap cleanup EXIT
+          for attempt in $(seq 1 50); do
+            if grep -q "LAN_HOST_READY" /tmp/lan-host.log; then break; fi
+            if ! kill -0 "$HOST_PID" 2>/dev/null; then cat /tmp/lan-host.log; exit 1; fi
+            sleep 0.1
+          done
+          if ! grep -q "LAN_HOST_READY" /tmp/lan-host.log; then cat /tmp/lan-host.log; echo "LAN host did not start."; exit 1; fi
+          set +e
+          "$GODOT" --headless --path GodotProject --script res://tests/lan_network_probe.gd -- --client 2>&1 | tee /tmp/lan-client.log
+          CLIENT_STATUS=${PIPESTATUS[0]}
+          set -e
+          if [[ "$CLIENT_STATUS" -ne 0 ]]; then cat /tmp/lan-host.log; exit "$CLIENT_STATUS"; fi
+          wait "$HOST_PID"
+          cat /tmp/lan-host.log
+          grep -q "LAN_CLIENT_PASS" /tmp/lan-client.log
+          grep -q "LAN_HOST_PASS" /tmp/lan-host.log
+ GodotProject/export_presets.cfg
+
       - name: Run project smoke test
         shell: bash
         run: |
