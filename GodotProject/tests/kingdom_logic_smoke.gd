@@ -370,6 +370,29 @@ func _run_tests() -> void:
 	if game.gold != claimed_daily_gold or not game.status_message.contains("already claimed"):
 		_fail("Daily reward could be claimed more than once in the same day.")
 		return
+	# The Academy is a real buildable structure and discounts subsequent research.
+	game.gold += 500
+	game.wood += 300
+	game.stone += 300
+	game._select_tile(2)
+	var academy_gold_before: int = game.gold
+	var academy_wood_before: int = game.wood
+	game._build_academy()
+	if game.tiles[2] != "Academy" or game.gold != academy_gold_before - 120 or game.wood != academy_wood_before - 45:
+		_fail("Academy construction did not place the building or charge the correct resources.")
+		return
+	game.tile_levels[2] = 2
+	game._refresh_ui()
+	if not game.tile_detail_label.text.contains("Research discount: 10%"):
+		_fail("Academy inspection did not show its level-based research discount.")
+		return
+	var research_gold_before: int = game.gold
+	var research_wood_before: int = game.wood
+	var research_stone_before: int = game.stone
+	game._research("economy")
+	if game.gold != research_gold_before - 45 or game.wood != research_wood_before - 108 or game.stone != research_stone_before - 72 or game.economy_research != 2:
+		_fail("Level-2 Academy discount was not applied to research costs.")
+		return
 	for i in range(9):
 		game.outpost_defeated[i] = 1
 	game.outpost_defeated[9] = 0
