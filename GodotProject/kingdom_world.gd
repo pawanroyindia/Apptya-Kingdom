@@ -649,6 +649,21 @@ func _remove_temporary_rig(character: Node3D, rig_data: Dictionary) -> void:
 	articulated_rigs.erase(rig_data)
 	if is_instance_valid(character):
 		character.queue_free()
+func play_exploration() -> void:
+	var scout := Node3D.new()
+	scout.name = "ExplorationScout"
+	scout.position = Vector3(0.0, 0.08, 1.2)
+	var scout_model := _create_articulated_character("#6c8dbe", "#bca46e", "#8f3936", false, 0.78)
+	scout.add_child(scout_model)
+	var rig_data: Dictionary = scout_model.get_meta("rig_data")
+	articulated_rigs.append(rig_data)
+	add_child(scout)
+	var destination := Vector3(-10.5, 0.08, -11.5)
+	var journey := create_tween()
+	journey.tween_property(scout, "position", destination, 1.15).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	journey.tween_callback(_show_battle_flash.bind(destination + Vector3(0, 1.0, 0), true))
+	journey.tween_callback(_remove_temporary_rig.bind(scout, rig_data))
+
 func _show_battle_flash(position_value: Vector3, victory: bool) -> void:
 	var flash_color := "#e4d17e" if victory else "#b53d36"
 	var flash := _add_sphere(self, position_value, Vector3(0.2, 0.2, 0.2), flash_color)
