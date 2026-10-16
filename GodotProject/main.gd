@@ -1406,7 +1406,7 @@ func _claim_quest(quest_id: String) -> void:
 		captured_outposts += 1 if defeated == 1 else 0
 	var highest_building_level := 1
 	for i in range(tiles.size()):
-		if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks"]:
+		if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks", "Academy"]:
 			highest_building_level = maxi(highest_building_level, tile_levels[i])
 	match quest_id:
 		"builder":
