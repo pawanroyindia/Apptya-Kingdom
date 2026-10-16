@@ -85,8 +85,17 @@ func _run_tests() -> void:
 		_fail("Initial kingdom state is incorrect.")
 		return
 	if game.outpost_threat.size() != 10 or game.world_view.current_outposts.size() != 10:
-		_fail("Five-outpost campaign map was not initialized.")
+		_fail("Ten-outpost campaign map was not initialized.")
 		return
+	game.outpost_defeated[0] = 1
+	game.region_scouted[1] = 1
+	game._refresh_ui()
+	if game.world_view.current_outposts[0] != 1 or game.world_view.current_scouted[1] != 1:
+		_fail("Ten-outpost campaign state did not synchronize to the 3D world.")
+		return
+	game.outpost_defeated[0] = 0
+	game.region_scouted[1] = 0
+	game._refresh_ui()
 	var initial_mesh_count: int = game.world_view.find_children("*", "MeshInstance3D", true, false).size()
 	print("APPTYA_WORLD_MESH_COUNT=%d" % initial_mesh_count)
 	if initial_mesh_count > 400:
