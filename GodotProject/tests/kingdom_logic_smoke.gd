@@ -160,6 +160,16 @@ func _run_tests() -> void:
 	if game.network_session._valid_snapshot(invalid_level_snapshot):
 		_fail("LAN co-op accepted a building level outside the supported range.")
 		return
+	var mismatched_army_snapshot := coop_snapshot.duplicate(true)
+	mismatched_army_snapshot["guards"] = 999
+	if game.network_session._valid_snapshot(mismatched_army_snapshot):
+		_fail("LAN co-op accepted troop totals that do not match the army roster.")
+		return
+	var impossible_campaign_snapshot := coop_snapshot.duplicate(true)
+	impossible_campaign_snapshot["outpost_defeated"][2] = 1
+	if game.network_session._valid_snapshot(impossible_campaign_snapshot):
+		_fail("LAN co-op accepted a captured outpost behind locked campaign gates.")
+		return
 	var host_start_result: int = game.network_session.host_game()
 	if host_start_result != OK or not game.network_session.is_network_active() or not game.multiplayer.is_server():
 		_fail("LAN co-op host could not start its ENet server.")
