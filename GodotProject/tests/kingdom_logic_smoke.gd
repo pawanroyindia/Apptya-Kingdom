@@ -24,6 +24,18 @@ func _run_tests() -> void:
 	if not is_instance_valid(game.world_view.hero_model) or not game.world_view.hero_level_label.text.contains("LV 1"):
 		_fail("The 3D Royal Captain model or level label was not created.")
 		return
+	if game.sound_streams.size() != 5 or game.sound_streams["victory"].data.is_empty() or game.sound_player.bus != "Master":
+		_fail("Procedural sound effect streams or the audio player were not initialized.")
+		return
+	game.sound_enabled = true
+	game._toggle_sound()
+	if game.sound_enabled or game.settings_buttons[2].text != "Sound: OFF":
+		_fail("Sound toggle did not mute effects or update its button.")
+		return
+	game._toggle_sound()
+	if not game.sound_enabled or game.settings_buttons[2].text != "Sound: ON":
+		_fail("Sound toggle did not re-enable effects or update its button.")
+		return
 
 	var initial_yaw: float = game.world_view.camera_yaw
 	var drag_event := InputEventScreenDrag.new()
@@ -419,6 +431,7 @@ func _run_tests() -> void:
 	var saved_levels: PackedInt32Array = game.tile_levels.duplicate()
 	var saved_keep_level: int = game.keep_level
 	var saved_graphics_quality: String = game.graphics_quality
+	var saved_sound_enabled: bool = game.sound_enabled
 	var saved_day: int = game.day
 	var saved_enemy_level: int = game.enemy_level
 	var saved_explored_regions: int = game.explored_regions
@@ -443,6 +456,7 @@ func _run_tests() -> void:
 	game.tile_levels[0] = 1
 	game.keep_level = 1
 	game.graphics_quality = "Low" if saved_graphics_quality != "Low" else "High"
+	game.sound_enabled = not saved_sound_enabled
 	game.outpost_defeated[0] = 0
 	game.achievements.clear()
 	game.quest_builder_claimed = false
@@ -466,6 +480,9 @@ func _run_tests() -> void:
 		return
 	if game.graphics_quality != saved_graphics_quality:
 		_fail("Kingdom save/load did not restore the graphics preset.")
+		return
+	if game.sound_enabled != saved_sound_enabled:
+		_fail("Kingdom save/load did not restore the sound preference.")
 		return
 	if game.outpost_defeated != saved_defeated or game.achievements != saved_achievements:
 		_fail("Kingdom save/load did not restore campaign and achievement progress.")
