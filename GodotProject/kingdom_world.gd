@@ -13,6 +13,8 @@ var selected_tile_index := 4
 var tile_highlight: Node3D
 var world_camera: Camera3D
 var sun_light: DirectionalLight3D
+var world_environment: Environment
+var day_phase := 0.25
 var quality_preset := "Balanced"
 var camera_distance := 24.0
 var camera_yaw := 0.0
@@ -41,6 +43,21 @@ func _ready() -> void:
 	_rebuild_outposts()
 	_rebuild_guards()
 	_build_hero_model()
+
+func _process(delta: float) -> void:
+	day_phase = fposmod(day_phase + delta / 240.0, 1.0)
+	_update_daylight()
+
+func _update_daylight() -> void:
+	if not is_instance_valid(world_environment) or not is_instance_valid(sun_light):
+		return
+	var daylight := clampf(sin(day_phase * TAU), 0.08, 1.0)
+	world_environment.background_color = Color("#17253b").lerp(Color("#a9c6d0"), daylight)
+	world_environment.ambient_light_color = Color("#37425e").lerp(Color("#d8e6d7"), daylight)
+	world_environment.ambient_light_energy = 0.15 + daylight * 0.6
+	sun_light.light_color = Color("#e29a60").lerp(Color("#fff0d4"), daylight)
+	sun_light.light_energy = (0.15 + daylight * 1.1) * (0.88 if quality_preset == "Low" else 1.0)
+	sun_light.rotation_degrees.x = -15.0 - daylight * 42.0
 
 func set_hero_level(level: int) -> void:
 	current_hero_level = clampi(level, 1, 20)
@@ -113,13 +130,13 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 
 func _build_environment() -> void:
 	var environment_node := WorldEnvironment.new()
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("#a9c6d0")
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("#d8e6d7")
-	environment.ambient_light_energy = 0.75
-	environment_node.environment = environment
+	world_environment = Environment.new()
+	world_environment.background_mode = Environment.BG_COLOR
+	world_environment.background_color = Color("#a9c6d0")
+	world_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	world_environment.ambient_light_color = Color("#d8e6d7")
+	world_environment.ambient_light_energy = 0.75
+	environment_node.environment = world_environment
 	add_child(environment_node)
 
 	sun_light = DirectionalLight3D.new()
@@ -140,7 +157,7 @@ func set_quality_preset(preset: String) -> void:
 	quality_preset = preset if preset in ["Low", "Balanced", "High"] else "Balanced"
 	if is_instance_valid(sun_light):
 		sun_light.shadow_enabled = quality_preset != "Low"
-		sun_light.light_energy = 1.1 if quality_preset == "Low" else 1.25
+		_update_daylight()
 
 func reset_camera() -> void:
 	camera_distance = 24.0
