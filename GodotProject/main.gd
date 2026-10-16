@@ -1688,6 +1688,10 @@ func _load_game() -> void:
 	troop_training_finish_unix = int(config.get_value("kingdom", "troop_training_finish_unix", troop_training_finish_unix))
 	keep_level = int(config.get_value("kingdom", "keep_level", keep_level))
 	selected_tile = clampi(int(config.get_value("kingdom", "selected_tile", selected_tile)), 0, tiles.size() - 1)
+	tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
+	tile_levels = PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
+	outpost_defeated = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+	region_scouted = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 	var loaded_tiles = config.get_value("kingdom", "tiles", tiles.duplicate())
 	if loaded_tiles is Array and loaded_tiles.size() == 9:
 		var normalized_tiles: Array[String] = []
