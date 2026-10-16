@@ -20,13 +20,25 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Periodic autosave, backup recovery, save-data normalization and persisted upgrade/training timers
 - Procedural WAV sound effects for gathering, upgrades, training and battle outcomes, with a persistent mute toggle
 - A looping procedural ambient music bed with its own on/off control and saved preference
+- Short finite ambient animations for tree sway and guard idle motion, building reveal/upgrade feedback, hero level-up feedback, marching/exploration squads and battle impact rings
+- LAN co-op for one host and one guest on the same Wi-Fi: host-authoritative resource/build/training/research/scouting/attack/claim actions, shared kingdom snapshots and validation of client requests
 - Seven-day daily reward streak, resource payouts, day-seven bonus, duplicate-claim protection, live reset countdown and saved progress
 - Upgradeable single Academy with timed upgrades, research discounts up to 25%, and save-data duplicate cleanup
 - Sequential outpost scouting/attack unlocks; scouting a region repeatedly cannot generate duplicate rewards
 - Persistent Low / Balanced / High graphics presets and camera reset
 - Local save/load on the device, including graphics preferences; save recovery enforces a unique Keep and Barracks troop capacity
 
-This is a reimplementation of the prototype mechanics, not an automatic conversion of Unity scenes or C# scripts. It uses procedural low-poly models rather than authored production art, and does not yet contain production-quality art/animations, a soundtrack, multiplayer, or release signing.
+This is a reimplementation of the prototype mechanics, not an automatic conversion of Unity scenes or C# scripts. It uses procedural low-poly models, not final production art, and synthesized prototype audio rather than an authored soundtrack. LAN co-op is source-implemented but not yet verified between physical phones; it is limited to one host and one guest on the same Wi-Fi network, uses UDP port 24567, and does not provide public-internet matchmaking or dedicated servers.
+
+## LAN co-op quick start
+
+1. Put both phones on the same Wi-Fi network.
+2. On the host phone, tap **Host LAN Game**.
+3. Find the host phone's local IPv4 address in Android Wi-Fi network details and enter it on the guest phone.
+4. Tap **Join Host IP**. The host is authoritative for shared resource, building, training, research, scouting, battle and claim actions.
+5. If connection fails, check Wi-Fi client isolation and whether UDP port `24567` is allowed. The feature is LAN-only; mobile data or different networks will not work without additional networking infrastructure.
+
+The LAN co-op code has automated snapshot/action validation, but live two-phone connectivity and reconnect behavior still need device testing.
 
 ## Android APK from GitHub
 
@@ -37,7 +49,7 @@ The workflow `.github/workflows/godot-android-apk.yml` builds a debug APK using 
 3. Run **Run workflow** only after explicit approval to build an APK. Source changes do not trigger APK builds.
 4. Open the completed run and download the `apptya-kingdom-godot-apk` artifact.
 
-The latest headless Godot integration run passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38854852168)), including project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, generated sound effects and looping ambient music, audio preference persistence and pause/resume behavior, daily rewards, Academy timed upgrades and duplicate-save recovery, sequential campaign scouting/attack gates, duplicate-scout prevention, and the 256-mesh budget/stable-refresh checks. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
+The latest headless Godot integration run passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38854852168)), including project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, generated sound effects and looping ambient music, audio preference persistence and pause/resume behavior, daily rewards, Academy timed upgrades and duplicate-save recovery, sequential campaign scouting/attack gates, duplicate-scout prevention, LAN snapshot/action validation, and the procedural-world mesh budget/stable-refresh checks. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
 
 ## Validation
 
