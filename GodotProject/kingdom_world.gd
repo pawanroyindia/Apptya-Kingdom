@@ -23,6 +23,7 @@ var current_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 var current_keep_level := 1
 var current_guards := 10
 var current_outposts := PackedInt32Array([0, 0, 0])
+var current_scouted := PackedInt32Array([0, 0, 0])
 
 func _ready() -> void:
 	_build_environment()
@@ -32,7 +33,7 @@ func _ready() -> void:
 	_rebuild_outposts()
 	_rebuild_guards()
 
-func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, defeated: PackedInt32Array, target: int, selected_tile: int) -> void:
+func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, defeated: PackedInt32Array, scouted: PackedInt32Array, target: int, selected_tile: int) -> void:
 	var next_tiles: Array[String] = []
 	for tile in tile_data:
 		next_tiles.append(str(tile))
@@ -44,12 +45,15 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 	var next_outposts := defeated.duplicate()
 	if next_outposts.size() != 3:
 		next_outposts = PackedInt32Array([0, 0, 0])
+	var next_scouted := scouted.duplicate()
+	if next_scouted.size() != 3:
+		next_scouted = PackedInt32Array([0, 0, 0])
 	var next_keep_level := clampi(keep_level, 1, 99)
 	var next_guards := maxi(guards, 0)
 	var next_target := clampi(target, 0, 2)
 	var next_selected_tile := clampi(selected_tile, 0, 8)
 	var buildings_changed := current_tiles != next_tiles or current_levels != next_levels or current_keep_level != next_keep_level
-	var outposts_changed := current_outposts != next_outposts or selected_outpost != next_target
+	var outposts_changed := current_outposts != next_outposts or current_scouted != next_scouted or selected_outpost != next_target
 	var guards_changed := current_guards != next_guards
 	var tile_selection_changed := selected_tile_index != next_selected_tile
 	current_tiles = next_tiles
@@ -57,6 +61,7 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 	current_keep_level = next_keep_level
 	current_guards = next_guards
 	current_outposts = next_outposts
+	current_scouted = next_scouted
 	selected_outpost = next_target
 	selected_tile_index = next_selected_tile
 	if buildings_changed:
@@ -308,8 +313,9 @@ func _rebuild_outposts() -> void:
 		var root := Node3D.new()
 		root.position = positions[i]
 		var defeated := current_outposts[i] == 1
+		var scouted := current_scouted[i] == 1
 		var wall_color := "#858a83" if defeated else "#744d48"
-		var banner_color := "#7d9c78" if defeated else "#b53d36"
+		var banner_color := "#7d9c78" if defeated else ("#d0a35a" if scouted else "#b53d36")
 		_add_box(root, Vector3(1.55, 0.75, 1.45), Vector3(0, 0.38, 0), wall_color)
 		for side in [-1.0, 1.0]:
 			_add_box(root, Vector3(0.28, 1.45, 0.28), Vector3(side * 0.55, 0.72, -0.48), wall_color)
@@ -319,7 +325,8 @@ func _rebuild_outposts() -> void:
 		if i == selected_outpost:
 			_add_cylinder(root, 1.45, 0.045, Vector3(0, 0.08, 0), "#f1d38a")
 		var label := Label3D.new()
-		label.text = "OUTPOST %d%s" % [i + 1, " • SECURED" if defeated else ""]
+		var outpost_status := " • SECURED" if defeated else (" • SCOUTED" if scouted else "")
+		label.text = "OUTPOST %d%s" % [i + 1, outpost_status]
 		label.position = Vector3(0, 2.15, 0)
 		label.font_size = 32
 		label.modulate = Color("#fff0c9")
