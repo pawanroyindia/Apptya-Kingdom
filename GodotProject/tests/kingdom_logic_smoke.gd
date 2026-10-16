@@ -11,6 +11,27 @@ func _run_tests() -> void:
 	await process_frame
 	await process_frame
 
+	var initial_yaw: float = game.world_view.camera_yaw
+	var drag_event := InputEventScreenDrag.new()
+	drag_event.relative = Vector2(12, 0)
+	game.world_view._input(drag_event)
+	if is_equal_approx(initial_yaw, game.world_view.camera_yaw):
+		_fail("Touch orbit control did not rotate the camera.")
+		return
+	var initial_distance: float = game.world_view.camera_distance
+	var pinch_event := InputEventMagnifyGesture.new()
+	pinch_event.factor = 1.2
+	game.world_view._input(pinch_event)
+	if game.world_view.camera_distance >= initial_distance:
+		_fail("Pinch zoom control did not zoom the camera.")
+		return
+	game._select_tile(0)
+	game.world_view._pick_tile(Vector2(320, 180))
+	if game.selected_tile != 4:
+		_fail("Tapping the 3D world did not select the central Keep tile.")
+		return
+	game._select_tile(0)
+
 	if game.gold != 300 or game.tiles.size() != 9:
 		_fail("Initial kingdom state is incorrect.")
 		return
