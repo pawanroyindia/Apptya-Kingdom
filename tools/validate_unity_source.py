@@ -196,6 +196,9 @@ def gameplay_invariants() -> list[str]:
         errors.append("ApptyaGameState.cs: research levels must be bounded during save normalization")
     if "public string Research(string type)" not in source or "Data.guards*(10+Data.combatResearch*2)" not in source:
         errors.append("ApptyaGameState.cs: research must have a real gameplay effect")
+    for prerequisite in ("int requiredKeepLevel=level+1", "Data.keepLevel<requiredKeepLevel", 'type=="combat"&&Data.barracksLevel<requiredKeepLevel'):
+        if prerequisite not in source:
+            errors.append(f"ApptyaGameState.cs: research progression prerequisite missing: {prerequisite}")
 
     if "Data.combatResearch=Mathf.Clamp(Data.combatResearch,0,5)" not in source or "Data.economyResearch=Mathf.Clamp(Data.economyResearch,0,5)" not in source or "Data.scoutingResearch=Mathf.Clamp(Data.scoutingResearch,0,5)" not in source:
         errors.append("ApptyaGameState.cs: research levels must be bounded during save normalization")
