@@ -50,6 +50,11 @@ jobs:
             curl --fail --location --retry 3 "$KIT_ROOT/glTF/$texture" --output "$KIT_DIR/glTF/$texture"
           done
           curl --fail --location --retry 3 "$KIT_ROOT/LICENSE" --output "$KIT_DIR/QUATERNIUS_CC0_1.0.txt"
+          # Downscale source kit maps before Blender imports them so mobile GLBs do not embed multi-megabyte 4K textures.
+          for texture in T_WoodTrim_Normal.png T_WoodTrim_BaseColor.png T_WoodTrim_Roughness.png T_Plaster_Normal.png T_Plaster_BaseColor.png T_Plaster_ORM.png T_UnevenBrick_Normal.png T_UnevenBrick_BaseColor.png T_UnevenBrick_Roughness.png T_RoundTiles_Normal.png T_RoundTiles_BaseColor.png T_RoundTiles_Roughness.png T_RockTrim_Normal.png T_RockTrim_BaseColor.png T_RockTrim_ORM.png; do
+            ffmpeg -hide_banner -loglevel error -y -i "$KIT_DIR/glTF/$texture" -vf "scale=512:512:flags=lanczos" -frames:v 1 "$KIT_DIR/glTF/resized-$texture"
+            mv "$KIT_DIR/glTF/resized-$texture" "$KIT_DIR/glTF/$texture"
+          done
           PYTHONPATH=/usr/lib/python3/dist-packages blender --background --factory-startup --python tools/asset_pipeline/compose_authored_buildings.py
           cp "$KIT_DIR/QUATERNIUS_CC0_1.0.txt" GodotProject/assets/production/source_models/QUATERNIUS_CC0_1.0.txt
 
@@ -115,7 +120,9 @@ jobs:
           test -s GodotProject/assets/production/source_models/barracks_generated.glb
           test -s GodotProject/assets/production/source_models/QUATERNIUS_CC0_1.0.txt
           test "$(stat -c %s GodotProject/assets/production/keep.glb)" -gt 100000
+          test "$(stat -c %s GodotProject/assets/production/keep.glb)" -lt 20000000
           test "$(stat -c %s GodotProject/assets/production/barracks.glb)" -gt 100000
+          test "$(stat -c %s GodotProject/assets/production/barracks.glb)" -lt 20000000
           test -s GodotProject/assets/production/audio/kingdom_theme.wav
           for sound in gather build train victory defeat scout; do test -s "GodotProject/assets/production/audio/$sound.wav"; done
           test "$(find GodotProject/assets/production/textures -name '*.png' | wc -l)" -ge 30
