@@ -789,8 +789,9 @@ func _get_outpost_description() -> String:
 		return "Outpost %d is locked. Capture Outpost %d first to advance the campaign." % [selected_outpost + 1, selected_outpost]
 	if region_scouted[selected_outpost] != 1:
 		return "Target: Outpost %d. This region is unexplored. Scout it to reveal enemy threat before attacking." % (selected_outpost + 1)
-	var battle: Dictionary = COMBAT_DIRECTOR.resolve_outpost(infantry, archers, cavalry, _hero_power(), combat_research, practice_drills, keep_level, _get_barracks_level(), threat, selected_outpost, true)
-	return "Scouted target: Outpost %d • %s • Enemy power %d • Estimated success chance %d%% • Guards required: %d" % [selected_outpost + 1, battle["trait"], battle["enemy_power"], battle["chance"], 3 + threat]
+	var battle: Dictionary = COMBAT_DIRECTOR.resolve_outpost(infantry, archers, cavalry, _hero_power(), combat_research, practice_drills, keep_level, _get_barracks_level(), threat, selected_outpost, true, battle_stance)
+	var boss_warning := "\nFINAL BOSS: defeating this citadel grants a major campaign cache." if selected_outpost == outpost_threat.size() - 1 else ""
+	return "Scouted target: Outpost %d • %s • Enemy power %d • Estimated success chance %d%% • Guards required: %d • Stance: %s%s" % [selected_outpost + 1, battle["trait"], battle["enemy_power"], battle["chance"], 3 + threat, battle_stance, boss_warning]
 
 func _select_outpost(index: int) -> void:
 	if _route_network_action("select_outpost", {"outpost": index}):
@@ -1189,7 +1190,14 @@ func _attack_outpost() -> void:
 		var reward := 100 * threat + keep_level * 25
 		gold += reward
 		food += 20 * threat
-		status_message = "Victory at Outpost %d! %s defeated at %d%% odds. Lost %d troops; reward: %d gold and %d food." % [selected_outpost + 1, battle["trait"], chance, casualties, reward, 20 * threat]
+		var boss_bonus_text := ""
+		if selected_outpost == outpost_threat.size() - 1:
+			gold += 500
+			stone += 250
+			food += 200
+			_award_hero_xp(100)
+			boss_bonus_text = " FINAL BOSS CACHE: +500 gold, +250 stone, +200 food, +100 hero XP."
+		status_message = "Victory at Outpost %d! %s defeated at %d%% odds. Lost %d troops; reward: %d gold and %d food.%s" % [selected_outpost + 1, battle["trait"], chance, casualties, reward, 20 * threat, boss_bonus_text]
 		_award_achievement("outpost", "First Outpost", 50, 10)
 		var campaign_won := _all_outposts_captured()
 		if campaign_won:
@@ -1197,7 +1205,7 @@ func _attack_outpost() -> void:
 		if tutorial_step == 3:
 			_advance_tutorial(4)
 		if campaign_won:
-			status_message = "CAMPAIGN COMPLETE! All ten enemy outposts are secured. The kingdom is united."
+			status_message = "CAMPAIGN COMPLETE! The Warlord's Citadel is defeated. Final cache: +500 gold, +250 stone, +200 food and +100 hero XP. The kingdom is united."
 	else:
 		_award_hero_xp(10)
 		defeats = mini(defeats + 1, 1000000)
