@@ -15,7 +15,9 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Queued infantry, archer and cavalry training with Barracks capacity limits
 - Combat, economy and scouting research; troop practice; region exploration; claimable campaign rewards and a persistent quest board
 - Royal Captain hero with XP/levels, skill upgrades, battle/exploration progression, and an army-power bonus
-- Scouting and targeted outpost battles with troop losses, rewards and visible battle/exploration animations; outposts unlock in campaign order and the HUD shows campaign progress through completion
+- Tactical outpost battles with troop-composition power, enemy doctrines (Fortified Hold, Longbow Nest, Mounted Raiders), scouting-based odds, bounded victory/defeat casualties, battle rewards, and visible battle/exploration animations; outposts unlock in campaign order and the HUD shows campaign progress through completion
+- Enemy-army encounters use escalating enemy formations (Shield Wall, Bow Line, Cavalry Wing), composition-aware power, odds-based outcomes, casualty calculations and increasing enemy levels
+- Distinct procedural 3D silhouettes for fortified, archer and cavalry outposts to communicate enemy doctrine visually
 - Timed production and bounded eight-hour offline production with research bonuses
 - Periodic autosave, backup recovery, save-data normalization and persisted upgrade/training timers
 - Procedural WAV sound effects for gathering, upgrades, training and battle outcomes, with a persistent mute toggle
@@ -28,7 +30,7 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Persistent Low / Balanced / High graphics presets and camera reset
 - Local save/load on the device, including graphics preferences; save recovery enforces a unique Keep and Barracks troop capacity
 
-This is a reimplementation of the prototype mechanics, not an automatic conversion of Unity scenes or C# scripts. It uses procedural low-poly models, not final production art, and synthesized prototype audio rather than an authored soundtrack. LAN co-op is source-implemented but not yet verified between physical phones; it is limited to one host and one guest on the same Wi-Fi network, uses UDP port 24567, and does not provide public-internet matchmaking or dedicated servers.
+This is a reimplementation of the prototype mechanics, not an automatic conversion of Unity scenes or C# scripts. It uses procedural low-poly models, not final production art, and synthesized prototype audio rather than an authored soundtrack. LAN co-op is intentionally Wi-Fi/LAN-only: one host and one guest on the same local Wi-Fi network, UDP port 24567, no public-internet matchmaking, no remote servers, and no internet-based accounts. Source-level tests pass, but physical-phone connectivity remains unverified.
 
 ## LAN co-op quick start
 
@@ -49,7 +51,7 @@ The workflow `.github/workflows/godot-android-apk.yml` builds a debug APK using 
 3. Run **Run workflow** only after explicit approval to build an APK. Source changes do not trigger APK builds.
 4. Open the completed run and download the `apptya-kingdom-godot-apk` artifact.
 
-The latest headless Godot integration run passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38855999110)), including project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, generated sound effects and looping ambient music, audio preference persistence and pause/resume behavior, daily rewards, Academy timed upgrades and duplicate-save recovery, sequential campaign scouting/attack gates, duplicate-scout prevention, LAN snapshot/action validation, a two-process ENet host/client action-and-snapshot round trip, and the procedural-world mesh budget/stable-refresh checks. The APK workflow remains manual-only and has not been run. The source workflow verifies the Android INTERNET permission and the LAN RPC path, but the first approved APK workflow run is still required to verify the Android export itself. The APK is for testing, not a Play Store release.
+The source-check workflow validates project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, audio generation/preferences, daily rewards, Academy timed upgrades, sequential campaign gates, LAN snapshot/action validation, a two-process ENet host/client action-and-snapshot round trip, and procedural-world mesh stability. Tactical combat and expanded corrupt-save regression tests are now included; check the latest Actions run before treating these changes as validated. The APK workflow remains manual-only and has not been run. The source workflow verifies the Android INTERNET permission and the LAN RPC path, but the first approved APK workflow run is still required to verify the Android export itself. The APK is for testing, not a Play Store release.
 
 ## Validation
 
