@@ -120,6 +120,9 @@ def gameplay_invariants() -> list[str]:
         if required_rule not in source:
             errors.append(f"ApptyaGameState.cs: troop queue/class rule missing: {required_rule}")
 
+    if "public string PracticeTroops()" not in source or "Data.practiceDrills=Mathf.Clamp(Data.practiceDrills,0,20)" not in source or "Data.practiceDrills>=20" not in source or "+Data.practiceDrills" not in source:
+        errors.append("ApptyaGameState.cs: practice progression must persist, cap at 20 drills, and contribute to army power")
+
     if 'string composition=" Army: "+Data.infantry+" infantry, "+Data.archers+" archers, "+Data.cavalry+" cavalry."' not in source:
         errors.append("ApptyaGameState.cs: battle result must report troop-class composition")
 
@@ -179,7 +182,7 @@ def gameplay_invariants() -> list[str]:
     hud_path = ROOT / "UnityProject/Assets/Scripts/ApptyaRuntimeHud.cs"
     if hud_path.is_file():
         hud = hud_path.read_text(encoding="utf-8")
-        for practice_rule in ('"Practice troops"', "void PracticeSelectedTarget()", 'selectedBuildingKey != "practice"', "state.ArmyPower()"):
+        for practice_rule in ('"Practice troops"', "void PracticeSelectedTarget()", 'selectedBuildingKey != "practice"', "state.ArmyPower()", "state.PracticeTroops()"):
             if practice_rule not in hud:
                 errors.append(f"ApptyaRuntimeHud.cs: practice target interaction missing: {practice_rule}")
 
