@@ -322,7 +322,7 @@ func _update_tile_highlight() -> void:
 func _rebuild_buildings() -> void:
 	for node in building_nodes:
 		if is_instance_valid(node):
-			node.queue_free()
+			node.free()
 	building_nodes.clear()
 	for i in range(9):
 		var x := float(i % 3 - 1) * 3.7
@@ -393,8 +393,12 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 	return root
 
 func play_attack(target_index: int, victory: bool) -> void:
-	var safe_target := clampi(target_index, 0, 4)
-	var positions := [Vector3(-10.0, 0.1, -8.0), Vector3(-5.0, 0.1, -12.0), Vector3(0.0, 0.1, -14.0), Vector3(5.0, 0.1, -12.0), Vector3(10.0, 0.1, -8.0)]
+	var safe_target := clampi(target_index, 0, 9)
+	var positions := [
+		Vector3(-12.0, 0.1, -9.0), Vector3(-8.0, 0.1, -13.0), Vector3(-3.0, 0.1, -14.0),
+		Vector3(3.0, 0.1, -14.0), Vector3(8.0, 0.1, -13.0), Vector3(12.0, 0.1, -8.0),
+		Vector3(12.0, 0.1, 1.0), Vector3(9.0, 0.1, 10.0), Vector3(2.0, 0.1, 13.0), Vector3(-9.0, 0.1, 10.0)
+	]
 	var target_position: Vector3 = positions[safe_target]
 	var squad_size := mini(5, maxi(3, current_guards))
 	for i in range(squad_size):
@@ -453,7 +457,7 @@ func _show_battle_flash(position_value: Vector3, victory: bool) -> void:
 func _rebuild_outposts() -> void:
 	for node in outpost_nodes:
 		if is_instance_valid(node):
-			node.queue_free()
+			node.free()
 	outpost_nodes.clear()
 	var positions := [
 		Vector3(-12.0, 0.0, -9.0), Vector3(-8.0, 0.0, -13.0), Vector3(-3.0, 0.0, -14.0),
@@ -493,7 +497,7 @@ func _rebuild_outposts() -> void:
 func _rebuild_guards() -> void:
 	for node in guard_nodes:
 		if is_instance_valid(node):
-			node.queue_free()
+			node.free()
 	guard_nodes.clear()
 	var visible_count := mini(current_guards, 7)
 	for i in range(visible_count):
