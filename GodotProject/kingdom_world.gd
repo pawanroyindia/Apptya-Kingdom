@@ -185,13 +185,22 @@ func _find_animation_player(root: Node) -> AnimationPlayer:
 func _play_animation_clip(player: AnimationPlayer, desired: String) -> void:
 	if not is_instance_valid(player):
 		return
+	var aliases: Array[String] = [desired.to_lower()]
+	if desired == "Walk":
+		aliases = ["walk", "run", "jog", "move"]
+	elif desired == "Attack":
+		aliases = ["attack", "slash", "combat", "sword", "hit"]
+	elif desired == "Idle":
+		aliases = ["idle", "stand", "breath"]
 	var chosen := ""
 	for clip in player.get_animation_list():
-		if clip == desired:
-			chosen = clip
+		var normalized := clip.to_lower()
+		for alias in aliases:
+			if normalized.contains(alias):
+				chosen = clip
+				break
+		if not chosen.is_empty():
 			break
-		if chosen.is_empty() and clip.to_lower().contains(desired.to_lower()):
-			chosen = clip
 	if not chosen.is_empty() and player.current_animation != chosen:
 		player.play(chosen)
 
