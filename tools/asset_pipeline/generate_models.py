@@ -201,6 +201,29 @@ def export_glb(path,objects):
       export_frame_range=True,export_force_sampling=True,export_nla_strips=True)
     bpy.ops.object.select_all(action="DESELECT")
 
+def validate_character(arm,mesh):
+    if mesh is None or mesh.type!="MESH":
+        raise RuntimeError("Character export has no merged mesh")
+    if not any(mod.type=="ARMATURE" and mod.object==arm for mod in mesh.modifiers):
+        raise RuntimeError("Character mesh is missing its armature deformation modifier")
+    bone_names={bone.name for bone in arm.data.bones}
+    group_names={group.name for group in mesh.vertex_groups}
+    missing=bone_names-group_names
+    if missing:
+        raise RuntimeError("Character is missing deformation groups: "+", ".join(sorted(missing)))
+    unweighted=[vertex.index for vertex in mesh.data.vertices if not vertex.groups]
+    if unweighted:
+        raise RuntimeError("Unweighted character vertices: "+str(unweighted[:12]))
+    clips={strip.name:strip for track in arm.animation_data.nla_tracks for strip in track.strips}
+    for name in ("Idle","Walk","Attack"):
+        if name not in clips or clips[name].action is None:
+            raise RuntimeError("Missing exported animation clip: "+name)
+        if clips[name].action_frame_end-clips[name].action_frame_start < 4:
+            raise RuntimeError("Animation clip is too short: "+name)
+        if not any(len(fc.keyframe_points)>1 for fc in clips[name].action.fcurves):
+            raise RuntimeError("Animation has no usable keyframes: "+name)
+    print("CHARACTER_DEFORMATION_QA_OK",mesh.name,len(mesh.data.vertices),len(bone_names),sorted(clips))
+
 def character(path,royal):
     bpy.ops.object.select_all(action="DESELECT"); arm=make_rig("RoyalCaptain" if royal else "KingdomGuard"); parts=[]
     def add(o): parts.append(o); return o
@@ -299,6 +322,7 @@ def character(path,royal):
         add(cube("ShieldRimRight",(-0.345,-0.091,0.92),(0.025,0.018,0.34),"gold",0.006,"Forearm.L",arm))
     animate_rig(arm)
     combined=combine_meshes(parts,"Character_Mesh",arm)
+    validate_character(arm,combined)
     export_glb(path,[arm,combined])
 
 def building(path,kind):
