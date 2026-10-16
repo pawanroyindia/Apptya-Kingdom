@@ -129,7 +129,8 @@ func _notification(what: int) -> void:
 		if is_instance_valid(music_player):
 			music_player.stop()
 	elif what == NOTIFICATION_APPLICATION_RESUMED:
-		_apply_offline_production(true)
+		if not (is_instance_valid(network_session) and network_session.is_client_connected()):
+			_apply_offline_production(true)
 		_resume_timed_upgrades()
 		if music_enabled and is_instance_valid(music_player):
 			music_player.play()
@@ -903,6 +904,8 @@ func _upgrade_keep() -> void:
 	_refresh_ui()
 
 func _finish_keep_upgrade() -> void:
+	if is_instance_valid(network_session) and network_session.is_client_connected():
+		return
 	if keep_upgrade_finish_unix <= 0:
 		return
 	keep_upgrade_finish_unix = 0
@@ -982,6 +985,8 @@ func _upgrade_selected_building() -> void:
 	_refresh_ui()
 
 func _finish_building_upgrade() -> void:
+	if is_instance_valid(network_session) and network_session.is_client_connected():
+		return
 	if building_upgrade_finish_unix <= 0:
 		return
 	if building_upgrade_tile >= 0 and building_upgrade_tile < tiles.size():
@@ -1079,6 +1084,8 @@ func _queue_troop(troop_type: String, count: int = 1) -> void:
 	_refresh_ui()
 
 func _finish_troop_training() -> void:
+	if is_instance_valid(network_session) and network_session.is_client_connected():
+		return
 	if queued_troop_count <= 0:
 		return
 	match queued_troop_type:
@@ -1234,6 +1241,8 @@ func _enemy_power() -> int:
 	return 10 + enemy_level * 7
 
 func _attack_enemy_army() -> void:
+	if _route_network_action("army_battle"):
+		return
 	if guards < 1:
 		status_message = "Train guards before attacking the enemy army."
 		_refresh_ui()
@@ -1388,6 +1397,8 @@ func _claim_daily_reward() -> void:
 	_refresh_ui()
 
 func _claim_quest(quest_id: String) -> void:
+	if _route_network_action("claim_quest" {"quest_id": quest_id}):
+		return
 	var captured_outposts := 0
 	for defeated in outpost_defeated:
 		captured_outposts += 1 if defeated == 1 else 0
@@ -1432,6 +1443,8 @@ func _claim_quest(quest_id: String) -> void:
 	_refresh_ui()
 
 func _claim_reward(reward_id: String) -> void:
+	if _route_network_action("claim_reward" {"reward_id": reward_id}):
+		return
 	match reward_id:
 		"first_victory":
 			if victories < 1:
@@ -1476,6 +1489,8 @@ func _on_autosave_tick() -> void:
 	_persist_game()
 
 func _on_production_tick() -> void:
+	if is_instance_valid(network_session) and network_session.is_client_connected():
+		return
 	for i in range(tiles.size()):
 		match tiles[i]:
 			"Farm":
@@ -1565,6 +1580,9 @@ func _apply_network_action(action: String, payload: Dictionary) -> void:
 		"train_hero": _train_hero()
 		"upgrade_hero_skill": _upgrade_hero_skill()
 		"claim_daily": _claim_daily_reward()
+		"army_battle": _attack_enemy_army()
+		"claim_reward": _claim_reward(str(payload.get("reward_id", "")))
+		"claim_quest": _claim_quest(str(payload.get("quest_id", "")))
 
 func _persist_game() -> int:
 	last_saved_unix = int(Time.get_unix_time_from_system())
