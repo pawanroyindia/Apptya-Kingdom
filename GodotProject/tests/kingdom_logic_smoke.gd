@@ -163,6 +163,29 @@ func _run_tests() -> void:
 		_fail("Backup save recovery failed.")
 		return
 
+	# Save data normalization must clamp invalid economy values and restore the Keep invariant.
+	game.gold = -50
+	game.wood = -10
+	game.food = -1
+	game.guards = -7
+	game.keep_level = 0
+	game.selected_tile = 99
+	game.tiles[0] = "UnknownBuilding"
+	game.tiles[4] = "Farm"
+	game.tile_levels[0] = 1000
+	game.outpost_defeated[0] = 9
+	game.region_scouted[0] = -2
+	game._normalize_save_data()
+	if game.gold != 0 or game.wood != 0 or game.food != 0 or game.guards != 0:
+		_fail("Save normalization did not clamp negative resource and guard values.")
+		return
+	if game.keep_level != 1 or game.selected_tile != 8 or game.tiles[0] != "Empty" or game.tiles[4] != "Keep" or game.tile_levels[0] != 99:
+		_fail("Save normalization did not restore valid kingdom limits.")
+		return
+	if game.outpost_defeated[0] != 1 or game.region_scouted[0] != 0:
+		_fail("Save normalization did not sanitize outpost progress.")
+		return
+
 	print("APPTYA_GAMEPLAY_TESTS_PASSED")
 	quit(0)
 
