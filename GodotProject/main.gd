@@ -590,11 +590,11 @@ func _setup_audio() -> void:
 	sound_player.bus = "Master"
 	add_child(sound_player)
 	sound_streams = {
-		"gather": _make_tone(660.0, 0.09),
-		"build": _make_tone(440.0, 0.14),
-		"victory": _make_tone(880.0, 0.22),
-		"defeat": _make_tone(180.0, 0.20),
-		"train": _make_tone(520.0, 0.11)
+		"gather": _make_game_effect("gather"),
+		"build": _make_game_effect("build"),
+		"victory": _make_game_effect("victory"),
+		"defeat": _make_game_effect("defeat"),
+		"train": _make_game_effect("train")
 	}
 	music_player = AudioStreamPlayer.new()
 	music_player.bus = "Master"
@@ -606,20 +606,44 @@ func _setup_audio() -> void:
 		music_player.play()
 
 func _make_tone(frequency: float, duration: float) -> AudioStreamWAV:
+	# Retained as a compact fallback tone for future UI cues.
+	return _make_effect_layer(frequency, frequency * 0.88, duration, 0.2, 0.05)
+
+func _make_game_effect(effect_name: String) -> AudioStreamWAV:
+	match effect_name:
+		"gather":
+			var first := _make_effect_layer(1050.0, 1420.0, 0.24, 0.22, 0.07)
+			return _mix_effects(first, _make_effect_layer(1760.0, 1320.0, 0.32, 0.08, 0.02), 0.28)
+		"build":
+			var thud := _make_effect_layer(145.0, 72.0, 0.48, 0.48, 0.08)
+			return _mix_effects(thud, _make_effect_layer(720.0, 420.0, 0.36, 0.22, 0.12), 0.32)
+		"victory":
+			var chord := _make_effect_layer(523.25, 1046.5, 0.72, 0.18, 0.2)
+			chord = _mix_effects(chord, _make_effect_layer(659.25, 1318.5, 0.72, 0.14, 0.18), 0.7)
+			return _mix_effects(chord, _make_effect_layer(783.99, 1568.0, 0.82, 0.12, 0.24), 0.58)
+		"defeat":
+			var low := _make_effect_layer(220.0, 110.0, 0.72, 0.38, 0.1)
+			return _mix_effects(low, _make_effect_layer(164.81, 82.41, 0.78, 0.2, 0.14), 0.48)
+		"train":
+			var hammer := _make_effect_layer(620.0, 380.0, 0.46, 0.22, 0.06)
+			return _mix_effects(hammer, _make_effect_layer(1280.0, 760.0, 0.58, 0.12, 0.1), 0.42)
+	return _make_effect_layer(440.0, 330.0, 0.2, 0.16, 0.05)
+
+func _make_effect_layer(start_frequency: float, end_frequency: float, duration: float, amplitude: float, transient_level: float) -> AudioStreamWAV:
 	const SAMPLE_RATE := 22050
-	var sample_count := int(SAMPLE_RATE * duration)
+	var sample_count := maxi(1, int(SAMPLE_RATE * duration))
 	var pcm := PackedByteArray()
 	pcm.resize(sample_count * 2)
 	for i in range(sample_count):
 		var t := float(i) / SAMPLE_RATE
 		var progress := t / duration
-		var envelope := maxf(0.0, minf(minf(1.0, t * 65.0), minf(1.0, (duration - t) * 22.0)))
-		var swept_frequency := frequency * (1.0 - progress * 0.12)
-		var fundamental := sin(TAU * swept_frequency * t)
-		var overtone := sin(TAU * swept_frequency * 2.01 * t) * 0.24
-		var transient := sin(TAU * (frequency * 3.2) * t) * exp(-t * 34.0) * 0.12
-		var sample := (fundamental + overtone + transient) * envelope * 0.16
-		pcm.encode_s16(i * 2, int(clampf(sample, -0.9, 0.9) * 32767.0))
+		var phase := TAU * (start_frequency * t + (end_frequency - start_frequency) * t * t / (2.0 * duration))
+		var envelope := exp(-t * (5.0 if duration > 0.4 else 10.0)) * minf(1.0, t * 120.0)
+		var fundamental := sin(phase)
+		var upper := sin(phase * 2.01 + 0.18) * 0.3
+		var shimmer := sin(phase * 3.97) * exp(-t * 22.0) * transient_level
+		var sample := (fundamental + upper + shimmer) * envelope * amplitude
+		pcm.encode_s16(i * 2, int(clampf(sample, -0.92, 0.92) * 32767.0))
 	var stream := AudioStreamWAV.new()
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = SAMPLE_RATE
@@ -627,6 +651,23 @@ func _make_tone(frequency: float, duration: float) -> AudioStreamWAV:
 	stream.data = pcm
 	return stream
 
+func _mix_effects(first: AudioStreamWAV, second: AudioStreamWAV, second_gain: float) -> AudioStreamWAV:
+	const SAMPLE_RATE := 22050
+	var first_data: PackedByteArray = first.data
+	var second_data: PackedByteArray = second.data
+	var sample_count := maxi(first_data.size(), second_data.size()) / 2
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	for i in range(sample_count):
+		var a := float(first_data.decode_s16(i * 2)) / 32767.0 if i * 2 + 1 < first_data.size() else 0.0
+		var b := float(second_data.decode_s16(i * 2)) / 32767.0 if i * 2 + 1 < second_data.size() else 0.0
+		pcm.encode_s16(i * 2, int(clampf(a + b * second_gain, -0.92, 0.92) * 32767.0))
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = SAMPLE_RATE
+	stream.stereo = false
+	stream.data = pcm
+	return stream
 func _make_ambient_music() -> AudioStreamWAV:
 	# Original procedural score with sustained harmony, plucked arpeggios, bass and a melodic motif.
 	const SAMPLE_RATE := 11025
