@@ -151,6 +151,7 @@ func _build_ui() -> void:
 	world_view = load("res://kingdom_world.tscn").instantiate() as Node3D
 	world_viewport.add_child(world_view)
 	world_view.connect("tile_selected", Callable(self, "_select_tile"))
+	_apply_graphics_quality()
 	_add_button_row(column, [
 		{"text": "Cycle Graphics Quality", "action": _cycle_graphics_quality},
 		{"text": "Reset Camera", "action": _reset_camera}
