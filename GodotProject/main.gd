@@ -60,6 +60,8 @@ var upgrade_timer: Timer
 var building_upgrade_timer: Timer
 var troop_training_timer: Timer
 var world_view: Node3D
+var world_viewport: SubViewport
+var graphics_quality := "Balanced"
 
 func _ready() -> void:
 	_load_game()
@@ -141,7 +143,7 @@ func _build_ui() -> void:
 	world_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	world_container.stretch = true
 	column.add_child(world_container)
-	var world_viewport := SubViewport.new()
+	world_viewport = SubViewport.new()
 	world_viewport.size = Vector2i(640, 360)
 	world_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	world_viewport.gui_disable_input = true
@@ -149,6 +151,10 @@ func _build_ui() -> void:
 	world_view = load("res://kingdom_world.tscn").instantiate() as Node3D
 	world_viewport.add_child(world_view)
 	world_view.connect("tile_selected", Callable(self, "_select_tile"))
+	_add_button_row(column, [
+		{"text": "Cycle Graphics Quality", "action": _cycle_graphics_quality},
+		{"text": "Reset Camera", "action": _reset_camera}
+	])
 
 	var resource_panel := PanelContainer.new()
 	resource_panel.add_theme_stylebox_override("panel", _panel_style("#243a30"))
@@ -386,10 +392,43 @@ func _refresh_ui() -> void:
 		outpost_label.text = _get_outpost_description()
 		tutorial_label.text = _get_tutorial_text()
 		achievements_label.text = "Achievements: %d/8 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
-		campaign_label.text = "Army power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20" % [_army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills]
+		campaign_label.text = "Army power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s" % [_army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality]
 		if is_instance_valid(world_view):
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, infantry, archers, cavalry, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 		status_label.text = status_message
+
+func _cycle_graphics_quality() -> void:
+	match graphics_quality:
+		"Low":
+			graphics_quality = "Balanced"
+		"Balanced":
+			graphics_quality = "High"
+		_:
+			graphics_quality = "Low"
+	_apply_graphics_quality()
+	status_message = "Graphics quality set to %s." % graphics_quality
+	_persist_game()
+	_refresh_ui()
+
+func _apply_graphics_quality() -> void:
+	if is_instance_valid(world_viewport):
+		match graphics_quality:
+			"Low":
+				world_viewport.size = Vector2i(480, 270)
+			"High":
+				world_viewport.size = Vector2i(800, 450)
+			_:
+				world_viewport.size = Vector2i(640, 360)
+	if is_instance_valid(world_view) and world_view.has_method("set_quality_preset"):
+		world_view.set_quality_preset(graphics_quality)
+
+func _reset_camera() -> void:
+	if is_instance_valid(world_view) and world_view.has_method("reset_camera"):
+		world_view.reset_camera()
+		status_message = "Camera view reset."
+	else:
+		status_message = "Camera is not ready yet."
+	_refresh_ui()
 
 func _gather_resource(resource_type: String, amount: int) -> void:
 	if amount <= 0:
@@ -1008,6 +1047,7 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "wood", wood)
 	config.set_value("kingdom", "food", food)
 	config.set_value("kingdom", "stone", stone)
+	config.set_value("kingdom", "graphics_quality", graphics_quality)
 	config.set_value("kingdom", "day", day)
 	config.set_value("kingdom", "enemy_level", enemy_level)
 	config.set_value("kingdom", "explored_regions", explored_regions)
@@ -1056,6 +1096,7 @@ func _load_game() -> void:
 	wood = int(config.get_value("kingdom", "wood", wood))
 	food = int(config.get_value("kingdom", "food", food))
 	stone = int(config.get_value("kingdom", "stone", stone))
+	graphics_quality = str(config.get_value("kingdom", "graphics_quality", graphics_quality))
 	day = int(config.get_value("kingdom", "day", day))
 	enemy_level = int(config.get_value("kingdom", "enemy_level", enemy_level))
 	explored_regions = int(config.get_value("kingdom", "explored_regions", explored_regions))
@@ -1109,6 +1150,7 @@ func _load_game() -> void:
 	building_upgrade_tile = int(config.get_value("kingdom", "building_upgrade_tile", -1))
 	last_saved_unix = int(config.get_value("kingdom", "saved_at", Time.get_unix_time_from_system()))
 	_normalize_save_data()
+	_apply_graphics_quality()
 	_apply_offline_production(false)
 
 func _normalize_save_data() -> void:
@@ -1116,6 +1158,8 @@ func _normalize_save_data() -> void:
 	wood = maxi(wood, 0)
 	food = maxi(food, 0)
 	stone = maxi(stone, 0)
+	if graphics_quality not in ["Low", "Balanced", "High"]:
+		graphics_quality = "Balanced"
 	day = clampi(day, 1, 1000000)
 	enemy_level = clampi(enemy_level, 1, 100000)
 	explored_regions = clampi(explored_regions, 0, 1000000)
