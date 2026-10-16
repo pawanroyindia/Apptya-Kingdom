@@ -248,12 +248,19 @@ def validate_character(arm,mesh):
     if unweighted:
         raise RuntimeError("Unweighted character vertices: "+str(unweighted[:12]))
     clips={strip.name:strip for track in arm.animation_data.nla_tracks for strip in track.strips}
+    # Blender may suffix datablock/strip names (for example Idle.001) when
+    # generating a second rig in the same session. Match the stable clip stem,
+    # not only the globally unique display name.
     for name in ("Idle","Walk","Attack"):
-        if name not in clips or clips[name].action is None:
-            raise RuntimeError("Missing exported animation clip: "+name)
-        if clips[name].action_frame_end-clips[name].action_frame_start < 4:
+        matching=[strip for track in arm.animation_data.nla_tracks for strip in track.strips
+          if strip.name.split(".")[0].lower()==name.lower()
+          or (strip.action is not None and strip.action.name.split(".")[0].lower()==name.lower())]
+        if not matching or matching[0].action is None:
+            raise RuntimeError("Missing exported animation clip: "+name+"; found "+", ".join(sorted(clips)))
+        clip=matching[0]
+        if clip.action_frame_end-clip.action_frame_start < 4:
             raise RuntimeError("Animation clip is too short: "+name)
-        if not any(len(fc.keyframe_points)>1 for fc in clips[name].action.fcurves):
+        if not any(len(fc.keyframe_points)>1 for fc in clip.action.fcurves):
             raise RuntimeError("Animation has no usable keyframes: "+name)
     print("CHARACTER_DEFORMATION_QA_OK",mesh.name,len(mesh.data.vertices),len(bone_names),sorted(clips))
 
