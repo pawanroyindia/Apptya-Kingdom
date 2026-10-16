@@ -34,6 +34,25 @@ jobs:
         run: |
           PYTHONPATH=/usr/lib/python3/dist-packages blender --background --factory-startup --python tools/asset_pipeline/generate_models.py
 
+      - name: Download CC0 medieval modules and compose authored buildings
+        shell: bash
+        run: |
+          set -euo pipefail
+          KIT_SHA=21104b4045261c28fc312360841ed1a7b0ac8782
+          KIT_ROOT="https://raw.githubusercontent.com/J-Ponzo/gltf-medieval-village-megakit/$KIT_SHA"
+          KIT_DIR=/tmp/apptya-medieval-kit
+          mkdir -p "$KIT_DIR/glTF"
+          for module in Wall_UnevenBrick_Door_Round Wall_UnevenBrick_Straight Roof_RoundTiles_6x6 Wall_Plaster_Door_Round Wall_Plaster_Straight; do
+            curl --fail --location --retry 3 "$KIT_ROOT/glTF/$module.gltf" --output "$KIT_DIR/glTF/$module.gltf"
+            curl --fail --location --retry 3 "$KIT_ROOT/glTF/$module.bin" --output "$KIT_DIR/glTF/$module.bin"
+          done
+          for texture in T_WoodTrim_Normal.png T_WoodTrim_BaseColor.png T_WoodTrim_Roughness.png T_Plaster_Normal.png T_Plaster_BaseColor.png T_Plaster_ORM.png T_UnevenBrick_Normal.png T_UnevenBrick_BaseColor.png T_UnevenBrick_Roughness.png T_RoundTiles_Normal.png T_RoundTiles_BaseColor.png T_RoundTiles_Roughness.png T_RockTrim_Normal.png T_RockTrim_BaseColor.png T_RockTrim_ORM.png; do
+            curl --fail --location --retry 3 "$KIT_ROOT/glTF/$texture" --output "$KIT_DIR/glTF/$texture"
+          done
+          curl --fail --location --retry 3 "$KIT_ROOT/LICENSE" --output "$KIT_DIR/QUATERNIUS_CC0_1.0.txt"
+          PYTHONPATH=/usr/lib/python3/dist-packages blender --background --factory-startup --python tools/asset_pipeline/compose_authored_buildings.py
+          cp "$KIT_DIR/QUATERNIUS_CC0_1.0.txt" GodotProject/assets/production/source_models/QUATERNIUS_CC0_1.0.txt
+
       - name: Generate mixed stereo soundtrack and game effects
         run: |
           python3 tools/asset_pipeline/generate_audio.py
@@ -77,7 +96,7 @@ jobs:
           ffmpeg -hide_banner -loglevel error -y -i "$MUSIC_DIR/once_upon_a_time_loop_0.mp3" -af "volume=0.82" -ar 22050 -ac 2 -c:a pcm_s16le "$MODEL_DIR/audio/kingdom_theme.wav"
           cat > "$MODEL_DIR/ASSET_PROVENANCE.md" <<'EOF'
           # Third-party runtime assets
-          - Character and gate-tower models: Quaternius, RPG Character Pack and Medieval Village MegaKit, CC0 1.0 Universal. Source repository snapshot: Hakhyun-Kim/constellation-defense at commit 8ad1c93e382e2a6a5755882c1b9b2922877fab6e. The GLB models are used without geometry or texture edits.
+          - Character and gate-tower models: Quaternius RPG Character Pack and Medieval Village MegaKit, CC0 1.0 Universal. Keep and barracks are assembled from the pack's textured wall and roof modules. Source repository snapshot: Hakhyun-Kim/constellation-defense at commit 8ad1c93e382e2a6a5755882c1b9b2922877fab6e. The GLB models are used without geometry or texture edits.
           - Sound samples: Kenney, RPG Audio / Impact Sounds selections, CC0 1.0 Universal. The source OGG files are retained in `source_sfx/`; each runtime WAV mixes one source sample with the project's original generated effect.
           - Kingdom score: "Once Upon a Time (loop)" by TAD, CC0 1.0, from OpenGameArt; source MP3 is retained in `source_music/` and converted to the runtime WAV without trimming.
           - Source: https://quaternius.com/packs/rpgcharacters.html ; https://quaternius.com/packs/medievalvillagemegakit.html ; https://kenney.nl/assets/rpg-audio ; https://kenney.nl/assets/impact-sounds ; https://opengameart.org/content/once-upon-a-time-loop
@@ -92,6 +111,11 @@ jobs:
           test -s GodotProject/assets/production/keep.glb
           test -s GodotProject/assets/production/barracks.glb
           test -s GodotProject/assets/production/watchtower.glb
+          test -s GodotProject/assets/production/source_models/keep_generated.glb
+          test -s GodotProject/assets/production/source_models/barracks_generated.glb
+          test -s GodotProject/assets/production/source_models/QUATERNIUS_CC0_1.0.txt
+          test "$(stat -c %s GodotProject/assets/production/keep.glb)" -gt 100000
+          test "$(stat -c %s GodotProject/assets/production/barracks.glb)" -gt 100000
           test -s GodotProject/assets/production/audio/kingdom_theme.wav
           for sound in gather build train victory defeat scout; do test -s "GodotProject/assets/production/audio/$sound.wav"; done
           test "$(find GodotProject/assets/production/textures -name '*.png' | wc -l)" -ge 30
