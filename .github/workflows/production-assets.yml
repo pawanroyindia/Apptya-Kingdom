@@ -166,9 +166,25 @@ jobs:
           echo "Importing generated assets in Godot 4.5.1 (5-minute command limit)"
           timeout --signal=TERM --kill-after=20s 300s "$GODOT" --headless --editor --path GodotProject --quit
           echo "Running production asset smoke tests"
-          timeout --signal=TERM --kill-after=20s 300s "$GODOT" --headless --path GodotProject --script res://tests/production_asset_smoke.gd
+          set +e
+          timeout --signal=TERM --kill-after=20s 300s "$GODOT" --headless --path GodotProject --script res://tests/production_asset_smoke.gd 2>&1 | tee /tmp/production-asset-test.log
+          ASSET_STATUS=${PIPESTATUS[0]}
+          set -e
+          if [[ "$ASSET_STATUS" -ne 0 ]] || grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script|APPTYA_PRODUCTION_ASSET_TEST_FAILED" /tmp/production-asset-test.log | grep -v "resources still in use at exit"; then
+            echo "Production asset smoke test failed."
+            exit 1
+          fi
+          grep -q "APPTYA_PRODUCTION_ASSET_TESTS_PASSED" /tmp/production-asset-test.log
           echo "Running gameplay, save, touch and LAN regression tests"
-          timeout --signal=TERM --kill-after=20s 300s "$GODOT" --headless --path GodotProject --script res://tests/kingdom_logic_smoke.gd
+          set +e
+          timeout --signal=TERM --kill-after=20s 300s "$GODOT" --headless --path GodotProject --script res://tests/kingdom_logic_smoke.gd 2>&1 | tee /tmp/kingdom-logic-test.log
+          GAMEPLAY_STATUS=${PIPESTATUS[0]}
+          set -e
+          if [[ "$GAMEPLAY_STATUS" -ne 0 ]] || grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script|APPTYA_GAMEPLAY_TEST_FAILED" /tmp/kingdom-logic-test.log | grep -v "resources still in use at exit"; then
+            echo "Gameplay regression test failed."
+            exit 1
+          fi
+          grep -q "APPTYA_GAMEPLAY_TESTS_PASSED" /tmp/kingdom-logic-test.log
 
       - name: Commit generated models, textures and audio into repository
         run: |
