@@ -301,7 +301,7 @@ func _refresh_ui() -> void:
 		tutorial_label.text = _get_tutorial_text()
 		achievements_label.text = "Achievements: %d/8 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
 		if is_instance_valid(world_view):
-			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, outpost_defeated, selected_outpost, selected_tile)
+			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 		status_label.text = status_message
 
 func _select_tile(index: int) -> void:
