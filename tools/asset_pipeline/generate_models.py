@@ -254,6 +254,49 @@ def character(path,royal):
         add(cylinder("SpearHead",(0.46,-0.02,1.36),0.055,0.16,"steel",12,"Forearm.R",arm))
         for i in range(4):
             add(cube("BeltPouch",(0.22+i*0.035,-0.19,0.82),(0.055,0.06,0.06),"leather",0.008,"Spine",arm))
+    # Additional authored detail pass: layered plate edges, rivets, chain links, cloth folds,
+    # heraldic marks and weapon fittings. These are merged into one draw-call mesh at export.
+    for side,label in [(-1,"L"),(1,"R")]:
+        # Overlapping pauldron plates with raised rim and fasteners.
+        add(sphere("PauldronOuter"+label,(side*0.275,-0.105,1.285),(0.145,0.085,0.095),armor,"Arm."+label,arm))
+        add(cube("PauldronRim"+label,(side*0.275,-0.166,1.285),(0.19,0.018,0.035),"gold",0.008,"Arm."+label,arm))
+        for z in [1.245,1.285,1.325]:
+            add(sphere("PauldronRivet"+label,(side*(0.22+abs(z-1.285)*0.15),-0.176,z),(0.012,0.008,0.012),"gold","Arm."+label,arm))
+        # Layered vambrace and greave ridges make the silhouette readable at game zoom.
+        for z in [0.78,0.84,0.90]:
+            add(cube("VambraceRidge"+label,(side*0.40,-0.061,z),(0.105,0.018,0.018),"gold",0.004,"Forearm."+label,arm))
+        for z in [0.24,0.29,0.34]:
+            add(cube("GreaveRidge"+label,(side*0.14,-0.072,z),(0.105,0.018,0.018),"gold",0.004,"Shin."+label,arm))
+        # Boot buckles and articulated knee side plates.
+        add(cube("BootBuckle"+label,(side*0.14,-0.195,0.16),(0.055,0.018,0.035),"gold",0.005,"Shin."+label,arm))
+        add(sphere("KneeSideStud"+label,(side*0.205,-0.075,0.52),(0.018,0.012,0.018),"gold","Leg."+label,arm))
+    # Riveted chest perimeter and a fine chainmail field under the breastplate.
+    for x in [-0.145,-0.072,0.0,0.072,0.145]:
+        for z in [0.99,1.045,1.10,1.155]:
+            add(sphere("MailLink",(x,-0.158,z),(0.012,0.008,0.012),"steel","Spine",arm))
+    for x in [-0.16,-0.08,0.0,0.08,0.16]:
+        add(sphere("ChestRivet",(x,-0.184,1.205),(0.012,0.009,0.012),"gold","Spine",arm))
+    # Segmented skirt faulds and a pair of back-mounted cloth tails.
+    for side,label in [(-1,"L"),(1,"R")]:
+        add(cube("FauldPanel"+label,(side*0.105,-0.16,0.72),(0.13,0.045,0.20),tunic,0.012,"Spine",arm))
+        add(cube("FauldEdge"+label,(side*0.105,-0.187,0.72),(0.018,0.012,0.18),"gold",0.004,"Spine",arm))
+        add(cube("CapeFold"+label,(side*0.075,0.17,0.92),(0.035,0.025,0.38),"gold" if royal else "steel",0.006,"Spine",arm))
+    if royal:
+        # Raised crown points and a faceted jewel; all remain part of the skinned hero mesh.
+        for i in range(5):
+            a=2*pi*i/5
+            add(cube("CrownPoint",(0.145*cos(a),-0.012,1.805+0.025*(1-abs(cos(a)))),(0.025,0.028,0.09),"gold",0.006,"Head",arm))
+        add(sphere("CrownHeart",(0,-0.176,1.765),(0.035,0.018,0.04),"red","Head",arm))
+        # Guarded hilt and pommel details.
+        add(sphere("SwordPommel",(0.46,-0.02,0.575),(0.035,0.035,0.035),"gold","Forearm.R",arm))
+        for z in [0.62,0.66,0.70]:
+            add(cube("SwordGripWrap",(0.46,-0.02,z),(0.045,0.035,0.012),"gold",0.003,"Forearm.R",arm))
+    else:
+        # Shield rim and boss add depth without a texture-heavy material stack.
+        add(cube("ShieldRimTop",(-0.48,-0.091,1.105),(0.25,0.018,0.025),"gold",0.006,"Forearm.L",arm))
+        add(cube("ShieldRimBottom",(-0.48,-0.091,0.735),(0.25,0.018,0.025),"gold",0.006,"Forearm.L",arm))
+        add(cube("ShieldRimLeft",(-0.615,-0.091,0.92),(0.025,0.018,0.34),"gold",0.006,"Forearm.L",arm))
+        add(cube("ShieldRimRight",(-0.345,-0.091,0.92),(0.025,0.018,0.34),"gold",0.006,"Forearm.L",arm))
     animate_rig(arm)
     combined=combine_meshes(parts,"Character_Mesh",arm)
     export_glb(path,[arm,combined])
