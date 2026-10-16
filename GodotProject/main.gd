@@ -13,6 +13,8 @@ var selected_tile := 4
 var selected_outpost := 0
 var last_saved_unix := 0
 var keep_upgrade_finish_unix := 0
+var building_upgrade_finish_unix := 0
+var building_upgrade_tile := -1
 var tutorial_step := 0
 var tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
 var tile_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
@@ -32,6 +34,7 @@ var outpost_label: Label
 var achievements_label: Label
 var tick_timer: Timer
 var upgrade_timer: Timer
+var building_upgrade_timer: Timer
 var world_view: Node3D
 
 func _ready() -> void:
@@ -48,12 +51,11 @@ func _ready() -> void:
 	upgrade_timer.one_shot = true
 	upgrade_timer.timeout.connect(_finish_keep_upgrade)
 	add_child(upgrade_timer)
-	if keep_upgrade_finish_unix > 0:
-		var remaining := keep_upgrade_finish_unix - int(Time.get_unix_time_from_system())
-		if remaining > 0:
-			upgrade_timer.start(float(remaining))
-		else:
-			_finish_keep_upgrade()
+	building_upgrade_timer = Timer.new()
+	building_upgrade_timer.one_shot = true
+	building_upgrade_timer.timeout.connect(_finish_building_upgrade)
+	add_child(building_upgrade_timer)
+	_resume_timed_upgrades()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
@@ -168,7 +170,7 @@ func _build_ui() -> void:
 	tile_detail_label.add_theme_color_override("font_color", Color("#d8e6d9"))
 	column.add_child(tile_detail_label)
 	_add_button_row(column, [
-		{"text": "Upgrade Selected\nCost scales by level", "action": _upgrade_selected_building},
+		{"text": "Upgrade Selected\nTimed, cost scales by level", "action": _upgrade_selected_building},
 		{"text": "Refresh / Save", "action": _save_game}
 	])
 
@@ -289,7 +291,7 @@ func _refresh_ui() -> void:
 			outpost_buttons[i].text = "%sOutpost %d\nThreat %d%s" % ["▶ " if i == selected_outpost else "", i + 1, outpost_threat[i], " • Defeated" if outpost_defeated[i] == 1 else ""]
 		outpost_label.text = _get_outpost_description()
 		tutorial_label.text = _get_tutorial_text()
-		achievements_label.text = "Achievements: %d/7 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
+		achievements_label.text = "Achievements: %d/8 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
 		if is_instance_valid(world_view):
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, outpost_defeated, selected_outpost, selected_tile)
 		status_label.text = status_message
@@ -412,6 +414,10 @@ func _finish_keep_upgrade() -> void:
 	_refresh_ui()
 
 func _upgrade_selected_building() -> void:
+	if building_upgrade_finish_unix > int(Time.get_unix_time_from_system()):
+		status_message = "Another building upgrade is already in progress."
+		_refresh_ui()
+		return
 	var building := tiles[selected_tile]
 	if building != "Farm" and building != "Mine" and building != "Barracks":
 		status_message = "Select a Farm, Mine, or Barracks to upgrade it."
@@ -426,10 +432,41 @@ func _upgrade_selected_building() -> void:
 		return
 	gold -= gold_cost
 	wood -= wood_cost
-	tile_levels[selected_tile] += 1
-	status_message = "%s upgraded to level %d." % [building, tile_levels[selected_tile]]
+	building_upgrade_tile = selected_tile
+	building_upgrade_finish_unix = int(Time.get_unix_time_from_system()) + maxi(5, level * 5)
+	building_upgrade_timer.start(float(building_upgrade_finish_unix - int(Time.get_unix_time_from_system())))
+	status_message = "%s upgrade started. It will finish in %d seconds." % [building, maxi(5, level * 5)]
 	_persist_game()
 	_refresh_ui()
+
+func _finish_building_upgrade() -> void:
+	if building_upgrade_finish_unix <= 0:
+		return
+	if building_upgrade_tile >= 0 and building_upgrade_tile < tiles.size():
+		var building := tiles[building_upgrade_tile]
+		if building == "Farm" or building == "Mine" or building == "Barracks":
+			tile_levels[building_upgrade_tile] = clampi(tile_levels[building_upgrade_tile] + 1, 1, 99)
+			_award_achievement("building_upgrade", "Master Builder", 40)
+			status_message = "%s upgrade complete at level %d." % [building, tile_levels[building_upgrade_tile]]
+	building_upgrade_finish_unix = 0
+	building_upgrade_tile = -1
+	_persist_game()
+	_refresh_ui()
+
+func _resume_timed_upgrades() -> void:
+	var now := int(Time.get_unix_time_from_system())
+	if keep_upgrade_finish_unix > 0:
+		var keep_remaining := keep_upgrade_finish_unix - now
+		if keep_remaining > 0:
+			upgrade_timer.start(float(keep_remaining))
+		else:
+			_finish_keep_upgrade()
+	if building_upgrade_finish_unix > 0:
+		var building_remaining := building_upgrade_finish_unix - now
+		if building_remaining > 0:
+			building_upgrade_timer.start(float(building_remaining))
+		else:
+			_finish_building_upgrade()
 
 func _train_guard() -> void:
 	if gold < 20 or food < 10:
@@ -521,6 +558,8 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "tutorial_step", tutorial_step)
 	config.set_value("kingdom", "achievements", achievements)
 	config.set_value("kingdom", "keep_upgrade_finish_unix", keep_upgrade_finish_unix)
+	config.set_value("kingdom", "building_upgrade_finish_unix", building_upgrade_finish_unix)
+	config.set_value("kingdom", "building_upgrade_tile", building_upgrade_tile)
 	config.set_value("kingdom", "saved_at", last_saved_unix)
 	return config.save(SAVE_PATH)
 
@@ -555,9 +594,11 @@ func _load_game() -> void:
 		achievements.clear()
 		for achievement in loaded_achievements:
 			var achievement_id := str(achievement)
-			if achievement_id in ["farm", "mine", "keep_upgrade", "five_guards", "scout", "outpost", "all_outposts"] and not achievements.has(achievement_id):
+			if achievement_id in ["farm", "mine", "keep_upgrade", "building_upgrade", "five_guards", "scout", "outpost", "all_outposts"] and not achievements.has(achievement_id):
 				achievements.append(achievement_id)
 	keep_upgrade_finish_unix = int(config.get_value("kingdom", "keep_upgrade_finish_unix", 0))
+	building_upgrade_finish_unix = int(config.get_value("kingdom", "building_upgrade_finish_unix", 0))
+	building_upgrade_tile = int(config.get_value("kingdom", "building_upgrade_tile", -1))
 	last_saved_unix = int(config.get_value("kingdom", "saved_at", Time.get_unix_time_from_system()))
 	_normalize_save_data()
 	_apply_offline_production(false)
@@ -581,6 +622,10 @@ func _normalize_save_data() -> void:
 		outpost_defeated[i] = 1 if outpost_defeated[i] == 1 else 0
 	if keep_upgrade_finish_unix < 0:
 		keep_upgrade_finish_unix = 0
+	if building_upgrade_finish_unix < 0:
+		building_upgrade_finish_unix = 0
+	if building_upgrade_tile < -1 or building_upgrade_tile >= tiles.size():
+		building_upgrade_tile = -1
 
 func _apply_offline_production(refresh_after: bool) -> void:
 	var now := int(Time.get_unix_time_from_system())
