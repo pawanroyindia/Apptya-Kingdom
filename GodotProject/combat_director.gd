@@ -47,6 +47,6 @@ static func resolve_enemy_army(infantry: int, archers: int, cavalry: int, hero_p
 	var enemy_style := ["Shield Wall", "Bow Line", "Cavalry Wing"][posmod(level - 1, 3)]
 	var composition_bonus := maxi(0, infantry) if posmod(level - 1, 3) == 0 else (maxi(0, archers) if posmod(level - 1, 3) == 1 else maxi(0, cavalry))
 	kingdom_power += composition_bonus * 2
-	var chance := clampi(50 + int(round(float(kingdom_power - enemy_power) * 0.8)), 5, 95)
+	var chance := clampi(50 + int(round(float(kingdom_power - enemy_power) * 0.8)), 5, 100)
 	var loss_ratio := clampf(float(enemy_power) / float(kingdom_power + enemy_power), 0.08, 0.82)
 	return {"chance": chance, "enemy_power": enemy_power, "kingdom_power": kingdom_power, "trait": enemy_style, "win_losses": clampi(int(ceil(float(total_troops) * loss_ratio * 0.38)), 0, total_troops), "loss_losses": clampi(int(ceil(float(total_troops) * loss_ratio * 0.9)), 1 if total_troops > 0 else 0, total_troops)}
