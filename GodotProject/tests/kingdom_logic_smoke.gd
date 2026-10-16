@@ -170,6 +170,29 @@ func _run_tests() -> void:
 	if game.network_session._valid_snapshot(impossible_campaign_snapshot):
 		_fail("LAN co-op accepted a captured outpost behind locked campaign gates.")
 		return
+	var off_center_keep_snapshot := coop_snapshot.duplicate(true)
+	off_center_keep_snapshot["tiles"][0] = "Keep"
+	off_center_keep_snapshot["tiles"][4] = "Farm"
+	if game.network_session._valid_snapshot(off_center_keep_snapshot):
+		_fail("LAN co-op accepted a Keep outside the required centre tile.")
+		return
+	var oversized_army_snapshot := coop_snapshot.duplicate(true)
+	oversized_army_snapshot["infantry"] = 100001
+	oversized_army_snapshot["guards"] = 100001
+	if game.network_session._valid_snapshot(oversized_army_snapshot):
+		_fail("LAN co-op accepted troop counts beyond the save-data safety limit.")
+		return
+	var invalid_queue_snapshot := coop_snapshot.duplicate(true)
+	invalid_queue_snapshot["queued_troop_type"] = "infantry"
+	invalid_queue_snapshot["queued_troop_count"] = 6
+	if game.network_session._valid_snapshot(invalid_queue_snapshot):
+		_fail("LAN co-op accepted a troop queue larger than the supported maximum.")
+		return
+	var invalid_research_snapshot := coop_snapshot.duplicate(true)
+	invalid_research_snapshot["combat_research"] = 6
+	if game.network_session._valid_snapshot(invalid_research_snapshot):
+		_fail("LAN co-op accepted a research level beyond the supported maximum.")
+		return
 	var host_start_result: int = game.network_session.host_game()
 	if host_start_result != OK or not game.network_session.is_network_active() or not game.multiplayer.is_server():
 		_fail("LAN co-op host could not start its ENet server.")
@@ -820,6 +843,26 @@ func _run_tests() -> void:
 		return
 	if game.queued_troop_count > recovered_capacity - game.guards or (game.queued_troop_count == 0 and game.queued_troop_type != ""):
 		_fail("Save normalization did not safely trim the troop queue.")
+		return
+
+	# Far-future operation timestamps from a corrupt save must never stall progress.
+	var timer_now := int(Time.get_unix_time_from_system())
+	game.keep_level = 1
+	game.keep_upgrade_finish_unix = timer_now + 100000
+	game.building_upgrade_tile = 1
+	game.tiles[1] = "Academy"
+	game.tile_levels[1] = 1
+	game.building_upgrade_finish_unix = timer_now + 100000
+	game.infantry = 1
+	game.archers = 0
+	game.cavalry = 0
+	game.guards = 1
+	game.queued_troop_type = "archer"
+	game.queued_troop_count = 1
+	game.troop_training_finish_unix = timer_now + 100000
+	game._normalize_save_data()
+	if game.keep_upgrade_finish_unix > timer_now + 120 or game.building_upgrade_finish_unix > timer_now + 120 or game.troop_training_finish_unix > timer_now + 120:
+		_fail("Save normalization left a corrupt operation timer far in the future.")
 		return
 
 	print("APPTYA_GAMEPLAY_TESTS_PASSED")
