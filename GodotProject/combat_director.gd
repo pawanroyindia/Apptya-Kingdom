@@ -9,7 +9,7 @@ static func resolve_outpost(infantry: int, archers: int, cavalry: int, hero_powe
 	var research_bonus := total_troops * clampi(combat_research, 0, 5) * 2
 	var kingdom_power := troop_power + maxi(0, hero_power) + maxi(0, drills) + clampi(keep_level, 1, 10) * 3 + clampi(barracks_level, 0, 5) * 4 + research_bonus
 	var trait_id := posmod(outpost_index, 3)
-	var trait_name: String = ["Fortified Hold", "Longbow Nest", "Mounted Raiders"][trait_id]
+	var trait_name: String = "Warlord's Citadel" if outpost_index >= 9 else ["Fortified Hold", "Longbow Nest", "Mounted Raiders"][trait_id]
 	var tactical_bonus := 0
 	match trait_id:
 		0:
@@ -29,6 +29,8 @@ static func resolve_outpost(infantry: int, archers: int, cavalry: int, hero_powe
 		enemy_power += 8
 	elif trait_id == 2:
 		enemy_power += 10
+	if outpost_index >= 9:
+		enemy_power += 40
 	var normalized_stance := stance if stance in ["Balanced", "Aggressive", "Defensive"] else "Balanced"
 	var stance_chance_bonus := 0
 	var stance_loss_multiplier := 1.0
