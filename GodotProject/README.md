@@ -13,10 +13,10 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Timed Keep and resource-building upgrades, with timers restored after app suspension
 - Queued infantry, archer and cavalry training with Barracks capacity limits
 - Combat, economy and scouting research; troop practice; region exploration; claimable campaign rewards
-- Scouting and targeted outpost battles with troop losses, rewards and visible battle/exploration animations
+- Scouting and targeted outpost battles with troop losses, rewards and visible battle/exploration animations; outposts unlock in campaign order
 - Timed production and bounded eight-hour offline production with research bonuses
 - Periodic autosave, backup recovery, save-data normalization and persisted upgrade/training timers
-- Local save/load on the device
+- Local save/load on the device, including graphics preferences; save recovery enforces a unique Keep and Barracks troop capacity
 
 This is a reimplementation of the prototype mechanics, not an automatic conversion of Unity scenes or C# scripts. It does not yet contain production art, 3D assets, full campaign content, multiplayer, or release signing.
 
@@ -29,7 +29,7 @@ The workflow `.github/workflows/godot-android-apk.yml` builds a debug APK using 
 3. Run **Run workflow** only after explicit approval to build an APK. Source changes do not trigger APK builds.
 4. Open the completed run and download the `apptya-kingdom-godot-apk` artifact.
 
-The latest headless Godot source, runtime, gameplay, save recovery, legacy-save migration, troop training, research, five-outpost campaign, escalating enemy army battles, touch-control and mesh-budget checks passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848762730)). The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
+The headless Godot source, runtime, gameplay, save recovery, legacy-save migration, troop training, research, five-outpost campaign, escalating enemy army battles, touch-control and mesh-budget checks passed in CI ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851194005)). A newer test is checking that saved graphics quality is applied on startup. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
 
 ## Validation
 
