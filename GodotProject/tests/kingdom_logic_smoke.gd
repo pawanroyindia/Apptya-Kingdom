@@ -477,14 +477,14 @@ func _run_tests() -> void:
 	game.queued_troop_count = 5
 	game.troop_training_finish_unix = int(Time.get_unix_time_from_system()) + 60
 	game._normalize_save_data()
-	var normalized_capacity := 0
+	var recovered_capacity := 0
 	for i in range(game.tiles.size()):
 		if game.tiles[i] == "Barracks":
-			normalized_capacity = maxi(normalized_capacity, game.tile_levels[i] * 5)
-	if game.guards != game.infantry + game.archers + game.cavalry or game.guards > normalized_capacity:
+			recovered_capacity = maxi(recovered_capacity, game.tile_levels[i] * 5)
+	if game.guards != game.infantry + game.archers + game.cavalry or game.guards > recovered_capacity:
 		_fail("Save normalization did not enforce the Barracks troop capacity.")
 		return
-	if game.queued_troop_count > normalized_capacity - game.guards or (game.queued_troop_count == 0 and game.queued_troop_type != ""):
+	if game.queued_troop_count > recovered_capacity - game.guards or (game.queued_troop_count == 0 and game.queued_troop_type != ""):
 		_fail("Save normalization did not safely trim the troop queue.")
 		return
 
