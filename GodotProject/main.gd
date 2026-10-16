@@ -507,7 +507,10 @@ func _attack_outpost() -> void:
 		return
 	guards -= required_guards
 	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2, 10, 90)
-	if randi_range(1, 100) <= chance:
+	var won_attack := randi_range(1, 100) <= chance
+	if is_instance_valid(world_view):
+		world_view.play_attack(selected_outpost, won_attack)
+	if won_attack:
 		outpost_defeated[selected_outpost] = 1
 		var reward := 100 * threat + keep_level * 25
 		gold += reward
