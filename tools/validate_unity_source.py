@@ -186,6 +186,10 @@ def gameplay_invariants() -> list[str]:
             if practice_rule not in hud:
                 errors.append(f"ApptyaRuntimeHud.cs: practice target interaction missing: {practice_rule}")
 
+        for research_rule in ("Open Research Center", "void OpenResearchCenter()", "ResearchCenterSummary", "ResearchCostAndGate", "ResearchFromCenter", "LOCKED", "AVAILABLE"):
+            if research_rule not in hud:
+                errors.append(f"ApptyaRuntimeHud.cs: research center UI missing: {research_rule}")
+
     setup_path = ROOT / "UnityProject/Assets/Editor/ApptyaProjectSetup.cs"
     if setup_path.is_file():
         setup = setup_path.read_text(encoding="utf-8")
