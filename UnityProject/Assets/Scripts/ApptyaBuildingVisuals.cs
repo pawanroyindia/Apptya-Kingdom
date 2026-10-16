@@ -70,9 +70,45 @@ namespace ApptyaKingdom
             Refresh();
         }
 
+        void CreatePracticeTarget()
+        {
+            var root = new GameObject("Visible Practice Target").transform;
+            root.SetParent(cachedRoot, false);
+            root.position = new Vector3(10f, 0f, -7f);
+            practiceTarget = root;
+
+            var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            ring.name = "Practice target ground ring";
+            ring.transform.SetParent(root, false);
+            ring.transform.localPosition = new Vector3(0f, .08f, 0f);
+            ring.transform.localScale = new Vector3(1.65f, .06f, 1.65f);
+            ring.GetComponent<Renderer>().sharedMaterial = goldMat;
+            var ringCollider = ring.GetComponent<Collider>();
+            if (ringCollider) Destroy(ringCollider);
+
+            var dummy = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            dummy.name = "Practice target dummy";
+            dummy.transform.SetParent(root, false);
+            dummy.transform.localPosition = new Vector3(0f, .9f, 0f);
+            dummy.transform.localScale = new Vector3(.48f, .85f, .48f);
+            dummy.GetComponent<Renderer>().sharedMaterial = crimsonMat;
+            var dummyCollider = dummy.GetComponent<Collider>();
+            if (dummyCollider) Destroy(dummyCollider);
+
+            var crossbar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            crossbar.name = "Practice target crossbar";
+            crossbar.transform.SetParent(root, false);
+            crossbar.transform.localPosition = new Vector3(0f, 1.1f, 0f);
+            crossbar.transform.localScale = new Vector3(1.05f, .12f, .16f);
+            crossbar.GetComponent<Renderer>().sharedMaterial = goldMat;
+            var crossCollider = crossbar.GetComponent<Collider>();
+            if (crossCollider) Destroy(crossCollider);
+        }
+
         void Update()
         {
-            troopMotionClock += Time.deltaTime;\n            if (practiceTarget != null) practiceTarget.localScale = Vector3.one * (1f + Mathf.Sin(troopMotionClock * 1.7f) * .025f);
+            troopMotionClock += Time.deltaTime;
+            if (practiceTarget != null) practiceTarget.localScale = Vector3.one * (1f + Mathf.Sin(troopMotionClock * 1.7f) * .025f);
             for (int i = 0; i < guardMarkers.Length; i++)
             {
                 var guard = guardMarkers[i];
