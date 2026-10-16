@@ -139,6 +139,24 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 		"building_upgrade_finish_unix": [0, now_unix + 120],
 		"building_upgrade_tile": [-1, 8]
 	}
+	# Reject malformed scalar types before any int()/bool()/str() coercion.
+	# Coercion can silently turn bad network data into valid-looking zeroes.
+	var integer_fields := [
+		"gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry",
+		"keep_level", "day", "daily_reward_claim_day", "daily_reward_streak", "enemy_level",
+		"explored_regions", "victories", "defeats", "combat_research", "economy_research",
+		"scouting_research", "practice_drills", "hero_level", "hero_xp", "hero_skill_level",
+		"selected_tile", "selected_outpost", "keep_upgrade_finish_unix",
+		"building_upgrade_finish_unix", "building_upgrade_tile", "tutorial_step",
+		"troop_training_finish_unix", "queued_troop_count"
+	]
+	for key in integer_fields:
+		if snapshot.has(key) and not (snapshot[key] is int):
+			return false
+	if snapshot.has("battle_stance") and not (snapshot["battle_stance"] is String):
+		return false
+	if snapshot.has("queued_troop_type") and not (snapshot["queued_troop_type"] is String):
+		return false
 	for key in numeric_ranges:
 		if snapshot.has(key):
 			if not (snapshot[key] is int) or int(snapshot[key]) < int(numeric_ranges[key][0]) or int(snapshot[key]) > int(numeric_ranges[key][1]):
@@ -189,6 +207,12 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 		return false
 	if not (snapshot["tile_levels"] is Array) or snapshot["tile_levels"].size() != 9:
 		return false
+	for building in snapshot["tiles"]:
+		if not (building is String):
+			return false
+	for level in snapshot["tile_levels"]:
+		if not (level is int):
+			return false
 	if snapshot.has("building_upgrade_finish_unix") and int(snapshot["building_upgrade_finish_unix"]) > 0:
 		if not snapshot.has("building_upgrade_tile"):
 			return false
@@ -203,6 +227,12 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 		return false
 	if not (snapshot["region_scouted"] is Array) or snapshot["region_scouted"].size() != 10:
 		return false
+	for value in snapshot["outpost_defeated"]:
+		if not (value is int):
+			return false
+	for value in snapshot["region_scouted"]:
+		if not (value is int):
+			return false
 	var valid_buildings := ["Empty", "Farm", "Mine", "Keep", "Lumber Camp", "Quarry", "Academy", "Barracks"]
 	for tile in snapshot["tiles"]:
 		if str(tile) not in valid_buildings:
