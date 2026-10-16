@@ -10,7 +10,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 
 ## Gameplay and mobile controls
 - [x] Mobile portrait UI and scrollable control layout.
-- [x] Gold, wood, and food economy with active and capped offline production.
+- [x] Gold, wood, food and stone economy with direct gathering, active and capped offline production.
 - [x] Farm, mine, Lumber Camp, Quarry, Barracks and Keep construction/collection/upgrades.
 - [x] Queued infantry, archer and cavalry training; scouting, exploration, five enemy outposts, battle outcomes, rewards and achievements.
 - [x] Four-step tutorial, combat/economy/scouting research, troop practice and three claimable campaign rewards.
@@ -27,8 +27,8 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Add a CI mesh-node budget and refresh-stability check: 193 mesh nodes at startup, below the 400-node guardrail; physical-device FPS remains unverified.
 - [ ] Physical-device installation, touch testing, and performance validation are post-export gates and cannot be claimed before an APK exists.
 
-## Known scope limits before export
+## Remaining non-blocking prototype scope
 - The world uses procedural low-poly meshes and a custom SVG app icon, not final production art assets.
 - Campaign depth is currently limited to five outposts and the implemented prototype economy; there is no multiplayer or audio system.
 - A successful headless check does not prove Android export, APK installation, or device compatibility.
-- The APK workflow has not been run and no APK has been generated. Keep it that way until all pre-export work and checks are reviewed.
+- The APK workflow has not been run and no APK has been generated. This is intentional. Do not run the manual APK workflow unless the user explicitly asks after reviewing this checklist.
