@@ -155,6 +155,9 @@ func _run_tests() -> void:
 		return
 
 	# A pending upgrade timer must survive a save/load cycle.
+	# Give this isolated test fixture sufficient resources regardless of randomized scouting rewards.
+	game.gold += 200
+	game.wood += 200
 	game._select_tile(0)
 	game._upgrade_selected_building()
 	if game.building_upgrade_finish_unix <= int(Time.get_unix_time_from_system()):
