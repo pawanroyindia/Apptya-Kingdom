@@ -35,6 +35,13 @@ func _run_tests() -> void:
 	if not is_instance_valid(game.world_view.hero_model) or not game.world_view.hero_level_label.text.contains("LV 1"):
 		_fail("The 3D Royal Captain model or level label was not created.")
 		return
+	if not game.world_view.hero_rig_data.has("left_leg") or not game.world_view.hero_rig_data.has("right_leg") or not game.world_view.hero_rig_data.has("left_arm") or not game.world_view.hero_rig_data.has("right_arm"):
+		_fail("The Royal Captain articulated limb rig was not initialized.")
+		return
+	for rig in game.world_view.articulated_rigs:
+		if not rig.has("left_leg") or not rig.has("right_leg") or not rig.has("left_arm") or not rig.has("right_arm"):
+			_fail("A visible troop is missing articulated limb joints.")
+			return
 	if game.sound_streams.size() != 5 or game.sound_streams["victory"].data.is_empty() or game.sound_player.bus != "Master":
 		_fail("Procedural sound effect streams or the audio player were not initialized.")
 		return
@@ -47,8 +54,18 @@ func _run_tests() -> void:
 	if not game.sound_enabled or game.settings_buttons[2].text != "Sound: ON":
 		_fail("Sound toggle did not re-enable effects or update its button.")
 		return
-	if game.music_stream.data.is_empty() or game.music_stream.loop_mode != AudioStreamWAV.LOOP_FORWARD or game.music_stream.loop_end != game.music_stream.data.size() / 2:
-		_fail("Procedural ambient soundtrack did not initialize as a valid looping WAV stream.")
+	if game.music_stream.data.is_empty() or game.music_stream.loop_mode != AudioStreamWAV.LOOP_FORWARD or game.music_stream.loop_end != game.music_stream.data.size() / 2 or game.music_stream.mix_rate != 11025 or game.music_stream.data.size() != 11025 * 32 * 2:
+		_fail("Original 32-second ambient score did not initialize as a valid looping WAV stream.")
+		return
+	var effect_lengths: Dictionary = {}
+	for effect_name in game.sound_streams:
+		var effect_stream: AudioStreamWAV = game.sound_streams[effect_name]
+		if effect_stream.data.is_empty():
+			_fail("The %s sound effect has no audio samples." % effect_name)
+			return
+		effect_lengths[effect_stream.data.size()] = true
+	if effect_lengths.size() < 4:
+		_fail("Gather/build/victory/defeat/train effects are not differentiated by duration.")
 		return
 	game._toggle_music()
 	if game.music_enabled or game.music_settings_buttons[0].text != "Music: OFF" or game.music_player.playing:
