@@ -158,13 +158,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --location --retry 3 https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_linux.x86_64.zip --output /tmp/godot.zip
+          echo "Downloading pinned Godot 4.5.1 headless test runtime"
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 240 https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_linux.x86_64.zip --output /tmp/godot.zip
           unzip -q /tmp/godot.zip -d /tmp/godot
           chmod +x /tmp/godot/Godot_v4.5.1-stable_linux.x86_64
           GODOT=/tmp/godot/Godot_v4.5.1-stable_linux.x86_64
-          "$GODOT" --headless --editor --path GodotProject --quit
-          "$GODOT" --headless --path GodotProject --script res://tests/production_asset_smoke.gd
-          "$GODOT" --headless --path GodotProject --script res://tests/kingdom_logic_smoke.gd
+          echo "Importing generated assets in Godot 4.5.1 (5-minute command limit)"
+          timeout --signal=TERM --kill-after=20s 300s "$GODOT" --headless --editor --path GodotProject --quit
+          echo "Running production asset smoke tests"
+          timeout --signal=TERM --kill-after=20s 300s "$GODOT" --headless --path GodotProject --script res://tests/production_asset_smoke.gd
+          echo "Running gameplay, save, touch and LAN regression tests"
+          timeout --signal=TERM --kill-after=20s 300s "$GODOT" --headless --path GodotProject --script res://tests/kingdom_logic_smoke.gd
 
       - name: Commit generated models, textures and audio into repository
         run: |
