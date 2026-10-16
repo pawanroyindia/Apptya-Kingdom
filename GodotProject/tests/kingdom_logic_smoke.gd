@@ -351,12 +351,14 @@ func _run_tests() -> void:
 		return
 	var enemy_level_before_battle: int = game.enemy_level
 	var victories_before_battle: int = game.victories
-	if game._army_power() < game._enemy_power():
-		_fail("Test army fixture should be stronger than the first enemy.")
-		return
+	# Use an overwhelming, valid test force so this test checks victory progression rather than RNG.
+	game.infantry = 100
+	game.archers = 0
+	game.cavalry = 0
+	game.guards = 100
 	game._attack_enemy_army()
 	if game.enemy_level != enemy_level_before_battle + 1 or game.victories != victories_before_battle + 1:
-		_fail("Power-based enemy battle did not award victory or scale enemy level.")
+		_fail("A clearly overwhelming test army should win the enemy battle and scale enemy level.")
 		return
 	var drill_level_before: int = game.practice_drills
 	game._practice_troops()
@@ -390,8 +392,8 @@ func _run_tests() -> void:
 
 	var guards_before_attack: int = game.guards
 	game._attack_outpost()
-	if game.guards > guards_before_attack - 4:
-		_fail("Targeted outpost attack did not consume the required guards.")
+	if game.guards >= guards_before_attack or game.guards < 0:
+		_fail("Tactical outpost combat did not apply bounded troop casualties.")
 		return
 	await create_timer(0.9).timeout
 	game.victories = maxi(game.victories, 1)
@@ -690,8 +692,8 @@ func _run_tests() -> void:
 		_fail("Could not create a legacy three-outpost save fixture.")
 		return
 	game._load_game()
-	if game.outpost_defeated.size() != 10 or game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 1 or game.outpost_defeated[3] != 0 or game.region_scouted[1] != 1:
-		_fail("Legacy three-outpost save did not migrate to the ten-outpost campaign.")
+	if game.outpost_defeated.size() != 10 or game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 0 or game.outpost_defeated[3] != 0 or game.region_scouted[1] != 0:
+		_fail("Legacy save migration did not repair impossible sequential campaign states.")
 		return
 	var corrupt_file := FileAccess.open(absolute_save, FileAccess.WRITE)
 	if corrupt_file == null:
@@ -702,6 +704,18 @@ func _run_tests() -> void:
 	game._load_game()
 	if game.gold <= 0:
 		_fail("Backup save recovery failed.")
+		return
+
+	# Combat rules are deterministic for a given force and expose different enemy tactics.
+	var combat_rules = load("res://combat_director.gd")
+	var infantry_battle: Dictionary = combat_rules.resolve_outpost(8, 0, 0, 20, 2, 3, 3, 2, 2, 0, true)
+	var cavalry_battle: Dictionary = combat_rules.resolve_outpost(0, 0, 8, 20, 2, 3, 3, 2, 2, 2, true)
+	if infantry_battle["trait"] == cavalry_battle["trait"] or infantry_battle["chance"] < 8 or infantry_battle["chance"] > 92 or infantry_battle["loss_losses"] > 8:
+		_fail("Tactical combat director did not expose distinct enemy traits or bounded odds/casualties.")
+		return
+	var army_battle: Dictionary = combat_rules.resolve_enemy_army(100, 0, 0, 100, 5, 20, 10, 5, 1)
+	if army_battle["chance"] < 90 or army_battle["loss_losses"] > 100:
+		_fail("Combat director did not scale an overwhelming army advantage or bound casualties.")
 		return
 
 	# Save data normalization must clamp invalid economy values and restore the Keep invariant.
@@ -725,6 +739,12 @@ func _run_tests() -> void:
 	game.tile_levels[0] = 1000
 	game.outpost_defeated[0] = 9
 	game.region_scouted[0] = -2
+	game.gold = 3000000001
+	game.daily_reward_claim_day = int(floor(float(Time.get_unix_time_from_system()) / 86400.0)) + 99
+	game.outpost_defeated[0] = 1
+	game.outpost_defeated[1] = 0
+	game.outpost_defeated[2] = 1
+	game.region_scouted[2] = 1
 	game._normalize_save_data()
 	if game.gold != 0 or game.wood != 0 or game.food != 0 or game.guards != 0:
 		_fail("Save normalization did not clamp negative resource and guard values.")
