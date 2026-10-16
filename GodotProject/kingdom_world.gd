@@ -67,24 +67,39 @@ func _process(delta: float) -> void:
 	all_rigs.append_array(articulated_rigs)
 	for rig_index in range(all_rigs.size()):
 		var rig: Dictionary = all_rigs[rig_index]
-		var phase: float = animation_clock * float(rig.get("speed", 5.2)) + float(rig.get("offset", 0.0))
+		var offset: float = float(rig.get("offset", 0.0))
+		var phase: float = animation_clock * float(rig.get("speed", 5.2)) + offset
 		var gait: float = sin(phase) * float(rig.get("walk", 0.0))
-		var idle: float = sin(animation_clock * 1.45 + float(rig.get("offset", 0.0)))
+		var idle: float = sin(animation_clock * 1.45 + offset)
+		var moving := float(rig.get("walk", 0.0)) > 0.2
+		var combat := bool(rig.get("combat", false))
+		if combat:
+			rig["combat_elapsed"] = float(rig.get("combat_elapsed", 0.0)) + delta
+		var attack_pose := _combat_swing_curve(float(rig.get("combat_elapsed", 0.0))) if combat else 0.0
 		var left_leg: Node3D = rig.get("left_leg")
 		var right_leg: Node3D = rig.get("right_leg")
 		var left_arm: Node3D = rig.get("left_arm")
 		var right_arm: Node3D = rig.get("right_arm")
 		var torso: Node3D = rig.get("torso")
+		var head: Node3D = rig.get("head")
 		if is_instance_valid(left_leg):
 			left_leg.rotation.x = gait
+			left_leg.position.y = float(rig.get("left_leg_y", 0.46)) + (maxf(0.0, sin(phase)) * 0.045 if moving else 0.0)
 		if is_instance_valid(right_leg):
 			right_leg.rotation.x = -gait
+			right_leg.position.y = float(rig.get("right_leg_y", 0.46)) + (maxf(0.0, -sin(phase)) * 0.045 if moving else 0.0)
 		if is_instance_valid(left_arm):
-			left_arm.rotation.x = -gait * 0.72 + idle * 0.035
+			left_arm.rotation.x = -gait * 0.72 + idle * 0.035 - attack_pose * 0.22
+			left_arm.rotation.z = -0.04 + (attack_pose * 0.12)
 		if is_instance_valid(right_arm):
-			right_arm.rotation.x = (-1.15 + sin(animation_clock * 16.0) * 0.58) if bool(rig.get("combat", false)) else (gait * 0.72 + idle * 0.035)
+			right_arm.rotation.x = attack_pose if combat else (gait * 0.72 + idle * 0.035)
+			right_arm.rotation.z = (-0.08 - attack_pose * 0.12) if combat else 0.025
 		if is_instance_valid(torso):
-			torso.rotation.z = sin(animation_clock * (16.0 if bool(rig.get("combat", false)) else 1.1) + float(rig.get("offset", 0.0))) * (0.075 if bool(rig.get("combat", false)) else 0.025)
+			var torso_sway := sin(phase * 2.0) * 0.018 if moving else idle * 0.012
+			torso.rotation.z = torso_sway + (attack_pose * 0.085 if combat else 0.0)
+			torso.rotation.x = (-0.08 - attack_pose * 0.10) if combat else (sin(phase) * 0.025 if moving else idle * 0.012)
+		if is_instance_valid(head):
+			head.rotation.x = (-0.06 + attack_pose * 0.08) if combat else (sin(animation_clock * 0.8 + offset) * 0.018)
 	if is_instance_valid(hero_model):
 		hero_model.position.y = 0.08 + sin(animation_clock * 1.6) * 0.025
 		hero_model.rotation_degrees.y = sin(animation_clock * 0.42) * 2.0
@@ -183,7 +198,7 @@ func _create_articulated_character(uniform_color: String, armor_color: String, c
 	character.add_child(right_leg)
 	_add_capsule(right_leg, Vector3(0, -0.16, 0), armor_color)
 	_add_box(right_leg, Vector3(0.15, 0.1, 0.25), Vector3(0, -0.32, 0.055), "#49352b")
-	var rig_data := {"left_leg": left_leg, "right_leg": right_leg, "left_arm": left_arm, "right_arm": right_arm, "torso": torso, "walk": 0.12 if royal else 0.42, "speed": 3.2 if royal else 5.2, "offset": randf_range(0.0, TAU)}
+	var rig_data := {"left_leg": left_leg, "right_leg": right_leg, "left_arm": left_arm, "right_arm": right_arm, "torso": torso, "head": head, "left_leg_y": left_leg.position.y, "right_leg_y": right_leg.position.y, "walk": 0.12 if royal else 0.42, "speed": 3.2 if royal else 5.2, "offset": randf_range(0.0, TAU), "combat_elapsed": 0.0}
 	character.set_meta("rig_data", rig_data)
 	return character
 func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, infantry: int, archers: int, cavalry: int, defeated: PackedInt32Array, scouted: PackedInt32Array, target: int, selected_tile: int) -> void:
@@ -644,6 +659,19 @@ func play_attack(target_index: int, victory: bool) -> void:
 
 func _set_rig_combat(rig_data: Dictionary, enabled: bool) -> void:
 	rig_data["combat"] = enabled
+	if enabled:
+		rig_data["combat_elapsed"] = 0.0
+
+func _combat_swing_curve(elapsed: float) -> float:
+	# A single anticipation / strike / follow-through / recovery cycle, not a looping arm flap.
+	var t := clampf(elapsed / 0.48, 0.0, 1.0)
+	if t < 0.20:
+		return lerpf(0.0, -0.42, t / 0.20)
+	if t < 0.48:
+		return lerpf(-0.42, -1.62, (t - 0.20) / 0.28)
+	if t < 0.68:
+		return lerpf(-1.62, -1.18, (t - 0.48) / 0.20)
+	return lerpf(-1.18, 0.0, (t - 0.68) / 0.32)
 
 func _remove_temporary_rig(character: Node3D, rig_data: Dictionary) -> void:
 	articulated_rigs.erase(rig_data)
