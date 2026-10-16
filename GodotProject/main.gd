@@ -381,7 +381,7 @@ func _refresh_ui() -> void:
 				upgrade_note = " Building upgrade completes in %ds." % (building_upgrade_finish_unix - int(Time.get_unix_time_from_system()))
 			tile_detail_label.text = "Selected: %s (Level %d) on tile %d. %s%s" % [tiles[selected_tile], tile_levels[selected_tile], selected_tile + 1, production, upgrade_note]
 		for i in range(outpost_buttons.size()):
-			var region_status := " • Captured" if outpost_defeated[i] == 1 else (" • Scouted" if region_scouted[i] == 1 else " • Unknown")
+			var region_status := " • Captured" if outpost_defeated[i] == 1 else (" • Locked" if i > 0 and outpost_defeated[i - 1] != 1 else (" • Scouted" if region_scouted[i] == 1 else " • Unknown"))
 			outpost_buttons[i].text = "%sOutpost %d%s" % ["▶ " if i == selected_outpost else "", i + 1, region_status]
 		outpost_label.text = _get_outpost_description()
 		tutorial_label.text = _get_tutorial_text()
@@ -453,6 +453,8 @@ func _get_outpost_description() -> String:
 	var threat := outpost_threat[selected_outpost]
 	if outpost_defeated[selected_outpost] == 1:
 		return "Outpost %d captured. It is secured and cannot be attacked again." % (selected_outpost + 1)
+	if selected_outpost > 0 and outpost_defeated[selected_outpost - 1] != 1:
+		return "Outpost %d is locked. Capture Outpost %d first to advance the campaign." % [selected_outpost + 1, selected_outpost]
 	if region_scouted[selected_outpost] != 1:
 		return "Target: Outpost %d. This region is unexplored. Scout it to reveal enemy threat before attacking." % (selected_outpost + 1)
 	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 + combat_research * 5 + practice_drills + archers * 2 + cavalry * 3, 10, 90)
@@ -769,6 +771,10 @@ func _attack_outpost() -> void:
 	var threat := outpost_threat[selected_outpost]
 	if outpost_defeated[selected_outpost] == 1:
 		status_message = "This outpost is already captured. Select another target."
+		_refresh_ui()
+		return
+	if selected_outpost > 0 and outpost_defeated[selected_outpost - 1] != 1:
+		status_message = "Outpost %d is locked. Capture Outpost %d first." % [selected_outpost + 1, selected_outpost]
 		_refresh_ui()
 		return
 	var required_guards := 3 + threat
