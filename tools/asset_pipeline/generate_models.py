@@ -208,7 +208,7 @@ def validate_character(arm,mesh):
         raise RuntimeError("Character mesh is missing its armature deformation modifier")
     bone_names={bone.name for bone in arm.data.bones}
     group_names={group.name for group in mesh.vertex_groups}
-    missing=bone_names-group_names
+    missing=(bone_names-{"Root"})-group_names
     if missing:
         raise RuntimeError("Character is missing deformation groups: "+", ".join(sorted(missing)))
     unweighted=[vertex.index for vertex in mesh.data.vertices if not vertex.groups]
