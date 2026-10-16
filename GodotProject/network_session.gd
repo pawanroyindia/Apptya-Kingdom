@@ -165,6 +165,8 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 		return false
 	if int(snapshot["keep_level"]) < 1 or int(snapshot["keep_level"]) > 10 or int(snapshot["hero_level"]) < 1 or int(snapshot["hero_level"]) > 20:
 		return false
+	if snapshot.has("keep_upgrade_finish_unix") and int(snapshot["keep_upgrade_finish_unix"]) > 0 and int(snapshot["keep_level"]) >= 10:
+		return false
 	if snapshot.has("hero_xp") and (int(snapshot["hero_xp"]) < 0 or int(snapshot["hero_xp"]) > 1000000):
 		return false
 	if snapshot.has("hero_skill_level") and (int(snapshot["hero_skill_level"]) < 1 or int(snapshot["hero_skill_level"]) > 5):
@@ -180,8 +182,6 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 			return false
 		if queued_count > 0 and (not snapshot.has("troop_training_finish_unix") or int(snapshot["troop_training_finish_unix"]) <= 0):
 			return false
-	if snapshot.has("keep_upgrade_finish_unix") and int(snapshot["keep_upgrade_finish_unix"]) > 0 and int(snapshot["keep_level"]) >= 10:
-		return false
 	for key in ["combat_research", "economy_research", "scouting_research"]:
 		if snapshot.has(key) and (int(snapshot[key]) < 0 or int(snapshot[key]) > 5):
 			return false
