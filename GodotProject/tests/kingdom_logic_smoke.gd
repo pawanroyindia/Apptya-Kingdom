@@ -154,6 +154,13 @@ func _run_tests() -> void:
 		_fail("Offline production did not apply the exact eight-hour capped production.")
 		return
 
+	# A pending upgrade timer must survive a save/load cycle.
+	game._select_tile(0)
+	game._upgrade_selected_building()
+	if game.building_upgrade_finish_unix <= int(Time.get_unix_time_from_system()):
+		_fail("Could not create a pending upgrade for save persistence.")
+		return
+	var pending_building_upgrade := game.building_upgrade_finish_unix
 	game._persist_game()
 	var saved_gold: int = game.gold
 	var saved_wood: int = game.wood
@@ -182,6 +189,9 @@ func _run_tests() -> void:
 		return
 	if game.outpost_defeated != saved_defeated or game.achievements != saved_achievements:
 		_fail("Kingdom save/load did not restore campaign and achievement progress.")
+		return
+	if game.building_upgrade_finish_unix != pending_building_upgrade or game.building_upgrade_tile != 0:
+		_fail("Kingdom save/load did not restore the pending building upgrade timer.")
 		return
 
 	var absolute_save := ProjectSettings.globalize_path("user://apptya_kingdom_save.cfg")
