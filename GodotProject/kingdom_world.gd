@@ -41,6 +41,7 @@ var animated_flags: Array[MeshInstance3D] = []
 var animated_trees: Array[Node3D] = []
 var animated_guards: Array[Node3D] = []
 var articulated_rigs: Array[Dictionary] = []
+var hero_rig_data: Dictionary = {}
 var animation_clock := 0.0
 
 func _ready() -> void:
@@ -62,8 +63,10 @@ func _process(delta: float) -> void:
 	for i in range(animated_guards.size()):
 		if is_instance_valid(animated_guards[i]):
 			animated_guards[i].position.y = 0.08 + sin(animation_clock * 1.8 + float(i) * 0.8) * 0.025
-	for rig_index in range(articulated_rigs.size()):
-		var rig: Dictionary = articulated_rigs[rig_index]
+	var all_rigs: Array[Dictionary] = [hero_rig_data]
+	all_rigs.append_array(articulated_rigs)
+	for rig_index in range(all_rigs.size()):
+		var rig: Dictionary = all_rigs[rig_index]
 		var phase: float = animation_clock * float(rig.get("speed", 5.2)) + float(rig.get("offset", 0.0))
 		var gait: float = sin(phase) * float(rig.get("walk", 0.0))
 		var idle: float = sin(animation_clock * 1.45 + float(rig.get("offset", 0.0)))
@@ -121,9 +124,8 @@ func _build_hero_model() -> void:
 	for child in rig.get_children():
 		rig.remove_child(child)
 		hero_model.add_child(child)
-	var rig_data: Dictionary = rig.get_meta("rig_data")
+	hero_rig_data = rig.get_meta("rig_data")
 	rig.free()
-	articulated_rigs.append(rig_data)
 	hero_level_label = Label3D.new()
 	hero_level_label.text = "ROYAL CAPTAIN • LV %d" % current_hero_level
 	hero_level_label.position = Vector3(0, 2.05, 0)
@@ -725,14 +727,16 @@ func _rebuild_outposts() -> void:
 		outpost_nodes.append(root)
 
 func _rebuild_guards() -> void:
-	animated_guards.clear()
 	for node in guard_nodes:
 		if is_instance_valid(node):
 			node.free()
 	guard_nodes.clear()
+	animated_guards.clear()
+	articulated_rigs.clear()
 	var visible_count := mini(current_guards, 7)
 	for i in range(visible_count):
 		var guard := Node3D.new()
+		guard.name = "Guard_%02d" % i
 		guard.position = Vector3(-0.95 + float(i % 4) * 0.55, 0.08, 1.0 + float(int(i / 4)) * 0.55)
 		var troop_type := "infantry"
 		if i >= current_infantry and i < current_infantry + current_archers:
@@ -740,30 +744,33 @@ func _rebuild_guards() -> void:
 		elif i >= current_infantry + current_archers:
 			troop_type = "cavalry"
 		if troop_type == "cavalry":
+			# A distinct mount silhouette with an articulated rider keeps cavalry readable at gameplay zoom.
 			_add_box(guard, Vector3(0.55, 0.38, 0.85), Vector3(0, 0.48, 0), "#8c6845")
 			_add_sphere(guard, Vector3(0, 0.72, -0.38), Vector3(0.26, 0.22, 0.3), "#8c6845")
-			_add_capsule(guard, Vector3(0, 1.12, 0.05), "#b58b49")
-			_add_sphere(guard, Vector3(0, 1.75, 0.05), Vector3(0.22, 0.22, 0.22), "#d9b18c")
+			_add_sphere(guard, Vector3(0, 0.76, 0.43), Vector3(0.2, 0.19, 0.28), "#9b7650")
 			for leg_x in [-0.18, 0.18]:
 				for leg_z in [-0.25, 0.25]:
-					_add_box(guard, Vector3(0.09, 0.32, 0.09), Vector3(leg_x, 0.2, leg_z), "#6b4b35")
+					var horse_leg := _add_box(guard, Vector3(0.09, 0.32, 0.09), Vector3(leg_x, 0.2, leg_z), "#6b4b35")
+					horse_leg.name = "MountLeg"
+			var rider := _create_articulated_character("#8c6845", "#b58b49", "#6b4b35", false, 0.66)
+			rider.position = Vector3(0, 0.75, -0.05)
+			guard.add_child(rider)
+			articulated_rigs.append(rider.get_meta("rig_data"))
 		else:
 			var uniform_color := "#526e9c" if troop_type == "infantry" else "#648d55"
-			_add_capsule(guard, Vector3(0, 0.55, 0), uniform_color)
-			_add_sphere(guard, Vector3(0, 1.2, 0), Vector3(0.24, 0.24, 0.24), "#d9b18c")
+			var armor_color := "#bca46e" if troop_type == "infantry" else "#648d55"
+			var soldier := _create_articulated_character(uniform_color, armor_color, "#8f3936" if troop_type == "infantry" else "#435c3a", false, 0.82)
+			guard.add_child(soldier)
+			articulated_rigs.append(soldier.get_meta("rig_data"))
 			if troop_type == "infantry":
-				_add_box(guard, Vector3(0.12, 0.58, 0.12), Vector3(0.18, 0.58, 0), "#bca46e")
-				_add_box(guard, Vector3(0.34, 0.4, 0.12), Vector3(-0.22, 0.58, 0.08), "#8c6845")
-				_add_box(guard, Vector3(0.08, 0.08, 0.15), Vector3(-0.22, 0.58, 0.15), "#d8bd76")
+				_add_box(soldier, Vector3(0.16, 0.56, 0.07), Vector3(0.35, 0.45, 0), "#cbd2d5")
+				_add_box(soldier, Vector3(0.34, 0.42, 0.1), Vector3(-0.3, 0.55, 0.09), "#8c6845")
 			else:
-				_add_cylinder(guard, 0.035, 0.7, Vector3(0.28, 0.78, 0), "#8a6748")
-				_add_box(guard, Vector3(0.12, 0.45, 0.12), Vector3(-0.18, 0.58, 0), "#648d55")
-				_add_box(guard, Vector3(0.32, 0.26, 0.12), Vector3(-0.22, 0.65, 0.08), "#b7a16a")
-			_add_cone(guard, 0.22, 0.18, Vector3(0, 1.39, 0), "#b8bfc4")
+				_add_cylinder(soldier, 0.035, 0.82, Vector3(0.37, 0.55, 0), "#8a6748")
+				_add_cone(soldier, 0.065, 0.2, Vector3(0.37, 1.02, 0), "#cbd2d5")
 		add_child(guard)
 		guard_nodes.append(guard)
 		animated_guards.append(guard)
-
 func _add_textured_level_marker(parent: Node3D, level: int, pos: Vector3, color_value: String) -> void:
 	for i in range(mini(level, 4)):
 		_add_sphere(parent, pos + Vector3(float(i) * 0.16, 0, 0), Vector3(0.075, 0.075, 0.075), color_value)
