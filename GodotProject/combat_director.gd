@@ -13,17 +13,14 @@ static func resolve_outpost(infantry: int, archers: int, cavalry: int, hero_powe
 	var tactical_bonus := 0
 	match trait_id:
 		0:
-			tactical_bonus = maxi(0, infantry) * 2
-			if cavalry > archers:
-				tactical_bonus += cavalry * 2
+			# Fortified infantry is countered by ranged units; cavalry struggles against the wall.
+			tactical_bonus = maxi(0, archers) * 4 - maxi(0, cavalry) * 2
 		1:
-			tactical_bonus = maxi(0, archers) * 3
-			if infantry > cavalry:
-				tactical_bonus += infantry
+			# Longbow formations are vulnerable to a fast cavalry charge.
+			tactical_bonus = maxi(0, cavalry) * 4 - maxi(0, infantry) * 2
 		2:
-			tactical_bonus = maxi(0, cavalry) * 4
-			if archers > infantry:
-				tactical_bonus = archers * 2
+			# Mounted raiders can be stopped by a disciplined infantry line.
+			tactical_bonus = maxi(0, infantry) * 4 - maxi(0, archers) * 2
 	var effective_power := maxi(1, kingdom_power + tactical_bonus)
 	var enemy_power := 20 + clampi(threat, 1, 10) * 18 + maxi(0, outpost_index) * 5
 	if trait_id == 0:
@@ -44,9 +41,17 @@ static func resolve_enemy_army(infantry: int, archers: int, cavalry: int, hero_p
 	var kingdom_power := troop_power + maxi(0, hero_power) + maxi(0, drills) + clampi(keep_level, 1, 10) * 3 + clampi(barracks_level, 0, 5) * 4 + total_troops * clampi(combat_research, 0, 5) * 2
 	var level := clampi(enemy_level, 1, 100000)
 	var enemy_power := 35 + level * 18
-	var enemy_style := ["Shield Wall", "Bow Line", "Cavalry Wing"][posmod(level - 1, 3)]
-	var composition_bonus := maxi(0, infantry) if posmod(level - 1, 3) == 0 else (maxi(0, archers) if posmod(level - 1, 3) == 1 else maxi(0, cavalry))
-	kingdom_power += composition_bonus * 2
+	var style_id := posmod(level - 1, 3)
+	var enemy_style := ["Shield Wall", "Bow Line", "Cavalry Wing"][style_id]
+	var counter_bonus := 0
+	match style_id:
+		0:
+			counter_bonus = maxi(0, archers) * 4 - maxi(0, cavalry) * 2
+		1:
+			counter_bonus = maxi(0, cavalry) * 4 - maxi(0, infantry) * 2
+		2:
+			counter_bonus = maxi(0, infantry) * 4 - maxi(0, archers) * 2
+	kingdom_power = maxi(1, kingdom_power + counter_bonus)
 	var chance := clampi(50 + int(round(float(kingdom_power - enemy_power) * 0.8)), 5, 100)
 	var loss_ratio := clampf(float(enemy_power) / float(kingdom_power + enemy_power), 0.08, 0.82)
 	return {"chance": chance, "enemy_power": enemy_power, "kingdom_power": kingdom_power, "trait": enemy_style, "win_losses": clampi(int(ceil(float(total_troops) * loss_ratio * 0.38)), 0, total_troops), "loss_losses": clampi(int(ceil(float(total_troops) * loss_ratio * 0.9)), 1 if total_troops > 0 else 0, total_troops)}
