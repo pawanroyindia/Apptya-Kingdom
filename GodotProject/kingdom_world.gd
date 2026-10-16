@@ -550,6 +550,14 @@ func _rebuild_outposts() -> void:
 				_add_cone(root, 0.62, 0.78, Vector3(-0.48, 0.62, 0.62), "#8d5540")
 				_add_cone(root, 0.48, 0.62, Vector3(0.48, 0.52, 0.62), "#7c4838")
 				_add_box(root, Vector3(0.72, 0.12, 0.12), Vector3(0, 0.18, 0.88), "#67462f")
+		if i == 9:
+			# Final boss citadel gets a larger gold crown and war banner to signal the campaign climax.
+			_add_cone(root, 0.72, 0.68, Vector3(0, 1.82, -0.35), "#d7b354")
+			_add_cone(root, 0.18, 0.42, Vector3(-0.58, 1.45, 0.18), "#e4c77f")
+			_add_cone(root, 0.18, 0.42, Vector3(0.58, 1.45, 0.18), "#e4c77f")
+			_add_box(root, Vector3(0.1, 1.65, 0.1), Vector3(-0.72, 1.0, 0.48), "#4c3527")
+			_add_box(root, Vector3(0.62, 0.46, 0.07), Vector3(-0.4, 1.45, 0.48), "#d7b354")
+			_add_box(root, Vector3(0.08, 0.28, 0.04), Vector3(-0.4, 1.45, 0.43), "#6c2f2a")
 		if i == selected_outpost:
 			var target_ring := _add_cylinder(root, 1.45, 0.045, Vector3(0, 0.08, 0), "#f1d38a")
 			var pulse := create_tween().set_loops(3)
