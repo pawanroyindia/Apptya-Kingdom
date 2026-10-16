@@ -157,6 +157,9 @@ func _run_tests() -> void:
 	if game.archers != 1 or game.cavalry != 1 or game.guards != 7:
 		_fail("Archer/cavalry training completion did not update troop composition.")
 		return
+	if game.world_view.current_infantry != game.infantry or game.world_view.current_archers != game.archers or game.world_view.current_cavalry != game.cavalry:
+		_fail("3D troop models did not synchronize with trained troop types.")
+		return
 
 	# Research levels consume the correct resources and persist their bonuses.
 	game.gold += 500
