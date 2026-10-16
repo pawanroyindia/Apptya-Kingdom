@@ -15,15 +15,15 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Queued infantry, archer and cavalry training with Barracks capacity limits
 - Combat, economy and scouting research; troop practice; region exploration; claimable campaign rewards and a persistent quest board
 - Royal Captain hero with XP/levels, skill upgrades, battle/exploration progression, and an army-power bonus
-- Tactical outpost battles with troop-composition power, enemy doctrines (Fortified Hold, Longbow Nest, Mounted Raiders), scouting-based odds, bounded victory/defeat casualties, battle rewards, and visible battle/exploration animations; outposts unlock in campaign order and the HUD shows campaign progress through completion
+- Tactical outpost battles with troop-composition power, enemy doctrines (Fortified Hold, Longbow Nest, Mounted Raiders), scouting-based odds, bounded victory/defeat casualties, battle rewards, and visible battle/exploration animations; outposts unlock in campaign order and the HUD shows campaign progress through completion; selectable Balanced, Aggressive and Defensive battle stances trade combat odds against expected casualties and persist across saves/LAN snapshots
 - Enemy-army encounters use escalating enemy formations (Shield Wall, Bow Line, Cavalry Wing), composition-aware power, odds-based outcomes, casualty calculations and increasing enemy levels
 - Distinct procedural 3D silhouettes for fortified, archer and cavalry outposts to communicate enemy doctrine visually
 - Timed production and bounded eight-hour offline production with research bonuses
-- Periodic autosave, backup recovery, save-data normalization and persisted upgrade/training timers
+- Periodic autosave, backup recovery, save-data normalization, persisted upgrade/training timers, and explicit error reporting when backup or primary save writes fail
 - Procedural WAV sound effects for gathering, upgrades, training and battle outcomes, with a persistent mute toggle
 - A looping procedural ambient music bed with its own on/off control and saved preference
 - Short finite ambient animations for tree sway and guard idle motion, building reveal/upgrade feedback, hero level-up feedback, marching/exploration squads and battle impact rings
-- LAN co-op for one host and one guest on the same Wi-Fi: host-authoritative resource/build/training/research/scouting/attack/claim actions, shared kingdom snapshots and validation of client requests
+- LAN co-op for one host and one guest on the same Wi-Fi: host-authoritative resource/build/training/research/scouting/attack/claim/tactical-stance actions, shared kingdom snapshots and validation of client requests
 - Seven-day daily reward streak, resource payouts, day-seven bonus, duplicate-claim protection, live reset countdown and saved progress
 - Upgradeable single Academy with timed upgrades, research discounts up to 25%, and save-data duplicate cleanup
 - Sequential outpost scouting/attack unlocks; scouting a region repeatedly cannot generate duplicate rewards
