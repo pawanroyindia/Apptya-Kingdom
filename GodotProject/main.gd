@@ -1618,7 +1618,10 @@ func _persist_game() -> int:
 	if FileAccess.file_exists(SAVE_PATH):
 		var previous_save := ConfigFile.new()
 		if previous_save.load(SAVE_PATH) == OK:
-			DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(BACKUP_SAVE_PATH))
+			var backup_error := DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(BACKUP_SAVE_PATH))
+			if backup_error != OK:
+				status_message = "Save paused: could not protect the previous save with a backup (error %d)." % backup_error
+				return backup_error
 	var config := ConfigFile.new()
 	config.set_value("kingdom", "gold", gold)
 	config.set_value("kingdom", "wood", wood)
@@ -1669,7 +1672,11 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "building_upgrade_finish_unix", building_upgrade_finish_unix)
 	config.set_value("kingdom", "building_upgrade_tile", building_upgrade_tile)
 	config.set_value("kingdom", "saved_at", last_saved_unix)
-	return config.save(SAVE_PATH)
+	var save_error := config.save(SAVE_PATH)
+	if save_error != OK:
+		status_message = "Save failed (error %d). The previous backup was preserved if available." % save_error
+		return save_error
+	return OK
 
 func _load_game() -> void:
 	var config := ConfigFile.new()
