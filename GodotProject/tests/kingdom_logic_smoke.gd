@@ -231,6 +231,21 @@ func _run_tests() -> void:
 	if game.combat_research != 1 or game.economy_research != 1 or game.scouting_research != 1:
 		_fail("Combat, economy, or scouting research did not advance.")
 		return
+	var hero_power_before_xp: int = game._army_power()
+	game._award_hero_xp(100)
+	if game.hero_level != 2 or game.hero_xp != 0 or game._army_power() <= hero_power_before_xp:
+		_fail("Royal Captain did not level up or increase army power after earning XP.")
+		return
+	var hero_xp_before_training: int = game.hero_xp
+	game._train_hero()
+	if game.hero_xp != hero_xp_before_training + 25:
+		_fail("Hero training did not consume resources and award 25 XP.")
+		return
+	var hero_skill_before: int = game.hero_skill_level
+	game._upgrade_hero_skill()
+	if game.hero_skill_level != hero_skill_before + 1:
+		_fail("Hero skill upgrade did not increase the skill level.")
+		return
 	var enemy_level_before_battle: int = game.enemy_level
 	var victories_before_battle: int = game.victories
 	if game._army_power() < game._enemy_power():
@@ -379,6 +394,7 @@ func _run_tests() -> void:
 	var saved_research: Array = [game.combat_research, game.economy_research, game.scouting_research, game.practice_drills]
 	var saved_rewards: Array = [game.reward_first_victory_claimed, game.reward_explorer_claimed, game.reward_keep_claimed]
 	var saved_quests: Array = [game.quest_builder_claimed, game.quest_stronghold_claimed, game.quest_conqueror_claimed]
+	var saved_hero: Array = [game.hero_level, game.hero_xp, game.hero_skill_level]
 	var saved_defeated: PackedInt32Array = game.outpost_defeated.duplicate()
 	var saved_achievements: PackedStringArray = game.achievements.duplicate()
 	game.gold = 0
@@ -401,6 +417,9 @@ func _run_tests() -> void:
 	game.quest_builder_claimed = false
 	game.quest_stronghold_claimed = false
 	game.quest_conqueror_claimed = false
+	game.hero_level = 1
+	game.hero_xp = 0
+	game.hero_skill_level = 1
 	game._load_game()
 	if game.gold != saved_gold or game.wood != saved_wood or game.food != saved_food or game.stone != saved_stone or game.guards != saved_guards:
 		_fail("Kingdom save/load did not restore resource and guard values.")
@@ -431,6 +450,9 @@ func _run_tests() -> void:
 		return
 	if [game.quest_builder_claimed, game.quest_stronghold_claimed, game.quest_conqueror_claimed] != saved_quests:
 		_fail("Kingdom save/load did not restore quest claim progress.")
+		return
+	if [game.hero_level, game.hero_xp, game.hero_skill_level] != saved_hero:
+		_fail("Kingdom save/load did not restore Royal Captain progression.")
 		return
 	if game.building_upgrade_finish_unix != pending_building_upgrade or game.building_upgrade_tile != 0:
 		_fail("Kingdom save/load did not restore the pending building upgrade timer.")
