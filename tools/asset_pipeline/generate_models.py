@@ -85,6 +85,7 @@ def animate_rig(arm):
     specs=[("Idle",[1,9,17,25],"Idle"),("Walk",[1,7,13,19,25],"Walk"),("Attack",[1,5,9,13,17,21],"Attack")]
     for name,frames,mode in specs:
         act=bpy.data.actions.new(name)
+        arm.animation_data.action=act
         for frame in frames:
             for pb in arm.pose.bones:
                 pb.rotation_mode="XYZ"; pb.rotation_euler=(0,0,0)
