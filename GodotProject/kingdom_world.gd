@@ -60,10 +60,11 @@ func _update_daylight() -> void:
 	sun_light.rotation_degrees.x = -15.0 - daylight * 42.0
 
 func set_hero_level(level: int) -> void:
+	var previous_level := current_hero_level
 	current_hero_level = clampi(level, 1, 20)
 	if is_instance_valid(hero_level_label):
 		hero_level_label.text = "ROYAL CAPTAIN • LV %d" % current_hero_level
-	if is_instance_valid(hero_model) and current_hero_level != level:
+	if is_instance_valid(hero_model) and current_hero_level != previous_level:
 		var level_flash := create_tween()
 		level_flash.tween_property(hero_model, "scale", Vector3(1.16, 1.16, 1.16), 0.12).set_trans(Tween.TRANS_BACK)
 		level_flash.tween_property(hero_model, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BOUNCE)
