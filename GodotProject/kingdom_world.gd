@@ -258,6 +258,22 @@ func _build_landmarks() -> void:
 	_add_box(self, Vector3(0.6, 0.035, 11.5), Vector3(0, 0.03, 0), "#c2ae7b")
 	_add_box(self, Vector3(7.8, 0.035, 0.6), Vector3(3.5, 0.035, 2.1), "#c2ae7b")
 	_add_box(self, Vector3(0.55, 0.035, 8.0), Vector3(7.25, 0.035, -4.0), "#c2ae7b")
+	# A low stone perimeter wall frames the village while leaving a clear southern gate.
+	var wall_color := "#9b9b8c"
+	_add_box(self, Vector3(11.8, 0.85, 0.28), Vector3(0, 0.43, -5.9), wall_color)
+	_add_box(self, Vector3(0.28, 0.85, 11.8), Vector3(-5.9, 0.43, 0), wall_color)
+	_add_box(self, Vector3(0.28, 0.85, 11.8), Vector3(5.9, 0.43, 0), wall_color)
+	_add_box(self, Vector3(4.4, 0.85, 0.28), Vector3(-3.7, 0.43, 5.9), wall_color)
+	_add_box(self, Vector3(4.4, 0.85, 0.28), Vector3(3.7, 0.43, 5.9), wall_color)
+	for corner_x in [-5.9, 5.9]:
+		for corner_z in [-5.9, 5.9]:
+			_add_cylinder(self, 0.42, 1.45, Vector3(corner_x, 0.73, corner_z), "#b9b9a9")
+			_add_cone(self, 0.5, 0.72, Vector3(corner_x, 1.82, corner_z), "#6b5545")
+			_add_box(self, Vector3(0.58, 0.12, 0.58), Vector3(corner_x, 1.35, corner_z), "#d1c9ac")
+	for gate_x in [-1.5, 1.5]:
+		_add_box(self, Vector3(0.34, 1.25, 0.34), Vector3(gate_x, 0.63, 5.9), "#b9b9a9")
+		_add_box(self, Vector3(0.22, 0.72, 0.07), Vector3(gate_x, 1.35, 6.12), "#a94f43")
+	_add_box(self, Vector3(3.3, 0.18, 0.35), Vector3(0, 1.25, 5.9), "#8b6a49")
 	# Warm lantern posts mark the central road and make the Keep entrance stand out.
 	for side in [-1.0, 1.0]:
 		_add_cylinder(self, 0.07, 1.25, Vector3(side * 2.0, 0.62, 2.8), "#5c3f2d")
