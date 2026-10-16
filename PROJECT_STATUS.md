@@ -13,6 +13,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Gold, wood, food and stone economy with direct gathering, active and capped offline production.
 - [x] Farm, mine, Lumber Camp, Quarry, Academy, Barracks and Keep construction/collection/upgrades; Academy levels discount research costs.
 - [x] Queued infantry, archer and cavalry training; scouting, exploration, ten enemy outposts, battle outcomes, rewards and achievements.
+- [x] Final campaign boss: Outpost 10 is the stronger Warlord's Citadel, with a unique gold procedural silhouette, an explicit scout warning, and a one-time bonus cache of 500 gold, 250 stone, 200 food and 100 hero XP.
 - [x] Tactical campaign combat: troop composition, enemy doctrines, scouting intelligence, probability-based outcomes, bounded casualty calculations, and rewards; enemy army formations adapt across Shield Wall, Bow Line and Cavalry Wing encounters.
 - [x] Selectable Balanced/Aggressive/Defensive battle stances: aggressive play improves attack odds but increases expected casualties; defensive play reduces expected casualties at the cost of attack odds. Stance is saved, synchronized in LAN snapshots, and host-validated.
 - [x] Four-step tutorial, combat/economy/scouting research, troop practice, three claimable campaign rewards and a persistent three-objective quest board.
