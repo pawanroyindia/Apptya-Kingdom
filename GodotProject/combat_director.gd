@@ -9,7 +9,7 @@ static func resolve_outpost(infantry: int, archers: int, cavalry: int, hero_powe
 	var research_bonus := total_troops * clampi(combat_research, 0, 5) * 2
 	var kingdom_power := troop_power + maxi(0, hero_power) + maxi(0, drills) + clampi(keep_level, 1, 10) * 3 + clampi(barracks_level, 0, 5) * 4 + research_bonus
 	var trait_id := posmod(outpost_index, 3)
-	var trait_name := ["Fortified Hold", "Longbow Nest", "Mounted Raiders"][trait_id]
+	var trait_name: String = ["Fortified Hold", "Longbow Nest", "Mounted Raiders"][trait_id]
 	var tactical_bonus := 0
 	match trait_id:
 		0:
@@ -42,7 +42,7 @@ static func resolve_enemy_army(infantry: int, archers: int, cavalry: int, hero_p
 	var level := clampi(enemy_level, 1, 100000)
 	var enemy_power := 35 + level * 18
 	var style_id := posmod(level - 1, 3)
-	var enemy_style := ["Shield Wall", "Bow Line", "Cavalry Wing"][style_id]
+	var enemy_style: String = ["Shield Wall", "Bow Line", "Cavalry Wing"][style_id]
 	var counter_bonus := 0
 	match style_id:
 		0:
