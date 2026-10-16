@@ -518,10 +518,7 @@ func _build_terrain() -> void:
 		_add_cone(tree, 0.58, 1.05, Vector3(0, 2.48, 0), "#4f8a50")
 		_add_sphere(tree, Vector3(-0.34, 1.75, 0.18), Vector3(0.48, 0.56, 0.46), "#477e49")
 		_add_sphere(tree, Vector3(0.38, 2.0, -0.12), Vector3(0.42, 0.5, 0.44), "#5b9656")
-		var branch_left := _add_cylinder(tree, 0.055, 0.58, Vector3(-0.2, 0.78, 0), "#75563c")
-		branch_left.rotation_degrees.z = -38.0
-		var branch_right := _add_cylinder(tree, 0.05, 0.52, Vector3(0.2, 0.86, 0), "#75563c")
-		branch_right.rotation_degrees.z = 42.0
+		# The layered crown carries the silhouette; omit separate branch meshes to stay inside the mobile node budget.
 
 	# Layered hills and boulders give the valley a deeper horizon and more readable edges.
 	for i in range(7):
