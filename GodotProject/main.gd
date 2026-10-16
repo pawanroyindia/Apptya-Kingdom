@@ -75,9 +75,13 @@ var world_view: Node3D
 var world_viewport: SubViewport
 var graphics_quality := "Balanced"
 var sound_enabled := true
+var music_enabled := true
 var sound_player: AudioStreamPlayer
+var music_player: AudioStreamPlayer
+var music_stream: AudioStreamWAV
 var sound_streams: Dictionary = {}
 var settings_buttons: Array[Button] = []
+var music_settings_buttons: Array[Button] = []
 
 func _ready() -> void:
 	_load_game()
@@ -174,6 +178,9 @@ func _build_ui() -> void:
 		{"text": "Reset Camera", "action": _reset_camera},
 		{"text": "Sound: ON", "action": _toggle_sound}
 	], settings_buttons)
+	_add_button_row(column, [
+		{"text": "Music: ON", "action": _toggle_music}
+	], music_settings_buttons)
 
 	var resource_panel := PanelContainer.new()
 	resource_panel.add_theme_stylebox_override("panel", _panel_style("#243a30"))
@@ -463,9 +470,11 @@ func _refresh_ui() -> void:
 		for defeated in outpost_defeated:
 			captured_outposts += 1 if defeated == 1 else 0
 		var campaign_progress := "CAMPAIGN COMPLETE" if captured_outposts >= outpost_defeated.size() else "Outposts captured: %d/%d" % [captured_outposts, outpost_defeated.size()]
-		campaign_label.text = "%s\nArmy power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s • Sound: %s" % [campaign_progress, _army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality, "ON" if sound_enabled else "OFF"]
+		campaign_label.text = "%s\nArmy power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s • Sound: %s • Music: %s" % [campaign_progress, _army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality, "ON" if sound_enabled else "OFF", "ON" if music_enabled else "OFF"]
 		if not settings_buttons.is_empty():
 			settings_buttons[2].text = "Sound: ON" if sound_enabled else "Sound: OFF"
+		if not music_settings_buttons.is_empty():
+			music_settings_buttons[0].text = "Music: ON" if music_enabled else "Music: OFF"
 		var current_utc_day := int(floor(float(Time.get_unix_time_from_system()) / 86400.0))
 		var claimed_today := daily_reward_claim_day == current_utc_day
 		var seconds_to_reset := 86400 - int(Time.get_unix_time_from_system()) % 86400
@@ -495,6 +504,14 @@ func _setup_audio() -> void:
 		"defeat": _make_tone(180.0, 0.20),
 		"train": _make_tone(520.0, 0.11)
 	}
+	music_player = AudioStreamPlayer.new()
+	music_player.bus = "Master"
+	music_player.volume_db = -20.0
+	add_child(music_player)
+	music_stream = _make_ambient_music()
+	music_player.stream = music_stream
+	if music_enabled:
+		music_player.play()
 
 func _make_tone(frequency: float, duration: float) -> AudioStreamWAV:
 	const SAMPLE_RATE := 22050
@@ -512,6 +529,50 @@ func _make_tone(frequency: float, duration: float) -> AudioStreamWAV:
 	stream.stereo = false
 	stream.data = pcm
 	return stream
+
+func _make_ambient_music() -> AudioStreamWAV:
+	const SAMPLE_RATE := 11025
+	const LOOP_SECONDS := 16.0
+	var sample_count := int(SAMPLE_RATE * LOOP_SECONDS)
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	var chord_roots := [110.0, 87.31, 98.0, 73.42]
+	var chord_fifths := [164.81, 130.81, 146.83, 110.0]
+	var chord_octaves := [220.0, 174.61, 196.0, 146.83]
+	var melody := [440.0, 0.0, 392.0, 0.0, 329.63, 0.0, 392.0, 0.0, 349.23, 0.0, 293.66, 0.0, 329.63, 0.0, 261.63, 0.0, 392.0, 0.0, 349.23, 0.0, 293.66, 0.0, 329.63, 0.0, 440.0, 0.0, 392.0, 0.0, 329.63, 0.0, 293.66, 0.0]
+	for i in range(sample_count):
+		var t := float(i) / SAMPLE_RATE
+		var chord_index := mini(int(t / 4.0), 3)
+		var pad := sin(TAU * chord_roots[chord_index] * t) * 0.075
+		pad += sin(TAU * chord_fifths[chord_index] * t) * 0.045
+		pad += sin(TAU * chord_octaves[chord_index] * t) * 0.035
+		var beat_position := fposmod(t, 0.5)
+		var melody_index := mini(int(t / 0.5), melody.size() - 1)
+		var melody_frequency: float = melody[melody_index]
+		var envelope := minf(1.0, beat_position * 10.0) * minf(1.0, (0.5 - beat_position) * 5.0)
+		var lead := sin(TAU * melody_frequency * t) * envelope * 0.045 if melody_frequency > 0.0 else 0.0
+		var sample := clampf(pad + lead, -0.8, 0.8)
+		pcm.encode_s16(i * 2, int(sample * 32767.0))
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = SAMPLE_RATE
+	stream.stereo = false
+	stream.data = pcm
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_begin = 0
+	stream.loop_end = sample_count
+	return stream
+
+func _toggle_music() -> void:
+	music_enabled = not music_enabled
+	if is_instance_valid(music_player):
+		if music_enabled:
+			music_player.play()
+		else:
+			music_player.stop()
+	status_message = "Ambient music enabled." if music_enabled else "Ambient music muted."
+	_persist_game()
+	_refresh_ui()
 
 func _play_sound(sound_id: String) -> void:
 	if not sound_enabled or not is_instance_valid(sound_player) or not sound_streams.has(sound_id):
@@ -1342,6 +1403,7 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "stone", stone)
 	config.set_value("kingdom", "graphics_quality", graphics_quality)
 	config.set_value("kingdom", "sound_enabled", sound_enabled)
+	config.set_value("kingdom", "music_enabled", music_enabled)
 	config.set_value("kingdom", "day", day)
 	config.set_value("kingdom", "daily_reward_claim_day", daily_reward_claim_day)
 	config.set_value("kingdom", "daily_reward_streak", daily_reward_streak)
@@ -1400,6 +1462,7 @@ func _load_game() -> void:
 	stone = int(config.get_value("kingdom", "stone", stone))
 	graphics_quality = str(config.get_value("kingdom", "graphics_quality", graphics_quality))
 	sound_enabled = bool(config.get_value("kingdom", "sound_enabled", sound_enabled))
+	music_enabled = bool(config.get_value("kingdom", "music_enabled", music_enabled))
 	day = int(config.get_value("kingdom", "day", day))
 	daily_reward_claim_day = int(config.get_value("kingdom", "daily_reward_claim_day", daily_reward_claim_day))
 	daily_reward_streak = int(config.get_value("kingdom", "daily_reward_streak", daily_reward_streak))
