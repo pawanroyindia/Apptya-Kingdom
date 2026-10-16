@@ -18,6 +18,7 @@ var queued_troop_count := 0
 var troop_training_finish_unix := 0
 var keep_level := 1
 var day := 1
+var enemy_level := 1
 var explored_regions := 0
 var victories := 0
 var defeats := 0
@@ -291,7 +292,10 @@ func _build_ui() -> void:
 		{"text": "Practice Troops", "action": _practice_troops}
 	])
 	_add_button_row(column, [
-		{"text": "Claim Victory Reward", "action": _claim_reward.bind("first_victory")},
+		{"text": "Attack Enemy Army\nPower vs power", "action": _attack_enemy_army},
+		{"text": "Claim Victory Reward", "action": _claim_reward.bind("first_victory")}
+	])
+	_add_button_row(column, [
 		{"text": "Claim Explorer Reward", "action": _claim_reward.bind("explorer")},
 		{"text": "Claim Keep Reward", "action": _claim_reward.bind("keep_builder")}
 	])
@@ -382,7 +386,7 @@ func _refresh_ui() -> void:
 		outpost_label.text = _get_outpost_description()
 		tutorial_label.text = _get_tutorial_text()
 		achievements_label.text = "Achievements: %d/8 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
-		campaign_label.text = "Explored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20" % [explored_regions, combat_research, economy_research, scouting_research, practice_drills]
+		campaign_label.text = "Army power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20" % [_army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills]
 		if is_instance_valid(world_view):
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, infantry, archers, cavalry, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 		status_label.text = status_message
@@ -798,6 +802,44 @@ func _attack_outpost() -> void:
 	_persist_game()
 	_refresh_ui()
 
+func _army_power() -> int:
+	return infantry * (10 + combat_research * 2) + archers * (14 + combat_research * 2) + cavalry * (18 + combat_research * 2) + _get_barracks_level() * 4 + keep_level * 3 + practice_drills
+
+func _enemy_power() -> int:
+	return 10 + enemy_level * 7
+
+func _attack_enemy_army() -> void:
+	if guards < 1:
+		status_message = "Train guards before attacking the enemy army."
+		_refresh_ui()
+		return
+	var army := _army_power()
+	var enemy := _enemy_power()
+	day = mini(day + 1, 1000000)
+	if army >= enemy:
+		var lost := mini(guards, maxi(0, int(enemy / 45)))
+		_remove_troops(lost)
+		var wood_reward := 35 + enemy_level * 10
+		var stone_reward := 20 + enemy_level * 5
+		var gold_reward := 25 + enemy_level * 8
+		wood += wood_reward
+		stone += stone_reward
+		gold += gold_reward
+		victories = mini(victories + 1, 1000000)
+		enemy_level = mini(enemy_level + 1, 100000)
+		status_message = "VICTORY! Army %d vs enemy %d. Lost %d guards; loot: %d wood, %d stone, %d gold." % [army, enemy, lost, wood_reward, stone_reward, gold_reward]
+		if tutorial_step == 3:
+			_advance_tutorial(4)
+	else:
+		var lost := mini(guards, maxi(1, int(ceil(float(enemy - army) / 18.0))))
+		_remove_troops(lost)
+		var food_lost := mini(food, 15 * lost)
+		food -= food_lost
+		defeats = mini(defeats + 1, 1000000)
+		status_message = "DEFEAT. Army %d vs enemy %d. Lost %d guards and %d food. Train and research before retrying." % [army, enemy, lost, food_lost]
+	_persist_game()
+	_refresh_ui()
+
 func _research(research_type: String) -> void:
 	var level := combat_research if research_type == "combat" else (economy_research if research_type == "economy" else scouting_research)
 	var research_name := "Combat Drills" if research_type == "combat" else ("Efficient Production" if research_type == "economy" else "Cartography")
@@ -961,6 +1003,7 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "food", food)
 	config.set_value("kingdom", "stone", stone)
 	config.set_value("kingdom", "day", day)
+	config.set_value("kingdom", "enemy_level", enemy_level)
 	config.set_value("kingdom", "explored_regions", explored_regions)
 	config.set_value("kingdom", "victories", victories)
 	config.set_value("kingdom", "defeats", defeats)
@@ -1008,6 +1051,7 @@ func _load_game() -> void:
 	food = int(config.get_value("kingdom", "food", food))
 	stone = int(config.get_value("kingdom", "stone", stone))
 	day = int(config.get_value("kingdom", "day", day))
+	enemy_level = int(config.get_value("kingdom", "enemy_level", enemy_level))
 	explored_regions = int(config.get_value("kingdom", "explored_regions", explored_regions))
 	victories = int(config.get_value("kingdom", "victories", victories))
 	defeats = int(config.get_value("kingdom", "defeats", defeats))
@@ -1067,6 +1111,7 @@ func _normalize_save_data() -> void:
 	food = maxi(food, 0)
 	stone = maxi(stone, 0)
 	day = clampi(day, 1, 1000000)
+	enemy_level = clampi(enemy_level, 1, 100000)
 	explored_regions = clampi(explored_regions, 0, 1000000)
 	victories = clampi(victories, 0, 1000000)
 	defeats = clampi(defeats, 0, 1000000)
