@@ -368,8 +368,8 @@ namespace ApptyaKingdom
                 Say("No troops are available to practice. Queue infantry, archers or cavalry first.");
                 return;
             }
-            Say("Practice drill complete. Army power " + state.ArmyPower() + " • Infantry " + d.infantry +
-                " • Archers " + d.archers + " • Cavalry " + d.cavalry + ". No troops or resources were spent.");
+            Say(state.PracticeTroops() + " Army power: " + state.ArmyPower() + " • Infantry " + d.infantry +
+                " • Archers " + d.archers + " • Cavalry " + d.cavalry + ".");
         }
 
         void AttackSelectedTarget()
