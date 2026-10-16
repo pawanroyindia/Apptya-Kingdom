@@ -328,6 +328,19 @@ func play_attack(target_index: int, victory: bool) -> void:
 	tween.tween_callback(projectile.queue_free)
 	tween.tween_callback(_show_battle_flash.bind(target_position + Vector3(0, 1.0, 0), victory))
 
+func play_exploration() -> void:
+	var scout := Node3D.new()
+	scout.position = Vector3(0.0, 0.08, 1.2)
+	_add_capsule(scout, Vector3(0, 0.55, 0), "#6c8dbe")
+	_add_sphere(scout, Vector3(0, 1.2, 0), Vector3(0.22, 0.22, 0.22), "#d9b18c")
+	_add_box(scout, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
+	add_child(scout)
+	var destination := Vector3(-10.5, 0.08, -11.5)
+	var journey := create_tween()
+	journey.tween_property(scout, "position", destination, 0.9).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	journey.tween_callback(_show_battle_flash.bind(destination + Vector3(0, 1.0, 0), true))
+	journey.tween_callback(scout.queue_free)
+
 func _show_battle_flash(position_value: Vector3, victory: bool) -> void:
 	var flash_color := "#e4d17e" if victory else "#b53d36"
 	var flash := _add_sphere(self, position_value, Vector3(0.2, 0.2, 0.2), flash_color)
