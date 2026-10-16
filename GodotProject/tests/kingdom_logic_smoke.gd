@@ -210,7 +210,7 @@ func _run_tests() -> void:
 		_fail("LAN co-op accepted a non-integer building level.")
 		return
 	var malformed_building_snapshot := coop_snapshot.duplicate(true)
-	malformed_building_snapshot["tiles"][0] = 123
+	malformed_building_snapshot["tiles"] = [123, "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
 	if game.network_session._valid_snapshot(malformed_building_snapshot):
 		_fail("LAN co-op accepted a non-string building identifier.")
 		return
