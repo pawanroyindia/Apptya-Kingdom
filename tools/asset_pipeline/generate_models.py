@@ -234,10 +234,20 @@ def character(path,royal):
     add(cube("Belt",(0,-0.16,0.82),(0.40,0.06,0.07),"leather",0.015,"Spine",arm))
     add(cube("Buckle",(0,-0.196,0.82),(0.07,0.018,0.05),"gold",0.008,"Spine",arm))
     add(sphere("Head",(0,0,1.52),(0.16,0.14,0.20),"skin","Head",arm))
+    # Face planes, ears, nose, brows and a beard silhouette make the head readable at strategy zoom.
+    add(sphere("EarL",(-0.15,-0.005,1.52),(0.035,0.045,0.055),"skin","Head",arm))
+    add(sphere("EarR",(0.15,-0.005,1.52),(0.035,0.045,0.055),"skin","Head",arm))
     add(sphere("EyeL",(-0.06,-0.128,1.54),(0.018,0.012,0.018),"leather","Head",arm))
     add(sphere("EyeR",(0.06,-0.128,1.54),(0.018,0.012,0.018),"leather","Head",arm))
+    add(cube("BrowL",(-0.06,-0.139,1.565),(0.055,0.018,0.018),"leather",0.006,"Head",arm))
+    add(cube("BrowR",(0.06,-0.139,1.565),(0.055,0.018,0.018),"leather",0.006,"Head",arm))
+    add(sphere("Nose",(0,-0.145,1.505),(0.035,0.035,0.055),"skin","Head",arm))
+    add(cube("Mouth",(0,-0.134,1.455),(0.065,0.012,0.014),"leather",0.004,"Head",arm))
+    add(sphere("Beard",(0,-0.105,1.405),(0.105,0.07,0.095),"leather","Head",arm))
     add(sphere("Helmet",(0,0,1.67),(0.19,0.17,0.12),armor,"Head",arm))
     add(cube("HelmetNasal",(0,-0.17,1.59),(0.035,0.025,0.15),"gold",0.008,"Head",arm))
+    add(cube("HelmetBrowRim",(0,-0.157,1.615),(0.28,0.025,0.035),"gold",0.008,"Head",arm))
+    add(cylinder("HelmetRidge",(0,0,1.765),0.025,0.24,"gold",10,"Head",arm))
     add(sphere("ShoulderL",(-0.27,0,1.26),(0.13,0.15,0.12),armor,"Arm.L",arm))
     add(sphere("ShoulderR",(0.27,0,1.26),(0.13,0.15,0.12),armor,"Arm.R",arm))
     for side,label in [(-1,"L"),(1,"R")]:
@@ -256,6 +266,11 @@ def character(path,royal):
         add(cube("BootStrap"+label,(side*0.14,-0.18,0.12),(0.12,0.025,0.025),"gold",0.006,"Shin."+label,arm))
     for z in [0.96,1.08,1.20]:
         add(cube("ChestEmboss",(0,-0.181,z),(0.11,0.012,0.012),"gold",0.004,"Spine",arm))
+    # Overlapping abdominal lames and a raised central heraldic badge break up the flat breastplate.
+    for z in [0.91,0.96,1.01]:
+        add(cube("AbdominalLame",(0,-0.183,z),(0.255,0.018,0.035),armor,0.008,"Spine",arm))
+    add(cube("ChestHeraldicBadge",(0,-0.198,1.12),(0.09,0.018,0.12),"gold",0.012,"Spine",arm))
+    add(sphere("BadgeGem",(0,-0.211,1.12),(0.022,0.012,0.032),"red","Spine",arm))
     add(cube("EyeSlit",(0,-0.135,1.55),(0.10,0.012,0.018),"leather",0.003,"Head",arm))
     if royal:
         add(cylinder("SwordGrip",(0.46,-0.02,0.67),0.025,0.16,"leather",10,"Forearm.R",arm))
