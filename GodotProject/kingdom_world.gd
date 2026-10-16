@@ -510,11 +510,19 @@ func _build_landmarks() -> void:
 	_add_box(self, Vector3(0.28, 0.85, 11.8), Vector3(5.9, 0.43, 0), wall_color)
 	_add_box(self, Vector3(4.4, 0.85, 0.28), Vector3(-3.7, 0.43, 5.9), wall_color)
 	_add_box(self, Vector3(4.4, 0.85, 0.28), Vector3(3.7, 0.43, 5.9), wall_color)
+	var watchtower_path := "res://assets/production/watchtower.glb"
+	var watchtower_scene := load(watchtower_path) as PackedScene if ResourceLoader.exists(watchtower_path) else null
 	for corner_x in [-5.9, 5.9]:
 		for corner_z in [-5.9, 5.9]:
-			_add_cylinder(self, 0.42, 1.45, Vector3(corner_x, 0.73, corner_z), "#b9b9a9")
-			_add_cone(self, 0.5, 0.72, Vector3(corner_x, 1.82, corner_z), "#6b5545")
-			_add_box(self, Vector3(0.58, 0.12, 0.58), Vector3(corner_x, 1.35, corner_z), "#d1c9ac")
+			if watchtower_scene:
+				var tower := watchtower_scene.instantiate() as Node3D
+				tower.position = Vector3(corner_x, 0.0, corner_z)
+				tower.scale = Vector3.ONE * 0.82
+				add_child(tower)
+			else:
+				_add_cylinder(self, 0.42, 1.45, Vector3(corner_x, 0.73, corner_z), "#b9b9a9")
+				_add_cone(self, 0.5, 0.72, Vector3(corner_x, 1.82, corner_z), "#6b5545")
+				_add_box(self, Vector3(0.58, 0.12, 0.58), Vector3(corner_x, 1.35, corner_z), "#d1c9ac")
 	for gate_x in [-1.5, 1.5]:
 		_add_box(self, Vector3(0.34, 1.25, 0.34), Vector3(gate_x, 0.63, 5.9), "#b9b9a9")
 		_add_box(self, Vector3(0.22, 0.72, 0.07), Vector3(gate_x, 1.35, 6.12), "#a94f43")
