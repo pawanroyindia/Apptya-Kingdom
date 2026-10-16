@@ -6,7 +6,7 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 
 - Portrait, touch-friendly interface
 - Gold, wood, food and stone resource counters with direct gathering actions
-- Procedural 3D valley with a river, bridge, roads, stone perimeter wall, four watchtowers, a southern gate, trees, a castle keep, farms, mines, barracks, ten enemy outposts visible guard markers, and a gold-armored Royal Captain hero model with a level label
+- Procedural 3D valley with a river, bridge, roads, stone perimeter wall, four watchtowers, a southern gate, trees, a castle keep, farms, mines, barracks, ten enemy outposts, visible guard markers, and a gold-armored Royal Captain hero model with a level label
 - Touch drag to orbit the camera and two-finger pinch to zoom
 - Nine selectable kingdom tiles
 - Farm, mine and barracks construction
@@ -14,7 +14,7 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Queued infantry, archer and cavalry training with Barracks capacity limits
 - Combat, economy and scouting research; troop practice; region exploration; claimable campaign rewards and a persistent quest board
 - Royal Captain hero with XP/levels, skill upgrades, battle/exploration progression, and an army-power bonus
-- Scouting and targeted outpost battles with troop losses, rewards and visible battle/exploration animations; outposts unlock in campaign order
+- Scouting and targeted outpost battles with troop losses, rewards and visible battle/exploration animations; outposts unlock in campaign order and the HUD shows campaign progress through completion
 - Timed production and bounded eight-hour offline production with research bonuses
 - Periodic autosave, backup recovery, save-data normalization and persisted upgrade/training timers
 - Local save/load on the device, including graphics preferences; save recovery enforces a unique Keep and Barracks troop capacity
@@ -30,7 +30,7 @@ The workflow `.github/workflows/godot-android-apk.yml` builds a debug APK using 
 3. Run **Run workflow** only after explicit approval to build an APK. Source changes do not trigger APK builds.
 4. Open the completed run and download the `apptya-kingdom-godot-apk` artifact.
 
-The headless Godot source, runtime, gameplay, save recovery, legacy-save migration, troop training, research, ten-outpost campaign and 3D capture/scouting synchronization, escalating enemy army battles, touch-control and mesh-budget checks passed in CI ([latest successful gameplay/hero workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851865324)). This includes quest unlock/reward persistence, hero progression, saved-graphics startup, save normalization, sequential campaign unlocks, the 3D hero model/level-label synchronization, and the 256-mesh budget check. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
+The headless Godot source, runtime, gameplay, save recovery, legacy-save migration, troop training, research, ten-outpost campaign and 3D capture/scouting synchronization, escalating enemy army battles, touch-control and mesh-budget checks passed in CI ([latest successful gameplay/hero workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38852128706)). This includes quest unlock/reward persistence, hero progression, saved-graphics startup, save normalization, sequential campaign unlocks, the 3D hero model/level-label synchronization, and the 256-mesh budget and stable-refresh checks. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
 
 ## Validation
 
