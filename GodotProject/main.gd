@@ -63,6 +63,7 @@ func _notification(what: int) -> void:
 		_persist_game()
 	elif what == NOTIFICATION_APPLICATION_RESUMED:
 		_apply_offline_production(true)
+		_resume_timed_upgrades()
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
