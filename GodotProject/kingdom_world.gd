@@ -169,7 +169,7 @@ func _create_articulated_character(uniform_color: String, armor_color: String, c
 	_add_sphere(head, Vector3(0, 0.0, 0), Vector3(0.205, 0.235, 0.19), "#d9b18c")
 
 	_add_cone(head, 0.245, 0.22, Vector3(0, 0.19, 0), "#e3bd59" if royal else "#b8bfc4")
-	_add_box(head, Vector3(0.34, 0.06, 0.31), Vector3(0, 0.11, 0), "#e4c77f" if royal else "#858a83")
+
 
 	var left_leg := Node3D.new()
 	left_leg.name = "LeftLegJoint"
