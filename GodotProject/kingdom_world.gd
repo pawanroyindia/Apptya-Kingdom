@@ -58,8 +58,8 @@ func _build_environment() -> void:
 	var camera := Camera3D.new()
 	camera.position = Vector3(0, 14.5, 19)
 	camera.fov = 42
-	camera.look_at(Vector3(0, 0, -0.5), Vector3.UP)
 	add_child(camera)
+	camera.look_at(Vector3(0, 0, -0.5), Vector3.UP)
 	camera.current = true
 
 func _build_terrain() -> void:
