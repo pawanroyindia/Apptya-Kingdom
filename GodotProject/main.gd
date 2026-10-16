@@ -10,15 +10,28 @@ var food := 120
 var guards := 10
 var keep_level := 1
 var selected_tile := 4
+var selected_outpost := 0
 var last_saved_unix := 0
+var keep_upgrade_finish_unix := 0
+var tutorial_step := 0
 var tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
+var tile_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
+var outpost_threat := PackedInt32Array([1, 2, 3])
+var outpost_defeated := PackedInt32Array([0, 0, 0])
+var achievements := PackedStringArray()
 var status_message := "Your kingdom awaits your command."
 var resource_labels: Dictionary = {}
 var tile_buttons: Array[Button] = []
+var outpost_buttons: Array[Button] = []
 var keep_label: Label
 var guard_label: Label
 var status_label: Label
+var tile_detail_label: Label
+var tutorial_label: Label
+var outpost_label: Label
+var achievements_label: Label
 var tick_timer: Timer
+var upgrade_timer: Timer
 
 func _ready() -> void:
 	_load_game()
@@ -30,6 +43,16 @@ func _ready() -> void:
 	tick_timer.timeout.connect(_on_production_tick)
 	add_child(tick_timer)
 	tick_timer.start()
+	upgrade_timer = Timer.new()
+	upgrade_timer.one_shot = true
+	upgrade_timer.timeout.connect(_finish_keep_upgrade)
+	add_child(upgrade_timer)
+	if keep_upgrade_finish_unix > 0:
+		var remaining := keep_upgrade_finish_unix - int(Time.get_unix_time_from_system())
+		if remaining > 0:
+			upgrade_timer.start(float(remaining))
+		else:
+			_finish_keep_upgrade()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
@@ -126,6 +149,15 @@ func _build_ui() -> void:
 		grid.add_child(tile_button)
 		tile_buttons.append(tile_button)
 
+	tile_detail_label = Label.new()
+	tile_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tile_detail_label.add_theme_color_override("font_color", Color("#d8e6d9"))
+	column.add_child(tile_detail_label)
+	_add_button_row(column, [
+		{"text": "Upgrade Selected\n40 gold, 20 wood × level", "action": _upgrade_selected_building},
+		{"text": "Refresh / Save", "action": _save_game}
+	])
+
 	var build_title := Label.new()
 	build_title.text = "BUILD & IMPROVE"
 	build_title.add_theme_font_size_override("font_size", 18)
@@ -140,6 +172,20 @@ func _build_ui() -> void:
 		{"text": "Upgrade Keep\n100 gold, 50 wood", "action": _upgrade_keep}
 	])
 
+	var outpost_title := Label.new()
+	outpost_title.text = "ENEMY OUTPOSTS"
+	outpost_title.add_theme_font_size_override("font_size", 18)
+	outpost_title.add_theme_color_override("font_color", Color("#f1d38a"))
+	column.add_child(outpost_title)
+	outpost_label = Label.new()
+	outpost_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(outpost_label)
+	_add_button_row(column, [
+		{"text": "Outpost 1\nThreat 1", "action": _select_outpost.bind(0)},
+		{"text": "Outpost 2\nThreat 2", "action": _select_outpost.bind(1)},
+		{"text": "Outpost 3\nThreat 3", "action": _select_outpost.bind(2)}
+	], outpost_buttons)
+
 	var army_title := Label.new()
 	army_title.text = "ARMY & EXPLORATION"
 	army_title.add_theme_font_size_override("font_size", 18)
@@ -150,9 +196,18 @@ func _build_ui() -> void:
 		{"text": "Scout Region\n5 guards", "action": _scout}
 	])
 	_add_button_row(column, [
-		{"text": "Battle Raiders\n5 guards", "action": _battle},
+		{"text": "Attack Selected Outpost\n3+ guards", "action": _attack_outpost},
 		{"text": "Save Kingdom", "action": _save_game}
 	])
+
+	tutorial_label = Label.new()
+	tutorial_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tutorial_label.add_theme_color_override("font_color", Color("#f1d38a"))
+	column.add_child(tutorial_label)
+	achievements_label = Label.new()
+	achievements_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	achievements_label.add_theme_color_override("font_color", Color("#c3d2c7"))
+	column.add_child(achievements_label)
 
 	var status_panel := PanelContainer.new()
 	status_panel.add_theme_stylebox_override("panel", _panel_style("#26392f"))
@@ -163,7 +218,7 @@ func _build_ui() -> void:
 	status_label.custom_minimum_size = Vector2(0, 44)
 	status_panel.add_child(status_label)
 
-func _add_button_row(parent: VBoxContainer, definitions: Array) -> void:
+func _add_button_row(parent: VBoxContainer, definitions: Array, button_store: Array[Button] = []) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	parent.add_child(row)
@@ -175,6 +230,8 @@ func _add_button_row(parent: VBoxContainer, definitions: Array) -> void:
 		button.add_theme_font_size_override("font_size", 13)
 		button.pressed.connect(definition["action"])
 		row.add_child(button)
+		if button_store != null:
+			button_store.append(button)
 
 func _panel_style(color_value: String) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -194,17 +251,75 @@ func _refresh_ui() -> void:
 		resource_labels["gold"].text = "🪙 Gold: %d" % gold
 		resource_labels["wood"].text = "🪵 Wood: %d" % wood
 		resource_labels["food"].text = "🌾 Food: %d" % food
-		keep_label.text = "Keep level: %d   •   Selected tile: %d" % [keep_level, selected_tile + 1]
+		var upgrade_text := ""
+		if keep_upgrade_finish_unix > int(Time.get_unix_time_from_system()):
+			upgrade_text = "   •   Keep upgrade: %ds" % (keep_upgrade_finish_unix - int(Time.get_unix_time_from_system()))
+		keep_label.text = "Keep level: %d   •   Selected tile: %d%s" % [keep_level, selected_tile + 1, upgrade_text]
 		guard_label.text = "Trained guards: %d" % guards
 		for i in range(tile_buttons.size()):
 			var prefix := "▶ " if i == selected_tile else ""
-			tile_buttons[i].text = "%s%s\nTile %d" % [prefix, tiles[i], i + 1]
+			tile_buttons[i].text = "%s%s Lv.%d\nTile %d" % [prefix, tiles[i], tile_levels[i], i + 1]
 			tile_buttons[i].modulate = Color("#f4d994") if i == selected_tile else Color("#ffffff")
+		if tiles[selected_tile] == "Empty":
+			tile_detail_label.text = "Tile %d is empty. Build a Farm, Mine, or Barracks here." % (selected_tile + 1)
+		else:
+			var production := "No direct resource production"
+			if tiles[selected_tile] == "Farm":
+				production = "Food production: %d per tick" % (2 * keep_level * tile_levels[selected_tile])
+			elif tiles[selected_tile] == "Mine":
+				production = "Gold production: %d per tick" % (2 * keep_level * tile_levels[selected_tile])
+			elif tiles[selected_tile] == "Keep":
+				production = "Keep produces %d gold and 1 wood per tick" % keep_level
+			tile_detail_label.text = "Selected: %s (Level %d) on tile %d. %s" % [tiles[selected_tile], tile_levels[selected_tile], selected_tile + 1, production]
+		for i in range(outpost_buttons.size()):
+			outpost_buttons[i].text = "%sOutpost %d\nThreat %d%s" % ["▶ " if i == selected_outpost else "", i + 1, outpost_threat[i], " • Defeated" if outpost_defeated[i] == 1 else ""]
+		outpost_label.text = _get_outpost_description()
+		tutorial_label.text = _get_tutorial_text()
+		achievements_label.text = "Achievements: %d/6 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
 		status_label.text = status_message
 
 func _select_tile(index: int) -> void:
 	selected_tile = index
 	status_message = "Selected tile %d: %s." % [index + 1, tiles[index]]
+	_refresh_ui()
+
+func _get_tutorial_text() -> String:
+	match tutorial_step:
+		0:
+			return "TUTORIAL 1/4: Build a Farm on an empty tile."
+		1:
+			return "TUTORIAL 2/4: Build a Mine to increase gold income."
+		2:
+			return "TUTORIAL 3/4: Train guards for your army."
+		3:
+			return "TUTORIAL 4/4: Select an enemy outpost and win an attack."
+		_:
+			return "TUTORIAL COMPLETE: Keep upgrading, expand your economy, and defeat all outposts."
+
+func _advance_tutorial(target_step: int) -> void:
+	if target_step > tutorial_step:
+		tutorial_step = min(target_step, 4)
+		var reward := tutorial_step * 25
+		gold += reward
+		status_message = "Tutorial step completed! Reward: %d gold." % reward
+
+func _award_achievement(achievement_id: String, title: String, gold_reward: int, food_reward: int = 0) -> void:
+	if achievements.has(achievement_id):
+		return
+	achievements.append(achievement_id)
+	gold += gold_reward
+	food += food_reward
+	status_message = "Achievement unlocked: %s (+%d gold%s)." % [title, gold_reward, ", +%d food" % food_reward if food_reward > 0 else ""]
+
+func _get_outpost_description() -> String:
+	var threat := outpost_threat[selected_outpost]
+	if outpost_defeated[selected_outpost] == 1:
+		return "Outpost %d captured. It is secured and cannot be attacked again." % (selected_outpost + 1)
+	return "Target: Outpost %d • Threat %d • Estimated success chance %d%% • Guards required: %d" % [selected_outpost + 1, threat, clampi(75 - threat * 15 + keep_level * 5 + guards, 10, 95), 3 + threat]
+
+func _select_outpost(index: int) -> void:
+	selected_outpost = clampi(index, 0, outpost_threat.size() - 1)
+	status_message = "Targeting enemy outpost %d." % (selected_outpost + 1)
 	_refresh_ui()
 
 func _build_farm() -> void:
@@ -214,6 +329,9 @@ func _build_farm() -> void:
 	gold -= 50
 	wood -= 10
 	status_message = "Farm built. It produces food over time."
+	_award_achievement("farm", "First Farm", 20)
+	if tutorial_step == 0:
+		_advance_tutorial(1)
 	_refresh_ui()
 
 func _build_mine() -> void:
@@ -223,6 +341,9 @@ func _build_mine() -> void:
 	gold -= 70
 	wood -= 20
 	status_message = "Mine built. It produces gold over time."
+	_award_achievement("mine", "First Mine", 20)
+	if tutorial_step == 1:
+		_advance_tutorial(2)
 	_refresh_ui()
 
 func _build_barracks() -> void:
@@ -246,6 +367,10 @@ func _can_build(building: String, gold_cost: int, wood_cost: int) -> bool:
 	return true
 
 func _upgrade_keep() -> void:
+	if keep_upgrade_finish_unix > int(Time.get_unix_time_from_system()):
+		status_message = "Keep upgrade is already in progress."
+		_refresh_ui()
+		return
 	var gold_cost := 100 * keep_level
 	var wood_cost := 50 * keep_level
 	if gold < gold_cost or wood < wood_cost:
@@ -254,8 +379,40 @@ func _upgrade_keep() -> void:
 		return
 	gold -= gold_cost
 	wood -= wood_cost
+	keep_upgrade_finish_unix = int(Time.get_unix_time_from_system()) + 15
+	upgrade_timer.start(15.0)
+	status_message = "Keep upgrade started. It will finish in 15 seconds."
+	_persist_game()
+	_refresh_ui()
+
+func _finish_keep_upgrade() -> void:
+	if keep_upgrade_finish_unix <= 0:
+		return
+	keep_upgrade_finish_unix = 0
 	keep_level += 1
-	status_message = "Keep upgraded to level %d. Production is stronger." % keep_level
+	_award_achievement("keep_upgrade", "Keep Upgraded", 50)
+	status_message = "Keep upgrade complete! Keep level is now %d." % keep_level
+	_persist_game()
+	_refresh_ui()
+
+func _upgrade_selected_building() -> void:
+	var building := tiles[selected_tile]
+	if building != "Farm" and building != "Mine" and building != "Barracks":
+		status_message = "Select a Farm, Mine, or Barracks to upgrade it."
+		_refresh_ui()
+		return
+	var level := tile_levels[selected_tile]
+	var gold_cost := 40 * level
+	var wood_cost := 20 * level
+	if gold < gold_cost or wood < wood_cost:
+		status_message = "Upgrade needs %d gold and %d wood." % [gold_cost, wood_cost]
+		_refresh_ui()
+		return
+	gold -= gold_cost
+	wood -= wood_cost
+	tile_levels[selected_tile] += 1
+	status_message = "%s upgraded to level %d." % [building, tile_levels[selected_tile]]
+	_persist_game()
 	_refresh_ui()
 
 func _train_guard() -> void:
@@ -266,6 +423,10 @@ func _train_guard() -> void:
 		food -= 10
 		guards += 1
 		status_message = "A new guard joined your army."
+		if guards >= 5:
+			_award_achievement("five_guards", "Five Guards", 35)
+		if tutorial_step == 2:
+			_advance_tutorial(3)
 	_refresh_ui()
 
 func _scout() -> void:
@@ -277,30 +438,46 @@ func _scout() -> void:
 		gold += reward
 		wood += randi_range(5, 18)
 		status_message = "Scouting succeeded. Found %d gold and supplies." % reward
+		_award_achievement("scout", "First Scout", 25)
 	_refresh_ui()
 
-func _battle() -> void:
-	if guards < 5:
-		status_message = "You need at least 5 guards to challenge the raiders."
+func _attack_outpost() -> void:
+	var threat := outpost_threat[selected_outpost]
+	if outpost_defeated[selected_outpost] == 1:
+		status_message = "This outpost is already captured. Select another target."
+		_refresh_ui()
+		return
+	var required_guards := 3 + threat
+	if guards < required_guards:
+		status_message = "Outpost %d requires at least %d guards." % [selected_outpost + 1, required_guards]
+		_refresh_ui()
+		return
+	guards -= required_guards
+	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2, 10, 90)
+	if randi_range(1, 100) <= chance:
+		outpost_defeated[selected_outpost] = 1
+		var reward := 100 * threat + keep_level * 25
+		gold += reward
+		food += 20 * threat
+		status_message = "Victory at Outpost %d! Reward: %d gold and %d food." % [selected_outpost + 1, reward, 20 * threat]
+		_award_achievement("outpost", "First Outpost", 50, 10)
+		if outpost_defeated.count(1) == outpost_defeated.size():
+			_award_achievement("all_outposts", "Realm Conqueror", 250, 100)
+		if tutorial_step == 3:
+			_advance_tutorial(4)
 	else:
-		guards -= 5
-		if randi_range(0, 100) < min(85, 45 + keep_level * 5):
-			var reward := 100 + keep_level * 25
-			gold += reward
-			food += 35
-			status_message = "Victory! Raiders defeated; gained %d gold and 35 food." % reward
-		else:
-			gold = max(0, gold - 35)
-			status_message = "The raiders escaped. Your army lost supplies."
+		status_message = "Attack failed at Outpost %d. Your guards lost the battle." % (selected_outpost + 1)
+		if randi_range(0, 1) == 1:
+			guards = max(0, guards - 1)
 	_refresh_ui()
 
 func _on_production_tick() -> void:
-	for building in tiles:
-		match building:
+	for i in range(tiles.size()):
+		match tiles[i]:
 			"Farm":
-				food += 2 * keep_level
+				food += 2 * keep_level * tile_levels[i]
 			"Mine":
-				gold += 2 * keep_level
+				gold += 2 * keep_level * tile_levels[i]
 			"Keep":
 				gold += keep_level
 				wood += 1
@@ -321,6 +498,13 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "keep_level", keep_level)
 	config.set_value("kingdom", "selected_tile", selected_tile)
 	config.set_value("kingdom", "tiles", tiles)
+	config.set_value("kingdom", "tile_levels", tile_levels)
+	config.set_value("kingdom", "outpost_threat", outpost_threat)
+	config.set_value("kingdom", "outpost_defeated", outpost_defeated)
+	config.set_value("kingdom", "selected_outpost", selected_outpost)
+	config.set_value("kingdom", "tutorial_step", tutorial_step)
+	config.set_value("kingdom", "achievements", achievements)
+	config.set_value("kingdom", "keep_upgrade_finish_unix", keep_upgrade_finish_unix)
 	config.set_value("kingdom", "saved_at", last_saved_unix)
 	return config.save(SAVE_PATH)
 
@@ -340,6 +524,18 @@ func _load_game() -> void:
 		tiles.clear()
 		for building in loaded_tiles:
 			tiles.append(str(building))
+	var loaded_levels = config.get_value("kingdom", "tile_levels", tile_levels)
+	if loaded_levels is PackedInt32Array and loaded_levels.size() == tile_levels.size():
+		tile_levels = loaded_levels
+	var loaded_outposts = config.get_value("kingdom", "outpost_defeated", outpost_defeated)
+	if loaded_outposts is PackedInt32Array and loaded_outposts.size() == outpost_defeated.size():
+		outpost_defeated = loaded_outposts
+	selected_outpost = clampi(int(config.get_value("kingdom", "selected_outpost", selected_outpost)), 0, outpost_threat.size() - 1)
+	tutorial_step = clampi(int(config.get_value("kingdom", "tutorial_step", tutorial_step)), 0, 4)
+	var loaded_achievements = config.get_value("kingdom", "achievements", achievements)
+	if loaded_achievements is PackedStringArray:
+		achievements = loaded_achievements
+	keep_upgrade_finish_unix = int(config.get_value("kingdom", "keep_upgrade_finish_unix", 0))
 	last_saved_unix = int(config.get_value("kingdom", "saved_at", Time.get_unix_time_from_system()))
 	_apply_offline_production(false)
 
@@ -347,12 +543,12 @@ func _apply_offline_production(refresh_after: bool) -> void:
 	var now := int(Time.get_unix_time_from_system())
 	var elapsed := clampi(now - last_saved_unix, 0, MAX_OFFLINE_SECONDS)
 	var ticks := int(elapsed / int(TICK_SECONDS))
-	for building in tiles:
-		match building:
+	for i in range(tiles.size()):
+		match tiles[i]:
 			"Farm":
-				food += 2 * keep_level * ticks
+				food += 2 * keep_level * tile_levels[i] * ticks
 			"Mine":
-				gold += 2 * keep_level * ticks
+				gold += 2 * keep_level * tile_levels[i] * ticks
 			"Keep":
 				gold += keep_level * ticks
 				wood += ticks
