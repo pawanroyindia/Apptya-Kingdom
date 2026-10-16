@@ -6,9 +6,11 @@ on:
     paths:
       - "tools/asset_pipeline/**"
       - "GodotProject/main.gd"
+      - "GodotProject/network_session.gd"
       - "GodotProject/kingdom_world.gd"
       - "GodotProject/tests/production_asset_smoke.gd"
       - "GodotProject/tests/kingdom_logic_smoke.gd"
+      - "GodotProject/tests/lan_network_probe.gd"
       - ".github/workflows/production-assets.yml"
   workflow_dispatch:
 
