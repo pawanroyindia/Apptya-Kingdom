@@ -115,6 +115,7 @@ func _build_ui() -> void:
 	world_container.add_child(world_viewport)
 	world_view = load("res://kingdom_world.tscn").instantiate() as Node3D
 	world_viewport.add_child(world_view)
+	world_view.connect("tile_selected", Callable(self, "_select_tile"))
 
 	var resource_panel := PanelContainer.new()
 	resource_panel.add_theme_stylebox_override("panel", _panel_style("#243a30"))
