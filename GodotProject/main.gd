@@ -18,6 +18,8 @@ var queued_troop_count := 0
 var troop_training_finish_unix := 0
 var keep_level := 1
 var day := 1
+var daily_reward_claim_day := -1
+var daily_reward_streak := 0
 var enemy_level := 1
 var explored_regions := 0
 var victories := 0
@@ -346,6 +348,18 @@ func _build_ui() -> void:
 	])
 	_add_button_row(column, [
 		{"text": "Claim Conqueror Quest", "action": _claim_quest.bind("conqueror")}
+	])
+	var daily_title := Label.new()
+	daily_title.text = "DAILY KINGDOM REWARD"
+	daily_title.add_theme_font_size_override("font_size", 18)
+	daily_title.add_theme_color_override("font_color", Color("#f1d38a"))
+	column.add_child(daily_title)
+	var daily_description := Label.new()
+	daily_description.text = "Claim once per real-world day. Consecutive days build a 7-day reward streak."
+	daily_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(daily_description)
+	_add_button_row(column, [
+		{"text": "Claim Daily Reward", "action": _claim_daily_reward}
 	])
 
 	tutorial_label = Label.new()
@@ -1129,6 +1143,34 @@ func _practice_troops() -> void:
 		_persist_game()
 	_refresh_ui()
 
+func _claim_daily_reward() -> void:
+	var today := int(floor(float(Time.get_unix_time_from_system()) / 86400.0))
+	if daily_reward_claim_day == today:
+		status_message = "Daily reward already claimed. Return after the next daily reset."
+		_refresh_ui()
+		return
+	if daily_reward_claim_day == today - 1:
+		daily_reward_streak = mini(daily_reward_streak + 1, 7)
+	else:
+		daily_reward_streak = 1
+	daily_reward_claim_day = today
+	var gold_reward := 100 + daily_reward_streak * 25
+	var food_reward := 50 + daily_reward_streak * 15
+	var wood_reward := 25 + daily_reward_streak * 10
+	var stone_reward := 10 + daily_reward_streak * 5
+	gold += gold_reward
+	food += food_reward
+	wood += wood_reward
+	stone += stone_reward
+	if daily_reward_streak == 7:
+		gold += 250
+		status_message = "7-DAY STREAK! Daily reward: +%d gold, +%d food, +%d wood, +%d stone, plus 250 bonus gold." % [gold_reward, food_reward, wood_reward, stone_reward]
+	else:
+		status_message = "Day %d/7 daily reward: +%d gold, +%d food, +%d wood, +%d stone." % [daily_reward_streak, gold_reward, food_reward, wood_reward, stone_reward]
+	_play_sound("victory")
+	_persist_game()
+	_refresh_ui()
+
 func _claim_quest(quest_id: String) -> void:
 	var captured_outposts := 0
 	for defeated in outpost_defeated:
@@ -1256,6 +1298,8 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "graphics_quality", graphics_quality)
 	config.set_value("kingdom", "sound_enabled", sound_enabled)
 	config.set_value("kingdom", "day", day)
+	config.set_value("kingdom", "daily_reward_claim_day", daily_reward_claim_day)
+	config.set_value("kingdom", "daily_reward_streak", daily_reward_streak)
 	config.set_value("kingdom", "enemy_level", enemy_level)
 	config.set_value("kingdom", "explored_regions", explored_regions)
 	config.set_value("kingdom", "victories", victories)
@@ -1312,6 +1356,8 @@ func _load_game() -> void:
 	graphics_quality = str(config.get_value("kingdom", "graphics_quality", graphics_quality))
 	sound_enabled = bool(config.get_value("kingdom", "sound_enabled", sound_enabled))
 	day = int(config.get_value("kingdom", "day", day))
+	daily_reward_claim_day = int(config.get_value("kingdom", "daily_reward_claim_day", daily_reward_claim_day))
+	daily_reward_streak = int(config.get_value("kingdom", "daily_reward_streak", daily_reward_streak))
 	enemy_level = int(config.get_value("kingdom", "enemy_level", enemy_level))
 	explored_regions = int(config.get_value("kingdom", "explored_regions", explored_regions))
 	victories = int(config.get_value("kingdom", "victories", victories))
@@ -1389,6 +1435,8 @@ func _normalize_save_data() -> void:
 	if hero_level >= 20:
 		hero_xp = 0
 	day = clampi(day, 1, 1000000)
+	daily_reward_claim_day = maxi(daily_reward_claim_day, -1)
+	daily_reward_streak = clampi(daily_reward_streak, 0, 7)
 	enemy_level = clampi(enemy_level, 1, 100000)
 	explored_regions = clampi(explored_regions, 0, 1000000)
 	victories = clampi(victories, 0, 1000000)
