@@ -164,9 +164,36 @@ def combine_meshes(objects,name,armature=None):
     return combined
 
 def export_glb(path,objects):
+    # Merge each asset to one material-slotted mesh to keep draw calls and MeshInstance3D
+    # counts low on mobile. Character vertex groups and the armature modifier are retained.
+    mesh_objects=[o for o in objects if o.type=="MESH"]
+    other_objects=[o for o in objects if o.type!="MESH"]
+    for obj in mesh_objects:
+        bpy.ops.object.select_all(action="DESELECT")
+        obj.select_set(True); bpy.context.view_layer.objects.active=obj
+        bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
+    if len(mesh_objects)>1:
+        bpy.ops.object.select_all(action="DESELECT")
+        for obj in mesh_objects: obj.select_set(True)
+        bpy.context.view_layer.objects.active=mesh_objects[0]
+        bpy.ops.object.join()
+        merged=bpy.context.object
+    elif mesh_objects:
+        merged=mesh_objects[0]
+    else:
+        merged=None
+    if merged:
+        armatures=[o for o in other_objects if o.type=="ARMATURE"]
+        if armatures:
+            arm=armatures[0]; merged.parent=arm
+            arm_mods=[m for m in merged.modifiers if m.type=="ARMATURE"]
+            if arm_mods: arm_mods[0].object=arm
+            else:
+                mod=merged.modifiers.new("DeformationRig","ARMATURE"); mod.object=arm
+        objects=other_objects+[merged]
     bpy.ops.object.select_all(action="DESELECT")
     for o in objects: o.select_set(True)
-    bpy.context.view_layer.objects.active=objects[0]
+    bpy.context.view_layer.objects.active=next((o for o in objects if o.type=="ARMATURE"),objects[0])
     bpy.ops.export_scene.gltf(filepath=path,export_format="GLB",use_selection=True,
       export_animations=True,export_animation_mode="NLA_TRACKS",export_skins=True,
       export_apply=False,export_texcoords=True,export_normals=True,
