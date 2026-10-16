@@ -342,7 +342,7 @@ func _rebuild_outposts() -> void:
 		_add_box(root, Vector3(0.55, 0.38, 0.06), Vector3(0.52, 1.63, 0.3), banner_color)
 		if i == selected_outpost:
 			var target_ring := _add_cylinder(root, 1.45, 0.045, Vector3(0, 0.08, 0), "#f1d38a")
-			var pulse := create_tween().set_loops()
+			var pulse := create_tween().set_loops(3)
 			pulse.tween_property(target_ring, "scale", Vector3(1.12, 1.0, 1.12), 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 			pulse.tween_property(target_ring, "scale", Vector3.ONE, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		root.scale = Vector3(0.82, 0.82, 0.82)
