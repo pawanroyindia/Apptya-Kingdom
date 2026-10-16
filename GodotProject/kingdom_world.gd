@@ -25,8 +25,8 @@ var current_guards := 4
 var current_infantry := 4
 var current_archers := 0
 var current_cavalry := 0
-var current_outposts := PackedInt32Array([0, 0, 0])
-var current_scouted := PackedInt32Array([0, 0, 0])
+var current_outposts := PackedInt32Array([0, 0, 0, 0, 0])
+var current_scouted := PackedInt32Array([0, 0, 0, 0, 0])
 
 func _ready() -> void:
 	_build_environment()
@@ -46,17 +46,17 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 	if next_levels.size() != 9:
 		next_levels = PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 	var next_outposts := defeated.duplicate()
-	if next_outposts.size() != 3:
-		next_outposts = PackedInt32Array([0, 0, 0])
+	if next_outposts.size() != 5:
+		next_outposts = PackedInt32Array([0, 0, 0, 0, 0])
 	var next_scouted := scouted.duplicate()
-	if next_scouted.size() != 3:
-		next_scouted = PackedInt32Array([0, 0, 0])
+	if next_scouted.size() != 5:
+		next_scouted = PackedInt32Array([0, 0, 0, 0, 0])
 	var next_keep_level := clampi(keep_level, 1, 10)
 	var next_guards := maxi(guards, 0)
 	var next_infantry := maxi(infantry, 0)
 	var next_archers := maxi(archers, 0)
 	var next_cavalry := maxi(cavalry, 0)
-	var next_target := clampi(target, 0, 2)
+	var next_target := clampi(target, 0, 4)
 	var next_selected_tile := clampi(selected_tile, 0, 8)
 	var buildings_changed := current_tiles != next_tiles or current_levels != next_levels or current_keep_level != next_keep_level
 	var outposts_changed := current_outposts != next_outposts or current_scouted != next_scouted or selected_outpost != next_target
@@ -335,8 +335,8 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 	return root
 
 func play_attack(target_index: int, victory: bool) -> void:
-	var safe_target := clampi(target_index, 0, 2)
-	var positions := [Vector3(-8.0, 0.1, -9.0), Vector3(0.0, 0.1, -11.0), Vector3(8.0, 0.1, -9.0)]
+	var safe_target := clampi(target_index, 0, 4)
+	var positions := [Vector3(-10.0, 0.1, -8.0), Vector3(-5.0, 0.1, -12.0), Vector3(0.0, 0.1, -14.0), Vector3(5.0, 0.1, -12.0), Vector3(10.0, 0.1, -8.0)]
 	var target_position: Vector3 = positions[safe_target]
 	var squad_size := mini(5, maxi(3, current_guards))
 	for i in range(squad_size):
@@ -383,8 +383,8 @@ func _rebuild_outposts() -> void:
 		if is_instance_valid(node):
 			node.queue_free()
 	outpost_nodes.clear()
-	var positions := [Vector3(-8.0, 0.0, -9.0), Vector3(0.0, 0.0, -11.0), Vector3(8.0, 0.0, -9.0)]
-	for i in range(3):
+	var positions := [Vector3(-10.0, 0.0, -8.0), Vector3(-5.0, 0.0, -12.0), Vector3(0.0, 0.0, -14.0), Vector3(5.0, 0.0, -12.0), Vector3(10.0, 0.0, -8.0)]
+	for i in range(positions.size()):
 		var root := Node3D.new()
 		root.position = positions[i]
 		var defeated := current_outposts[i] == 1
