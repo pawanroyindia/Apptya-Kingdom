@@ -130,6 +130,21 @@ func _run_tests() -> void:
 	if not game.network_session._valid_snapshot(coop_snapshot):
 		_fail("The LAN co-op snapshot did not pass its own schema validation.")
 		return
+	var invalid_day_snapshot := coop_snapshot.duplicate(true)
+	invalid_day_snapshot["day"] = -1
+	if game.network_session._valid_snapshot(invalid_day_snapshot):
+		_fail("LAN co-op accepted a snapshot with an invalid campaign day.")
+		return
+	var invalid_timer_snapshot := coop_snapshot.duplicate(true)
+	invalid_timer_snapshot["building_upgrade_finish_unix"] = int(Time.get_unix_time_from_system()) + 3600
+	if game.network_session._valid_snapshot(invalid_timer_snapshot):
+		_fail("LAN co-op accepted a far-future building timer.")
+		return
+	var invalid_flags_snapshot := coop_snapshot.duplicate(true)
+	invalid_flags_snapshot["quest_builder_claimed"] = "yes"
+	if game.network_session._valid_snapshot(invalid_flags_snapshot):
+		_fail("LAN co-op accepted a non-boolean quest claim flag.")
+		return
 	if not game.network_session._is_allowed_action("gather", {"resource": "gold", "amount": 20, "tile": 4, "outpost": 0}) or game.network_session._is_allowed_action("gather", {"resource": "gold", "amount": 999, "tile": 4, "outpost": 0}) or game.network_session._is_allowed_action("execute_script", {"tile": 4, "outpost": 0}):
 		_fail("LAN co-op accepted an invalid or unsupported client action.")
 		return
