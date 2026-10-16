@@ -359,6 +359,9 @@ func _run_tests() -> void:
 	if game.daily_reward_claim_day != reward_today or game.daily_reward_streak != 3:
 		_fail("Daily reward did not advance a consecutive three-day streak.")
 		return
+	if not game.daily_reward_label.text.contains("CLAIMED TODAY") or game.daily_reward_buttons[0].text != "Reward Claimed Today":
+		_fail("Daily reward HUD did not display the claimed state and streak countdown.")
+		return
 	if game.gold != daily_gold_before + 175 or game.food != daily_food_before + 95 or game.wood != daily_wood_before + 55 or game.stone != daily_stone_before + 25:
 		_fail("Daily reward did not grant the expected streak-scaled resources.")
 		return
