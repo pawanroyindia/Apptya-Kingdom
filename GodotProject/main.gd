@@ -31,6 +31,10 @@ func _ready() -> void:
 	add_child(tick_timer)
 	tick_timer.start()
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_persist_game()
+
 func _build_ui() -> void:
 	var background := ColorRect.new()
 	background.color = Color("#14251f")
@@ -298,6 +302,11 @@ func _on_production_tick() -> void:
 	_refresh_ui()
 
 func _save_game() -> void:
+	var error := _persist_game()
+	status_message = "Kingdom saved on this device." if error == OK else "Save failed: %s" % error
+	_refresh_ui()
+
+func _persist_game() -> Error:
 	var config := ConfigFile.new()
 	config.set_value("kingdom", "gold", gold)
 	config.set_value("kingdom", "wood", wood)
@@ -307,9 +316,7 @@ func _save_game() -> void:
 	config.set_value("kingdom", "selected_tile", selected_tile)
 	config.set_value("kingdom", "tiles", tiles)
 	config.set_value("kingdom", "saved_at", int(Time.get_unix_time_from_system()))
-	var error := config.save(SAVE_PATH)
-	status_message = "Kingdom saved on this device." if error == OK else "Save failed: %s" % error
-	_refresh_ui()
+	return config.save(SAVE_PATH)
 
 func _load_game() -> void:
 	var config := ConfigFile.new()
@@ -341,3 +348,4 @@ func _load_game() -> void:
 				wood += ticks
 	if elapsed >= 10:
 		status_message = "Welcome back. Offline production was capped at 8 hours."
+	_persist_game()
