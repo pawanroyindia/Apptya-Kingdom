@@ -126,6 +126,27 @@ func _run_tests() -> void:
 	if game.gold != 300 or game.tiles.size() != 9:
 		_fail("Initial kingdom state is incorrect.")
 		return
+	var coop_snapshot: Dictionary = game._export_multiplayer_snapshot()
+	if not game.network_session._valid_snapshot(coop_snapshot):
+		_fail("The LAN co-op snapshot did not pass its own schema validation.")
+		return
+	if not game.network_session._is_allowed_action("gather", {"resource": "gold", "amount": 20}) or game.network_session._is_allowed_action("gather", {"resource": "gold", "amount": 999}) or game.network_session._is_allowed_action("execute_script", {}):
+		_fail("LAN co-op accepted an invalid or unsupported client action.")
+		return
+	var altered_snapshot := coop_snapshot.duplicate(true)
+	altered_snapshot["gold"] = 311
+	game._apply_multiplayer_snapshot(altered_snapshot)
+	if game.gold != 311:
+		_fail("Applying the host snapshot did not update the shared kingdom state.")
+		return
+	game.gold = 300
+	game._refresh_ui()
+	game._persist_game()
+	var malformed_snapshot := coop_snapshot.duplicate(true)
+	malformed_snapshot["tiles"] = ["Keep"]
+	if game.network_session._valid_snapshot(malformed_snapshot):
+		_fail("LAN co-op accepted a malformed kingdom snapshot.")
+		return
 	if game.outpost_threat.size() != 10 or game.world_view.current_outposts.size() != 10:
 		_fail("Ten-outpost campaign map was not initialized.")
 		return
