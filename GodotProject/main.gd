@@ -441,7 +441,8 @@ func _refresh_ui() -> void:
 			if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks"]:
 				highest_building_level = maxi(highest_building_level, tile_levels[i])
 		quest_label.text = "1. Builder's Mark: upgrade a building to level 2 (%s)\n2. Royal Stronghold: upgrade Keep to level 3 (%s)\n3. Frontier Conqueror: capture 3 outposts (%d/3)\nRewards are one-time and persist with your save." % ["CLAIMED" if quest_builder_claimed else ("READY" if highest_building_level >= 2 else "LOCKED"), "CLAIMED" if quest_stronghold_claimed else ("READY" if keep_level >= 3 else "LOCKED"), captured_outposts]
-		hero_label.text = "Royal Captain • Level %d/20 • XP %d/%d • Skill %d/5 • Hero power %d" % [hero_level, hero_xp, hero_level * 100, hero_skill_level, _hero_power()]
+		var hero_progress := "MAX XP" if hero_level >= 20 else "XP %d/%d" % [hero_xp, hero_level * 100]
+		hero_label.text = "Royal Captain • Level %d/20 • %s • Skill %d/5 • Hero power %d" % [hero_level, hero_progress, hero_skill_level, _hero_power()]
 		if is_instance_valid(world_view):
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, infantry, archers, cavalry, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 		status_label.text = status_message
@@ -922,9 +923,12 @@ func _train_hero() -> void:
 	else:
 		gold -= 25
 		food -= 25
+		var previous_hero_level := hero_level
 		_award_hero_xp(25)
-		if hero_level < 20:
-			status_message = "Royal Captain gained 25 XP."
+		if hero_level > previous_hero_level:
+			status_message = "Royal Captain reached hero level %d!" % hero_level
+		else:
+			status_message = "Royal Captain gained 25 XP (%d/%d)." % [hero_xp, hero_level * 100]
 		_persist_game()
 	_refresh_ui()
 
