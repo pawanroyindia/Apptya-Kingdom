@@ -76,6 +76,8 @@ namespace ApptyaKingdom
             root.SetParent(cachedRoot, false);
             root.position = new Vector3(10f, 0f, -7f);
             practiceTarget = root;
+            var tap = root.gameObject.AddComponent<ApptyaBuildingTap>();
+            tap.Configure("practice", "Practice Target");
 
             var ring = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             ring.name = "Practice target ground ring";
