@@ -351,6 +351,19 @@ func _run_tests() -> void:
 		return
 
 	var absolute_save := ProjectSettings.globalize_path("user://apptya_kingdom_save.cfg")
+	# Old Unity/Godot prototype saves had only three outposts; migrate those entries forward.
+	game.outpost_defeated = PackedInt32Array([0, 0, 0, 0, 0])
+	game.region_scouted = PackedInt32Array([0, 0, 0, 0, 0])
+	var legacy_config := ConfigFile.new()
+	legacy_config.set_value("kingdom", "outpost_defeated", PackedInt32Array([1, 0, 1]))
+	legacy_config.set_value("kingdom", "region_scouted", PackedInt32Array([0, 1, 0]))
+	if legacy_config.save(absolute_save) != OK:
+		_fail("Could not create a legacy three-outpost save fixture.")
+		return
+	game._load_game()
+	if game.outpost_defeated.size() != 5 or game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 1 or game.outpost_defeated[3] != 0 or game.region_scouted[1] != 1:
+		_fail("Legacy three-outpost save did not migrate to the five-outpost campaign.")
+		return
 	var corrupt_file := FileAccess.open(absolute_save, FileAccess.WRITE)
 	if corrupt_file == null:
 		_fail("Could not create save-recovery test fixture.")
