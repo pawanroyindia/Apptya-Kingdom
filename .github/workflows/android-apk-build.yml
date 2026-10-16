@@ -30,13 +30,14 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           projectPath: UnityProject
           unityVersion: 6000.0.46f1
           targetPlatform: Android
           buildMethod: ApptyaKingdom.EditorTools.ApptyaAndroidBuild.BuildAndroidApk
           buildName: ApptyaKingdom.apk
-          androidAppBundle: false
+          androidTargetSdkVersion: 36
 
       - name: Upload APK and build report
         if: always()
