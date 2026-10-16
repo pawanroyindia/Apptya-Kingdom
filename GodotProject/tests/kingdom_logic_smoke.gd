@@ -145,6 +145,11 @@ func _run_tests() -> void:
 	game.gold = 300
 	game._refresh_ui()
 	game._persist_game()
+	var invalid_stance_snapshot := coop_snapshot.duplicate(true)
+	invalid_stance_snapshot["battle_stance"] = "GodMode"
+	if game.network_session._valid_snapshot(invalid_stance_snapshot):
+		_fail("LAN co-op accepted an invalid tactical battle stance.")
+		return
 	var malformed_snapshot := coop_snapshot.duplicate(true)
 	malformed_snapshot["tiles"] = ["Keep"]
 	if game.network_session._valid_snapshot(malformed_snapshot):
@@ -766,6 +771,20 @@ func _run_tests() -> void:
 		_fail("Combat director did not scale an overwhelming army advantage or bound casualties.")
 		return
 
+	var balanced_stance: Dictionary = combat_rules.resolve_outpost(5, 3, 2, 10, 0, 0, 1, 1, 10, 9, false, "Balanced")
+	var aggressive_stance: Dictionary = combat_rules.resolve_outpost(5, 3, 2, 10, 0, 0, 1, 1, 10, 9, false, "Aggressive")
+	var defensive_stance: Dictionary = combat_rules.resolve_outpost(5, 3, 2, 10, 0, 0, 1, 1, 10, 9, false, "Defensive")
+	if aggressive_stance["chance"] <= balanced_stance["chance"] or aggressive_stance["win_losses"] < balanced_stance["win_losses"] or aggressive_stance["loss_losses"] < balanced_stance["loss_losses"]:
+		_fail("Aggressive stance must improve attack odds while increasing expected casualties.")
+		return
+	if defensive_stance["chance"] >= balanced_stance["chance"] or defensive_stance["win_losses"] > balanced_stance["win_losses"] or defensive_stance["loss_losses"] > balanced_stance["loss_losses"]:
+		_fail("Defensive stance must trade lower odds for fewer expected casualties.")
+		return
+	var invalid_stance: Dictionary = combat_rules.resolve_outpost(5, 3, 2, 10, 0, 0, 1, 1, 10, 9, false, "invalid")
+	if invalid_stance["stance"] != "Balanced":
+		_fail("Combat director did not safely normalize an unknown battle stance.")
+		return
+
 	# Save data normalization must clamp invalid economy values and restore the Keep invariant.
 	game.gold = -50
 	game.wood = -10
@@ -778,6 +797,7 @@ func _run_tests() -> void:
 	game.queued_troop_count = 0
 	game.troop_training_finish_unix = 0
 	game.keep_level = 0
+	game.battle_stance = "Corrupted Stance"
 	game.selected_tile = 99
 	game.tiles[0] = "UnknownBuilding"
 	game.tiles[1] = "Academy"
@@ -791,6 +811,9 @@ func _run_tests() -> void:
 	game.outpost_defeated[2] = 1
 	game.region_scouted[2] = 1
 	game._normalize_save_data()
+	if game.battle_stance != "Balanced":
+		_fail("Save normalization did not repair an invalid battle stance.")
+		return
 	if game.gold != 0 or game.wood != 0 or game.food != 0 or game.guards != 0:
 		_fail("Save normalization did not clamp negative resource and guard values.")
 		return
