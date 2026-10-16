@@ -63,6 +63,8 @@ var outpost_label: Label
 var achievements_label: Label
 var campaign_label: Label
 var quest_label: Label
+var daily_reward_label: Label
+var daily_reward_buttons: Array[Button] = []
 var hero_label: Label
 var tick_timer: Timer
 var autosave_timer: Timer
@@ -358,9 +360,13 @@ func _build_ui() -> void:
 	daily_description.text = "Claim once per real-world day. Consecutive days build a 7-day reward streak."
 	daily_description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(daily_description)
+	daily_reward_label = Label.new()
+	daily_reward_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	daily_reward_label.add_theme_color_override("font_color", Color("#c3d2c7"))
+	column.add_child(daily_reward_label)
 	_add_button_row(column, [
 		{"text": "Claim Daily Reward", "action": _claim_daily_reward}
-	])
+	], daily_reward_buttons)
 
 	tutorial_label = Label.new()
 	tutorial_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -455,6 +461,12 @@ func _refresh_ui() -> void:
 		campaign_label.text = "%s\nArmy power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s • Sound: %s" % [campaign_progress, _army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality, "ON" if sound_enabled else "OFF"]
 		if not settings_buttons.is_empty():
 			settings_buttons[2].text = "Sound: ON" if sound_enabled else "Sound: OFF"
+		var current_utc_day := int(floor(float(Time.get_unix_time_from_system()) / 86400.0))
+		var claimed_today := daily_reward_claim_day == current_utc_day
+		var seconds_to_reset := 86400 - int(Time.get_unix_time_from_system()) % 86400
+		daily_reward_label.text = "Streak: %d/7 • %s • Next reset in %02d:%02d:%02d" % [daily_reward_streak, "CLAIMED TODAY" if claimed_today else "READY TO CLAIM", seconds_to_reset / 3600, (seconds_to_reset % 3600) / 60, seconds_to_reset % 60]
+		if not daily_reward_buttons.is_empty():
+			daily_reward_buttons[0].text = "Reward Claimed Today" if claimed_today else "Claim Daily Reward"
 		var highest_building_level := 1
 		for i in range(tiles.size()):
 			if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks"]:
