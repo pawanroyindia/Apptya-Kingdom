@@ -175,7 +175,7 @@ func _build_ui() -> void:
 	column.add_child(tile_detail_label)
 	_add_button_row(column, [
 		{"text": "Upgrade Selected\nTimed, cost scales by level", "action": _upgrade_selected_building},
-		{"text": "Refresh / Save", "action": _save_game}
+		{"text": "Collect Selected", "action": _collect_selected_building}
 	])
 
 	var build_title := Label.new()
@@ -420,6 +420,29 @@ func _finish_keep_upgrade() -> void:
 	keep_level += 1
 	_award_achievement("keep_upgrade", "Keep Upgraded", 50)
 	status_message = "Keep upgrade complete! Keep level is now %d." % keep_level
+	_persist_game()
+	_refresh_ui()
+
+func _collect_selected_building() -> void:
+	match tiles[selected_tile]:
+		"Farm":
+			var food_gain := 10 * tile_levels[selected_tile] * keep_level
+			food += food_gain
+			status_message = "Collected %d food from the Farm." % food_gain
+		"Mine":
+			var gold_gain := 10 * tile_levels[selected_tile] * keep_level
+			gold += gold_gain
+			status_message = "Collected %d gold from the Mine." % gold_gain
+		"Keep":
+			var gold_gain := 5 * keep_level
+			gold += gold_gain
+			wood += keep_level
+			status_message = "Collected %d gold and %d wood from the Keep." % [gold_gain, keep_level]
+		"Barracks":
+			food += 5 * tile_levels[selected_tile]
+			status_message = "Collected army supplies from the Barracks."
+		_:
+			status_message = "Select a working building before collecting."
 	_persist_game()
 	_refresh_ui()
 
