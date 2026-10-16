@@ -182,6 +182,13 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 			return false
 	if snapshot.has("keep_upgrade_finish_unix") and int(snapshot["keep_upgrade_finish_unix"]) > 0 and int(snapshot["keep_level"]) >= 10:
 		return false
+	for key in ["combat_research", "economy_research", "scouting_research"]:
+		if snapshot.has(key) and (int(snapshot[key]) < 0 or int(snapshot[key]) > 5):
+			return false
+	if not (snapshot["tiles"] is Array) or snapshot["tiles"].size() != 9:
+		return false
+	if not (snapshot["tile_levels"] is Array) or snapshot["tile_levels"].size() != 9:
+		return false
 	if snapshot.has("building_upgrade_finish_unix") and int(snapshot["building_upgrade_finish_unix"]) > 0:
 		if not snapshot.has("building_upgrade_tile"):
 			return false
@@ -192,13 +199,6 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 			return false
 		if int(snapshot["tile_levels"][upgrade_tile]) >= 5:
 			return false
-	for key in ["combat_research", "economy_research", "scouting_research"]:
-		if snapshot.has(key) and (int(snapshot[key]) < 0 or int(snapshot[key]) > 5):
-			return false
-	if not (snapshot["tiles"] is Array) or snapshot["tiles"].size() != 9:
-		return false
-	if not (snapshot["tile_levels"] is Array) or snapshot["tile_levels"].size() != 9:
-		return false
 	if not (snapshot["outpost_defeated"] is Array) or snapshot["outpost_defeated"].size() != 10:
 		return false
 	if not (snapshot["region_scouted"] is Array) or snapshot["region_scouted"].size() != 10:
