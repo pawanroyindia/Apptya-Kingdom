@@ -10,6 +10,8 @@ func _run_tests() -> void:
 	root.add_child(game)
 	await process_frame
 	await process_frame
+	await physics_frame
+	await physics_frame
 
 	var initial_yaw: float = game.world_view.camera_yaw
 	var drag_event := InputEventScreenDrag.new()
