@@ -341,7 +341,11 @@ func _rebuild_outposts() -> void:
 		_add_box(root, Vector3(0.07, 1.1, 0.07), Vector3(0.25, 1.45, 0.3), "#5e4935")
 		_add_box(root, Vector3(0.55, 0.38, 0.06), Vector3(0.52, 1.63, 0.3), banner_color)
 		if i == selected_outpost:
-			_add_cylinder(root, 1.45, 0.045, Vector3(0, 0.08, 0), "#f1d38a")
+			var target_ring := _add_cylinder(root, 1.45, 0.045, Vector3(0, 0.08, 0), "#f1d38a")
+			var pulse := create_tween().set_loops()
+			pulse.tween_property(target_ring, "scale", Vector3(1.12, 1.0, 1.12), 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			pulse.tween_property(target_ring, "scale", Vector3.ONE, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		root.scale = Vector3(0.82, 0.82, 0.82)
 		var label := Label3D.new()
 		var outpost_status := " • SECURED" if defeated else (" • SCOUTED" if scouted else "")
 		label.text = "OUTPOST %d%s" % [i + 1, outpost_status]
@@ -350,6 +354,7 @@ func _rebuild_outposts() -> void:
 		label.modulate = Color("#fff0c9")
 		root.add_child(label)
 		add_child(root)
+		create_tween().tween_property(root, "scale", Vector3.ONE, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		outpost_nodes.append(root)
 
 func _rebuild_guards() -> void:
