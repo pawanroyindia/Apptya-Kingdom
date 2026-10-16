@@ -1,6 +1,7 @@
 extends Control
 
 const SAVE_PATH := "user://apptya_kingdom_save.cfg"
+const BACKUP_SAVE_PATH := "user://apptya_kingdom_save_backup.cfg"
 const MAX_OFFLINE_SECONDS := 28800
 const TICK_SECONDS := 10.0
 
@@ -546,6 +547,10 @@ func _save_game() -> void:
 
 func _persist_game() -> int:
 	last_saved_unix = int(Time.get_unix_time_from_system())
+	if FileAccess.file_exists(SAVE_PATH):
+		var previous_save := ConfigFile.new()
+		if previous_save.load(SAVE_PATH) == OK:
+			DirAccess.copy_absolute(ProjectSettings.globalize_path(SAVE_PATH), ProjectSettings.globalize_path(BACKUP_SAVE_PATH))
 	var config := ConfigFile.new()
 	config.set_value("kingdom", "gold", gold)
 	config.set_value("kingdom", "wood", wood)
@@ -568,9 +573,13 @@ func _persist_game() -> int:
 
 func _load_game() -> void:
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
-		last_saved_unix = int(Time.get_unix_time_from_system())
-		return
+	var load_error := config.load(SAVE_PATH)
+	if load_error != OK:
+		load_error = config.load(BACKUP_SAVE_PATH)
+		if load_error != OK:
+			last_saved_unix = int(Time.get_unix_time_from_system())
+			return
+		status_message = "Recovered your kingdom from the backup save."
 	gold = int(config.get_value("kingdom", "gold", gold))
 	wood = int(config.get_value("kingdom", "wood", wood))
 	food = int(config.get_value("kingdom", "food", food))
