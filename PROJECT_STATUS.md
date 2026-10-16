@@ -13,6 +13,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Gold, wood, food and stone economy with direct gathering, active and capped offline production.
 - [x] Farm, mine, Lumber Camp, Quarry, Academy, Barracks and Keep construction/collection/upgrades; Academy levels discount research costs.
 - [x] Queued infantry, archer and cavalry training; scouting, exploration, ten enemy outposts, battle outcomes, rewards and achievements.
+- [x] Tactical campaign combat: troop composition, enemy doctrines, scouting intelligence, probability-based outcomes, bounded casualty calculations, and rewards; enemy army formations adapt across Shield Wall, Bow Line and Cavalry Wing encounters.
 - [x] Four-step tutorial, combat/economy/scouting research, troop practice, three claimable campaign rewards and a persistent three-objective quest board.
 - [x] Royal Captain hero progression: XP from battle/scouting/exploration, level cap 20, skill upgrades to level 5, army-power bonus, save/load persistence, and a distinct gold-armored 3D model with a live level label.
 - [x] Local save/load, backup recovery, save-data normalization, timed upgrade restoration, and periodic autosave.
@@ -24,10 +25,11 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] A 16-second looping procedural ambient soundtrack with an independent music toggle and persisted preference (prototype audio, not a professionally authored soundtrack).
 - [x] Daily reward system with real-world daily reset, a seven-day streak, resource rewards, a seventh-day bonus, duplicate-claim protection, visible reset countdown, and save/load persistence.
 - [x] Sequential campaign progression: each outpost unlocks only after the previous outpost is captured; locked attacks do not consume troops, and the HUD reports progress through the final campaign-complete state.
-- [x] Save normalization removes duplicate Keeps and enforces Barracks troop capacity, including queued-training capacity.
+- [x] Distinct procedural outpost structures for fortified, archer and cavalry enemy doctrines; visual silhouettes align with the combat rules.
+- [x] Save normalization removes duplicate Keeps/Academies, enforces Barracks and queued-training capacity, clamps resources/hero/reward values, validates timed-operation targets, and repairs impossible sequential campaign progress.
 - [x] Visible construction/outpost reveal effects, finite tree-sway and staggered guard-idle animations, water ripples, exploration scout journey, marching guard squad, and expanding battle impact rings.
 - [x] Improved procedural model details: Keep windows, farmhouse doors, Barracks facade, Academy stained glass, troop helmets/shields, and Royal Captain level-up feedback.
-- [x] Added LAN co-op for one host and one guest: host/join by local IP, validated host-authoritative gameplay actions, shared kingdom snapshots, and client-side prevention of independent production/timer completion. Requires same Wi-Fi and UDP port 24567; public matchmaking is not included.
+- [x] Added LAN-only co-op for one host and one guest: host/join by local IP, validated host-authoritative gameplay actions, shared kingdom snapshots, and client-side prevention of independent production/timer completion. Same Wi-Fi and UDP port 24567 are required; no internet matchmaking or remote server is part of the scope.
 - [x] Academy can be upgraded through the normal timed building system; duplicate Academies are rejected and sanitized from malformed saves.
 - [x] Sequential campaign gates now apply to scouting as well as attacks; repeated scouting cannot farm rewards or consume guards.
 
@@ -49,7 +51,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 
 ## Remaining non-blocking prototype scope
 - The world still uses procedural low-poly meshes and a custom SVG app icon, not final production art assets. Sound effects and ambient music are synthesized prototypes, not authored production audio.
-- LAN co-op is implemented at source level, but live two-phone networking has not been verified. Internet matchmaking, dedicated servers, account identity, reconnect/session recovery, and anti-cheat are not implemented. Authored music/audio, production art/animation, and physical Android device profiling remain outstanding.
-- Campaign depth is currently limited to ten outposts, escalating enemy army encounters and the implemented prototype economy; internet matchmaking/dedicated servers, authored soundtrack, and production-quality sound design are not implemented.
+- LAN co-op is intentionally local-network-only. Live two-phone networking has not been verified; reconnect/session recovery and robust handling of router isolation remain outstanding. Authored music/audio, production art/animation, and physical Android device profiling remain outstanding.
+- Campaign depth currently includes ten sequential outposts, tactical enemy doctrines, composition-aware battles and escalating enemy-army encounters. More campaign chapters, authored soundtrack, and production-quality sound design are still future work. Internet matchmaking is intentionally out of scope.
 - A successful headless check does not prove Android export, APK installation, LAN connectivity between physical phones, or device compatibility.
 - The APK workflow has not been run and no APK has been generated. This is intentional. Do not run the manual APK workflow unless the user explicitly asks after reviewing this checklist.
