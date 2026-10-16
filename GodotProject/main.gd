@@ -658,9 +658,18 @@ func _on_production_tick() -> void:
 				food += 2 * keep_level * tile_levels[i]
 			"Mine":
 				gold += 2 * keep_level * tile_levels[i]
+			"Lumber Camp":
+				wood += 2 * keep_level * tile_levels[i]
+			"Quarry":
+				stone += 2 * keep_level * tile_levels[i]
 			"Keep":
 				gold += keep_level
 				wood += 1
+		if economy_research > 0:
+			wood += economy_research
+			food += economy_research
+			stone += economy_research
+			gold += economy_research
 	_refresh_ui()
 
 func _save_game() -> void:
@@ -811,12 +820,16 @@ func _apply_offline_production(refresh_after: bool) -> void:
 	for i in range(tiles.size()):
 		match tiles[i]:
 			"Farm":
-				food += 2 * keep_level * tile_levels[i] * ticks
+				food += (2 * keep_level * tile_levels[i] + economy_research) * ticks
 			"Mine":
-				gold += 2 * keep_level * tile_levels[i] * ticks
+				gold += (2 * keep_level * tile_levels[i] + economy_research) * ticks
+			"Lumber Camp":
+				wood += (2 * keep_level * tile_levels[i] + economy_research) * ticks
+			"Quarry":
+				stone += (2 * keep_level * tile_levels[i] + economy_research) * ticks
 			"Keep":
-				gold += keep_level * ticks
-				wood += ticks
+				gold += (keep_level + economy_research) * ticks
+				wood += (1 + economy_research) * ticks
 	if elapsed >= 10:
 		status_message = "Welcome back. Offline production was capped at 8 hours."
 	_persist_game()
