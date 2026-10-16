@@ -474,7 +474,7 @@ func _refresh_ui() -> void:
 			daily_reward_buttons[0].text = "Reward Claimed Today" if claimed_today else "Claim Daily Reward"
 		var highest_building_level := 1
 		for i in range(tiles.size()):
-			if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks"]:
+			if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks", "Academy"]:
 				highest_building_level = maxi(highest_building_level, tile_levels[i])
 		quest_label.text = "1. Builder's Mark: upgrade a building to level 2 (%s)\n2. Royal Stronghold: upgrade Keep to level 3 (%s)\n3. Frontier Conqueror: capture 3 outposts (%d/3)\nRewards are one-time and persist with your save." % ["CLAIMED" if quest_builder_claimed else ("READY" if highest_building_level >= 2 else "LOCKED"), "CLAIMED" if quest_stronghold_claimed else ("READY" if keep_level >= 3 else "LOCKED"), captured_outposts]
 		var hero_progress := "MAX XP" if hero_level >= 20 else "XP %d/%d" % [hero_xp, hero_level * 100]
@@ -588,6 +588,10 @@ func _gather_resource(resource_type: String, amount: int) -> void:
 	_refresh_ui()
 
 func _select_tile(index: int) -> void:
+	if index < 0 or index >= tiles.size():
+		status_message = "That kingdom tile is outside the map."
+		_refresh_ui()
+		return
 	selected_tile = index
 	status_message = "Selected tile %d: %s." % [index + 1, tiles[index]]
 	_refresh_ui()
@@ -711,6 +715,10 @@ func _build_barracks() -> void:
 	_refresh_ui()
 
 func _can_build(building: String, gold_cost: int, wood_cost: int) -> bool:
+	if building == "Academy" and tiles.has("Academy"):
+		status_message = "Your kingdom can have one Academy. Select it and use Upgrade Selected to improve its research discount."
+		_refresh_ui()
+		return false
 	if tiles[selected_tile] != "Empty":
 		status_message = "Choose an empty tile before building."
 		_refresh_ui()
@@ -795,8 +803,8 @@ func _upgrade_selected_building() -> void:
 		_refresh_ui()
 		return
 	var building := tiles[selected_tile]
-	if building != "Farm" and building != "Mine" and building != "Barracks" and building != "Lumber Camp" and building != "Quarry":
-		status_message = "Select a Farm, Mine, Barracks, Lumber Camp, or Quarry to upgrade it."
+	if building != "Farm" and building != "Mine" and building != "Barracks" and building != "Lumber Camp" and building != "Quarry" and building != "Academy":
+		status_message = "Select a Farm, Mine, Barracks, Lumber Camp, Quarry, or Academy to upgrade it."
 		_refresh_ui()
 		return
 	var level := tile_levels[selected_tile]
@@ -826,7 +834,7 @@ func _finish_building_upgrade() -> void:
 		return
 	if building_upgrade_tile >= 0 and building_upgrade_tile < tiles.size():
 		var building := tiles[building_upgrade_tile]
-		if building == "Farm" or building == "Mine" or building == "Barracks" or building == "Lumber Camp" or building == "Quarry":
+		if building == "Farm" or building == "Mine" or building == "Barracks" or building == "Lumber Camp" or building == "Quarry" or building == "Academy":
 			tile_levels[building_upgrade_tile] = clampi(tile_levels[building_upgrade_tile] + 1, 1, 5)
 			day = mini(day + 1, 1000000)
 			_award_achievement("building_upgrade", "Master Builder", 40)
@@ -1505,6 +1513,14 @@ func _normalize_save_data() -> void:
 		if i != 4 and tiles[i] == "Keep":
 			tiles[i] = "Empty"
 	tiles[4] = "Keep"
+	# A single Academy provides one predictable discount path; sanitize duplicate legacy/corrupt entries.
+	var academy_found := false
+	for i in range(tiles.size()):
+		if tiles[i] == "Academy":
+			if academy_found:
+				tiles[i] = "Empty"
+			else:
+				academy_found = true
 	# Keep the saved army within Barracks capacity, even if a save was edited or partially corrupted.
 	var barracks_capacity := 0
 	for i in range(tiles.size()):
