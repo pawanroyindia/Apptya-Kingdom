@@ -291,9 +291,17 @@ func _build_terrain() -> void:
 	_add_box(self, Vector3(2.5, 0.22, 1.2), Vector3(7.25, 0.12, 2.1), "#8a6547")
 	for i in range(9):
 		var z := -12.0 + float(i) * 2.7
-		_add_cylinder(self, 0.16, 1.1, Vector3(-11.5, 0.42, z), "#6b4b35")
-		_add_sphere(self, Vector3(-11.5, 1.55, z), Vector3(1.05, 1.25, 1.05), "#3e7547")
-		_add_sphere(self, Vector3(-10.95, 1.85, z + 0.18), Vector3(0.72, 0.8, 0.72), "#4f8a50")
+		var tree := Node3D.new()
+		tree.position = Vector3(-11.5, 0.0, z)
+		add_child(tree)
+		_add_cylinder(tree, 0.16, 1.1, Vector3(0, 0.42, 0), "#6b4b35")
+		_add_sphere(tree, Vector3(0, 1.55, 0), Vector3(1.05, 1.25, 1.05), "#3e7547")
+		_add_sphere(tree, Vector3(0.55, 1.85, 0.18), Vector3(0.72, 0.8, 0.72), "#4f8a50")
+		var tree_sway := create_tween().set_loops(2)
+		var sway_duration := 1.0 + float(i % 3) * 0.12
+		tree_sway.tween_property(tree, "rotation_degrees", Vector3(0, 0, 2.0), sway_duration).set_delay(float(i % 3) * 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tree_sway.tween_property(tree, "rotation_degrees", Vector3(0, 0, -2.0), sway_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tree_sway.tween_property(tree, "rotation_degrees", Vector3.ZERO, sway_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	# Layered hills and boulders give the valley a deeper horizon and more readable edges.
 	for i in range(7):
 		var hill_x := -16.0 + float(i) * 5.3
@@ -581,6 +589,10 @@ func _rebuild_guards() -> void:
 			_add_cone(guard, 0.22, 0.18, Vector3(0, 1.39, 0), "#b8bfc4")
 		add_child(guard)
 		guard_nodes.append(guard)
+		var guard_rest_position := guard.position
+		var guard_idle := create_tween().set_loops(2)
+		guard_idle.tween_property(guard, "position", guard_rest_position + Vector3(0, 0.07, 0), 0.55).set_delay(float(i % 3) * 0.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		guard_idle.tween_property(guard, "position", guard_rest_position, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _add_textured_level_marker(parent: Node3D, level: int, pos: Vector3, color_value: String) -> void:
 	for i in range(mini(level, 4)):
