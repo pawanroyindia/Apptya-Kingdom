@@ -8,6 +8,7 @@ The workflow uses Unity GameCI licensing. Configure these repository Actions sec
 - `UNITY_LICENSE`
 - `UNITY_EMAIL`
 - `UNITY_PASSWORD`
+- `UNITY_SERIAL` (alternative activation method if no license file is available)
 
 The workflow cannot create a valid Unity build if the required Unity license credentials are missing or invalid.
 
