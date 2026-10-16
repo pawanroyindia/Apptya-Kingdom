@@ -380,7 +380,7 @@ func _refresh_ui() -> void:
 		achievements_label.text = "Achievements: %d/8 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
 		campaign_label.text = "Explored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20" % [explored_regions, combat_research, economy_research, scouting_research, practice_drills]
 		if is_instance_valid(world_view):
-			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, outpost_defeated, region_scouted, selected_outpost, selected_tile)
+			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, infantry, archers, cavalry, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 		status_label.text = status_message
 
 func _gather_resource(resource_type: String, amount: int) -> void:
