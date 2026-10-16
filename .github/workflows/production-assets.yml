@@ -26,7 +26,7 @@ jobs:
       - name: Install Blender and Python audio dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender python3 python3-numpy python3-numpy
+          sudo apt-get install -y blender python3 python3-numpy ffmpeg python3-numpy
           blender --version
           python3 --version
 
@@ -37,6 +37,45 @@ jobs:
       - name: Generate mixed stereo soundtrack and game effects
         run: |
           python3 tools/asset_pipeline/generate_audio.py
+
+      - name: Integrate authored CC0 characters and sampled game effects
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA=8ad1c93e382e2a6a5755882c1b9b2922877fab6e
+          ROOT="https://raw.githubusercontent.com/Hakhyun-Kim/constellation-defense/$SOURCE_SHA/assets"
+          MODEL_DIR="GodotProject/assets/production"
+          SFX_DIR="$MODEL_DIR/source_sfx"
+          mkdir -p "$SFX_DIR" "$MODEL_DIR/source_models"
+          for model in warrior ranger gate-tower; do
+            curl --fail --location --retry 3 "$ROOT/models/quaternius-$model.glb" --output "/tmp/quaternius-$model.glb"
+          done
+          cp "$MODEL_DIR/royal_captain.glb" "$MODEL_DIR/source_models/royal_captain_generated.glb"
+          cp "$MODEL_DIR/kingdom_guard.glb" "$MODEL_DIR/source_models/kingdom_guard_generated.glb"
+          cp "$MODEL_DIR/watchtower.glb" "$MODEL_DIR/source_models/watchtower_generated.glb"
+          cp /tmp/quaternius-warrior.glb "$MODEL_DIR/royal_captain.glb"
+          cp /tmp/quaternius-ranger.glb "$MODEL_DIR/kingdom_guard.glb"
+          cp /tmp/quaternius-gate-tower.glb "$MODEL_DIR/watchtower.glb"
+          declare -A MAP=(
+            [gather]="kenney-coins"
+            [build]="kenney-place"
+            [victory]="kenney-crit-metal"
+            [defeat]="kenney-hero-hurt"
+            [train]="kenney-block-heavy"
+            [scout]="kenney-knife-slice"
+          )
+          for sound in "${!MAP[@]}"; do
+            sample="${MAP[$sound]}"
+            curl --fail --location --retry 3 "$ROOT/audio/$sample.ogg" --output "$SFX_DIR/$sample.ogg"
+            ffmpeg -hide_banner -loglevel error -y -i "$MODEL_DIR/audio/$sound.wav" -i "$SFX_DIR/$sample.ogg" -filter_complex "[0:a]volume=0.78[a];[1:a]volume=0.58[b];[a][b]amix=inputs=2:duration=shortest:dropout_transition=0:normalize=0,alimiter=limit=0.96[mix]" -map "[mix]" -ar 22050 -ac 2 -c:a pcm_s16le "/tmp/$sound-mixed.wav"
+            mv "/tmp/$sound-mixed.wav" "$MODEL_DIR/audio/$sound.wav"
+          done
+          cat > "$MODEL_DIR/ASSET_PROVENANCE.md" <<'EOF'
+          # Third-party runtime assets
+          - Character and gate-tower models: Quaternius, RPG Character Pack and Medieval Village MegaKit, CC0 1.0 Universal. Source repository snapshot: Hakhyun-Kim/constellation-defense at commit 8ad1c93e382e2a6a5755882c1b9b2922877fab6e. The GLB models are used without geometry or texture edits.
+          - Sound samples: Kenney, RPG Audio / Impact Sounds selections, CC0 1.0 Universal. The source OGG files are retained in `source_sfx/`; each runtime WAV mixes one source sample with the project's original generated effect.
+          - Source: https://quaternius.com/packs/rpgcharacters.html ; https://quaternius.com/packs/medievalvillagemegakit.html ; https://kenney.nl/assets/rpg-audio ; https://kenney.nl/assets/impact-sounds
+          EOF
 
       - name: Verify asset outputs and animation exports
         shell: bash
