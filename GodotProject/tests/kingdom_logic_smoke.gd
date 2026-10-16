@@ -38,6 +38,15 @@ func _run_tests() -> void:
 	if not game.world_view.hero_rig_data.has("left_leg") or not game.world_view.hero_rig_data.has("right_leg") or not game.world_view.hero_rig_data.has("left_arm") or not game.world_view.hero_rig_data.has("right_arm"):
 		_fail("The Royal Captain articulated limb rig was not initialized.")
 		return
+	if not game.world_view.hero_rig_data.has("head") or not game.world_view.hero_rig_data.has("left_leg_y") or not game.world_view.hero_rig_data.has("right_leg_y"):
+		_fail("The Royal Captain rig is missing head articulation or stable foot-lift baselines.")
+		return
+	var anticipation: float = game.world_view._combat_swing_curve(0.08)
+	var strike: float = game.world_view._combat_swing_curve(0.24)
+	var recovery: float = game.world_view._combat_swing_curve(0.48)
+	if not (anticipation < 0.0 and strike < anticipation and absf(recovery) < 0.001):
+		_fail("Combat animation must sequence anticipation, a stronger strike, and a clean recovery.")
+		return
 	for rig in game.world_view.articulated_rigs:
 		if not rig.has("left_leg") or not rig.has("right_leg") or not rig.has("left_arm") or not rig.has("right_arm"):
 			_fail("A visible troop is missing articulated limb joints.")
