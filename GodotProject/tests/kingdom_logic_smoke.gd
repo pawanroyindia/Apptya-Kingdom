@@ -67,9 +67,19 @@ func _run_tests() -> void:
 		_fail("Mine construction, tutorial, or first-mine achievement failed.")
 		return
 
+	var training_gold_before_initial: int = game.gold
+	var training_food_before_initial: int = game.food
 	game._train_guard()
-	if game.guards != 11 or game.tutorial_step != 3:
-		_fail("Guard training or tutorial progression failed.")
+	if game.queued_troop_count != 1 or game.queued_troop_type != "infantry" or game.guards != 4:
+		_fail("Infantry training did not enter the queue or incorrectly changed guard count.")
+		return
+	if game.gold != training_gold_before_initial - 10 or game.food != training_food_before_initial - 25:
+		_fail("Infantry training did not charge the correct resources.")
+		return
+	game.troop_training_finish_unix = int(Time.get_unix_time_from_system()) - 1
+	game._finish_troop_training()
+	if game.guards != 5 or game.tutorial_step != 3 or game.infantry != 5:
+		_fail("Queued infantry completion or tutorial progression failed.")
 		return
 
 	# Resource collection must award the correct resource for the selected building.
@@ -96,14 +106,6 @@ func _run_tests() -> void:
 	if game.tiles[5] != "Barracks" or game.gold != barracks_gold_before - 80 or game.wood != barracks_wood_before - 30:
 		_fail("Barracks construction or resource costs failed.")
 		return
-	var guards_before_training: int = game.guards
-	var training_gold_before: int = game.gold
-	var training_food_before: int = game.food
-	game._train_guard()
-	if game.guards != guards_before_training + 1 or game.gold != training_gold_before - 20 or game.food != training_food_before - 10:
-		_fail("Guard training resource costs failed.")
-		return
-
 	game._select_tile(0)
 	var original_level: int = game.tile_levels[0]
 	game._upgrade_selected_building()
@@ -291,6 +293,9 @@ func _run_tests() -> void:
 	game.wood = -10
 	game.food = -1
 	game.guards = -7
+	game.infantry = -7
+	game.archers = -2
+	game.cavalry = -3
 	game.keep_level = 0
 	game.selected_tile = 99
 	game.tiles[0] = "UnknownBuilding"
