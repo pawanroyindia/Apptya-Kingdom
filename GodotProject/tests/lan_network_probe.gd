@@ -4,6 +4,7 @@ class ProbeKingdom:
 	extends Node
 
 	var gold := 300
+	var battle_stance := "Balanced"
 	var tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
 	var levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 	var defeated := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
@@ -13,7 +14,7 @@ class ProbeKingdom:
 		return {
 			"gold": gold, "wood": 150, "food": 120, "stone": 80,
 			"guards": 4, "infantry": 4, "archers": 0, "cavalry": 0,
-			"keep_level": 1, "hero_level": 1, "tiles": tiles.duplicate(),
+			"keep_level": 1, "hero_level": 1, "battle_stance": battle_stance, "tiles": tiles.duplicate(),
 			"tile_levels": Array(levels), "outpost_defeated": Array(defeated),
 			"region_scouted": Array(scouted), "selected_tile": 4, "selected_outpost": 0
 		}
@@ -21,9 +22,12 @@ class ProbeKingdom:
 	func _apply_network_action(action: String, payload: Dictionary) -> void:
 		if action == "gather" and payload.get("resource", "") == "gold":
 			gold += int(payload.get("amount", 0))
+		elif action == "set_stance" and str(payload.get("stance", "")) in ["Balanced", "Aggressive", "Defensive"]:
+			battle_stance = str(payload["stance"])
 
 	func _apply_multiplayer_snapshot(snapshot: Dictionary) -> void:
 		gold = int(snapshot.get("gold", gold))
+		battle_stance = str(snapshot.get("battle_stance", battle_stance))
 
 	func _persist_game() -> int:
 		return OK
@@ -50,9 +54,9 @@ func _run_probe() -> void:
 			return
 		print("LAN_HOST_READY")
 		for attempt in range(100):
-			if kingdom.gold == 320:
+			if kingdom.gold == 320 and kingdom.battle_stance == "Defensive":
 				await create_timer(0.5).timeout
-				print("LAN_HOST_PASS: host applied guest gather action; gold=%d" % kingdom.gold)
+				print("LAN_HOST_PASS: host applied guest gather and tactical stance actions; gold=%d stance=%s" % [kingdom.gold, kingdom.battle_stance])
 				quit(0)
 				return
 			await create_timer(0.1).timeout
@@ -75,9 +79,10 @@ func _run_probe() -> void:
 			quit(1)
 			return
 		session.request_host_action("gather", {"resource": "gold", "amount": 20})
+		session.request_host_action("set_stance", {"stance": "Defensive"})
 		for attempt in range(60):
-			if kingdom.gold == 320:
-				print("LAN_CLIENT_PASS: received authoritative host snapshot; gold=%d" % kingdom.gold)
+			if kingdom.gold == 320 and kingdom.battle_stance == "Defensive":
+				print("LAN_CLIENT_PASS: received authoritative host snapshot; gold=%d stance=%s" % [kingdom.gold, kingdom.battle_stance])
 				session.disconnect_game()
 				quit(0)
 				return
