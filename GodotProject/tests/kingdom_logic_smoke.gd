@@ -21,6 +21,17 @@ func _run_tests() -> void:
 	if game.graphics_quality != "Low" or not is_equal_approx(game.world_viewport.scaling_3d_scale, 0.75) or game.world_view.sun_light.shadow_enabled:
 		_fail("Saved graphics quality was not applied when the kingdom scene started.")
 		return
+	var daytime_background: Color = game.world_view.world_environment.background_color
+	game.world_view.day_phase = 0.75
+	game.world_view._update_daylight()
+	if is_equal_approx(game.world_view.world_environment.background_color.r, daytime_background.r) or game.world_view.sun_light.light_energy >= 0.5:
+		_fail("Night lighting did not darken the sky and reduce sun energy.")
+		return
+	game.world_view.day_phase = 0.25
+	game.world_view._update_daylight()
+	if not is_equal_approx(game.world_view.world_environment.background_color.r, daytime_background.r):
+		_fail("Day lighting did not restore the daytime sky color.")
+		return
 	if not is_instance_valid(game.world_view.hero_model) or not game.world_view.hero_level_label.text.contains("LV 1"):
 		_fail("The 3D Royal Captain model or level label was not created.")
 		return
