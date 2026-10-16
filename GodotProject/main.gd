@@ -21,6 +21,7 @@ var tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "
 var tile_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 var outpost_threat := PackedInt32Array([1, 2, 3])
 var outpost_defeated := PackedInt32Array([0, 0, 0])
+var region_scouted := PackedInt32Array([0, 0, 0])
 var achievements := PackedStringArray()
 var status_message := "Your kingdom awaits your command."
 var resource_labels: Dictionary = {}
@@ -294,7 +295,8 @@ func _refresh_ui() -> void:
 				upgrade_note = " Building upgrade completes in %ds." % (building_upgrade_finish_unix - int(Time.get_unix_time_from_system()))
 			tile_detail_label.text = "Selected: %s (Level %d) on tile %d. %s%s" % [tiles[selected_tile], tile_levels[selected_tile], selected_tile + 1, production, upgrade_note]
 		for i in range(outpost_buttons.size()):
-			outpost_buttons[i].text = "%sOutpost %d\nThreat %d%s" % ["▶ " if i == selected_outpost else "", i + 1, outpost_threat[i], " • Defeated" if outpost_defeated[i] == 1 else ""]
+			var region_status := " • Captured" if outpost_defeated[i] == 1 else (" • Scouted" if region_scouted[i] == 1 else " • Unknown")
+			outpost_buttons[i].text = "%sOutpost %d%s" % ["▶ " if i == selected_outpost else "", i + 1, region_status]
 		outpost_label.text = _get_outpost_description()
 		tutorial_label.text = _get_tutorial_text()
 		achievements_label.text = "Achievements: %d/8 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
@@ -339,7 +341,9 @@ func _get_outpost_description() -> String:
 	var threat := outpost_threat[selected_outpost]
 	if outpost_defeated[selected_outpost] == 1:
 		return "Outpost %d captured. It is secured and cannot be attacked again." % (selected_outpost + 1)
-	return "Target: Outpost %d • Threat %d • Estimated success chance %d%% • Guards required: %d" % [selected_outpost + 1, threat, clampi(75 - threat * 15 + keep_level * 5 + guards, 10, 95), 3 + threat]
+	if region_scouted[selected_outpost] != 1:
+		return "Target: Outpost %d. This region is unexplored. Scout it to reveal enemy threat before attacking." % (selected_outpost + 1)
+	return "Scouted target: Outpost %d • Threat %d • Estimated success chance %d%% • Guards required: %d" % [selected_outpost + 1, threat, clampi(65 - threat * 12 + keep_level * 6 + guards / 2, 10, 90), 3 + threat]
 
 func _select_outpost(index: int) -> void:
 	selected_outpost = clampi(index, 0, outpost_threat.size() - 1)
@@ -491,12 +495,18 @@ func _train_guard() -> void:
 func _scout() -> void:
 	if guards < 5:
 		status_message = "You need at least 5 guards to scout safely."
+	elif outpost_defeated[selected_outpost] == 1:
+		status_message = "This outpost is already captured. Select another region to explore."
 	else:
 		guards -= 1
 		var reward := randi_range(35, 90) * keep_level
 		gold += reward
 		wood += randi_range(5, 18)
-		status_message = "Scouting succeeded. Found %d gold and supplies." % reward
+		if region_scouted[selected_outpost] == 0:
+			region_scouted[selected_outpost] = 1
+			status_message = "Scouting revealed Threat %d at Outpost %d. Found %d gold and supplies." % [outpost_threat[selected_outpost], selected_outpost + 1, reward]
+		else:
+			status_message = "The region is already mapped. Scouting party returned with %d gold and supplies." % reward
 		_award_achievement("scout", "First Scout", 25)
 	_refresh_ui()
 
@@ -512,7 +522,7 @@ func _attack_outpost() -> void:
 		_refresh_ui()
 		return
 	guards -= required_guards
-	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2, 10, 90)
+	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 - (0 if region_scouted[selected_outpost] == 1 else 15), 10, 90)
 	var won_attack := randi_range(1, 100) <= chance
 	if is_instance_valid(world_view):
 		world_view.play_attack(selected_outpost, won_attack)
@@ -567,6 +577,7 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "tile_levels", tile_levels)
 	config.set_value("kingdom", "outpost_threat", outpost_threat)
 	config.set_value("kingdom", "outpost_defeated", outpost_defeated)
+	config.set_value("kingdom", "region_scouted", region_scouted)
 	config.set_value("kingdom", "selected_outpost", selected_outpost)
 	config.set_value("kingdom", "tutorial_step", tutorial_step)
 	config.set_value("kingdom", "achievements", achievements)
@@ -604,6 +615,10 @@ func _load_game() -> void:
 	if (loaded_outposts is PackedInt32Array or loaded_outposts is Array) and loaded_outposts.size() == outpost_defeated.size():
 		for i in range(outpost_defeated.size()):
 			outpost_defeated[i] = 1 if int(loaded_outposts[i]) == 1 else 0
+	var loaded_scouted = config.get_value("kingdom", "region_scouted", region_scouted)
+	if (loaded_scouted is PackedInt32Array or loaded_scouted is Array) and loaded_scouted.size() == region_scouted.size():
+		for i in range(region_scouted.size()):
+			region_scouted[i] = 1 if int(loaded_scouted[i]) == 1 else 0
 	selected_outpost = clampi(int(config.get_value("kingdom", "selected_outpost", selected_outpost)), 0, outpost_threat.size() - 1)
 	tutorial_step = clampi(int(config.get_value("kingdom", "tutorial_step", tutorial_step)), 0, 4)
 	var loaded_achievements = config.get_value("kingdom", "achievements", achievements)
@@ -637,6 +652,7 @@ func _normalize_save_data() -> void:
 	tiles[4] = "Keep"
 	for i in range(outpost_defeated.size()):
 		outpost_defeated[i] = 1 if outpost_defeated[i] == 1 else 0
+		region_scouted[i] = 1 if region_scouted[i] == 1 else 0
 	if keep_upgrade_finish_unix < 0:
 		keep_upgrade_finish_unix = 0
 	if building_upgrade_finish_unix < 0:
