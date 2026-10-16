@@ -230,6 +230,9 @@ namespace ApptyaKingdom {
     default:return "Unknown research.";
    }
    if(level>=5)return label+" is already at maximum level 5.";
+   int requiredKeepLevel=level+1;
+   if(Data.keepLevel<requiredKeepLevel)return label+" level "+(level+1)+" requires Keep level "+requiredKeepLevel+".";
+   if(type=="combat"&&Data.barracksLevel<requiredKeepLevel)return label+" level "+(level+1)+" requires Barracks level "+requiredKeepLevel+".";
    int woodCost=60*(level+1),stoneCost=40*(level+1),goldCost=25*(level+1);
    if(Data.wood<woodCost||Data.stone<stoneCost||Data.gold<goldCost)
     return "Research needs "+woodCost+" wood, "+stoneCost+" stone and "+goldCost+" gold.";
