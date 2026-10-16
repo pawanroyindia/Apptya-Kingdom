@@ -19,7 +19,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Gold-tint feedback across all separately tappable mesh parts of the selected building.
 - Keep and village-building roof ridges turn gold while their timed upgrades are running.
 - World-visible guard squad that updates when guards are trained or lost in battle/expeditions (up to 25 individual markers, matching barracks capacity).
-- Three troop classes are tracked separately (infantry, archers and cavalry), with class-specific food/gold costs and different army-power values. Barracks has a single-slot timed training queue with a live countdown, capacity checks, save persistence and completion recovery after app suspension. The HUD offers separate queue actions and reports class counts/queue state; world squad markers are tinted by troop class.
+- Three troop classes are tracked separately (infantry, archers and cavalry), with class-specific food/gold costs and different army-power values. Barracks has a single-slot timed training queue with a live countdown, capacity checks, save persistence and completion recovery after app suspension. The HUD offers separate queue actions and reports class counts/queue state; world squad markers are tinted by troop class and now have subtle procedural idle motion. Battle reports include the troop-class composition.
 - Enemy outpost roof threat scaling is capped visually so high gameplay levels cannot create enormous meshes.
 - Selected-building upgrade and resource collection actions; selected enemy outpost can be attacked through a dedicated action.
 - Persistent contextual building details panel with level, upgrade costs, active countdowns, max-level state and enemy power; Barracks inspection also shows guard capacity/training costs, while resource buildings show passive output rates. Details refresh after game-state changes without overwriting action feedback.
@@ -42,7 +42,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 ## Still needed before calling the vertical slice complete
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
 - Compile and test timed upgrade completion, save/reload countdown continuity, and edge cases in Unity.
-- Add class-specific troop models/animations and richer battle feedback plus a visible practice/combat target; current world markers now use separate class tints but remain simple capsules.
+- Replace capsule blockout markers with authored class-specific troop models and attack/march animations; add a visible practice/combat target with selectable interaction. Current motion is a subtle procedural idle sway, not a full animation system.
 - Expand research into a dedicated research screen with clearer per-technology costs, research-specific icons, and a more complete visual presentation; the HUD now shows next-level Keep/Barracks requirements, and game logic enforces them.
 - Test bounded camera pan/zoom gestures against HUD interactions in Unity Play Mode and on Android.
 - Improve authored art, animations, audio, lighting, terrain and mobile UI polish.
