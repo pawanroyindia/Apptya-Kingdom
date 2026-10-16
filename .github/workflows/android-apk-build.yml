@@ -1,0 +1,50 @@
+name: Android APK Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "UnityProject/**"
+      - ".github/workflows/android-apk-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apptya-kingdom-android-apk
+  cancel-in-progress: false
+
+jobs:
+  build-apk:
+    name: Build and verify Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build Android APK in Unity
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: UnityProject
+          unityVersion: 6000.0.46f1
+          targetPlatform: Android
+          buildMethod: ApptyaKingdom.EditorTools.ApptyaAndroidBuild.BuildAndroidApk
+          buildName: ApptyaKingdom.apk
+          androidAppBundle: false
+
+      - name: Upload APK and build report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apptya-kingdom-android-build
+          path: |
+            UnityProject/Build/Android/ApptyaKingdom.apk
+            UnityProject/Build/android-build-report.txt
+          if-no-files-found: warn
+          retention-days: 14
