@@ -35,6 +35,7 @@ var current_cavalry := 0
 var current_outposts := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 var current_scouted := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 var material_cache: Dictionary = {}
+var material_textures: Dictionary = {}
 var surface_noise: NoiseTexture2D
 var animated_flags: Array[MeshInstance3D] = []
 var animation_clock := 0.0
@@ -163,6 +164,12 @@ func _build_environment() -> void:
 	surface_noise.height = 128
 	surface_noise.seamless = true
 	surface_noise.noise = noise
+	material_textures = {
+		"stone": load("res://art/textures/stone_masonry.svg"),
+		"wood": load("res://art/textures/wood_grain.svg"),
+		"cloth": load("res://art/textures/woven_banner.svg"),
+		"grass": load("res://art/textures/grass_detail.svg")
+	}
 
 	var environment_node := WorldEnvironment.new()
 	world_environment = Environment.new()
@@ -739,8 +746,18 @@ func _material(color_value: String) -> StandardMaterial3D:
 	if material_cache.has(color_value):
 		return material_cache[color_value] as StandardMaterial3D
 	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(color_value)
-	material.albedo_texture = surface_noise
+	var base_color := Color(color_value)
+	material.albedo_color = base_color
+	var texture_key := "noise"
+	if color_value in ["#b7b1a3", "#d0c6b2", "#a7a091", "#9b9b8c", "#b9b9a9", "#858a83", "#625f58", "#a49c89", "#d0d4cf", "#a3aaa7", "#858c89"]:
+		texture_key = "stone"
+	elif color_value in ["#8a6242", "#5c3d2d", "#67462f", "#513b2d", "#5d4432", "#75563c", "#6b4b35", "#8b6a49", "#67462f", "#5e4935", "#4c3527"]:
+		texture_key = "wood"
+	elif color_value in ["#b53d36", "#7d9c78", "#d0a35a", "#f1d38a", "#d7b354", "#8f3936"]:
+		texture_key = "cloth"
+	elif base_color.g > base_color.r * 1.08 and base_color.g > base_color.b * 1.05:
+		texture_key = "grass"
+	material.albedo_texture = material_textures.get(texture_key, surface_noise) as Texture2D
 	material.uv1_scale = Vector3(2.0, 2.0, 2.0)
 	material.roughness = 0.78
 	var base_color := Color(color_value)
