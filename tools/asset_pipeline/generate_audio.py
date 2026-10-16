@@ -1,7 +1,7 @@
 import math, os, random, struct, wave
 OUT=os.path.abspath("GodotProject/assets/production/audio")
 os.makedirs(OUT,exist_ok=True)
-SR=22050
+SR=22050  # Rendered master and effects use 22.05 kHz stereo PCM for compact mobile playback.
 random.seed(918)
 def env(t,d,a=0.02,r=0.3):
     return min(1,t/max(a,1e-4))*max(0,min(1,(d-t)/max(r,1e-4)))
