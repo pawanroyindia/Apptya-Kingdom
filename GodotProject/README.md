@@ -16,7 +16,7 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Combat, economy and scouting research; troop practice; region exploration; claimable campaign rewards and a persistent quest board
 - Royal Captain hero with XP/levels, skill upgrades, battle/exploration progression, and an army-power bonus
 - Tactical outpost battles with troop-composition power, enemy doctrines (Fortified Hold, Longbow Nest, Mounted Raiders), scouting-based odds, bounded victory/defeat casualties, battle rewards, and visible battle/exploration animations; outposts unlock in campaign order and the HUD shows campaign progress through completion; selectable Balanced, Aggressive and Defensive battle stances trade combat odds against expected casualties and persist across saves/LAN snapshots
-- Enemy-army encounters use escalating enemy formations (Shield Wall, Bow Line, Cavalry Wing), composition-aware power, odds-based outcomes, casualty calculations and increasing enemy levels
+- Enemy-army encounters use escalating enemy formations (Shield Wall, Bow Line, Cavalry Wing), composition-aware power, odds-based outcomes, casualty calculations and increasing enemy levels; the tenth outpost is the stronger Warlord's Citadel boss with a distinct gold crown/banner silhouette and a final campaign cache
 - Distinct procedural 3D silhouettes for fortified, archer and cavalry outposts to communicate enemy doctrine visually
 - Timed production and bounded eight-hour offline production with research bonuses
 - Periodic autosave, backup recovery, save-data normalization, persisted upgrade/training timers, and explicit error reporting when backup or primary save writes fail
