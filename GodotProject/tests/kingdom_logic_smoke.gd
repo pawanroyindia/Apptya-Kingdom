@@ -208,6 +208,13 @@ func _run_tests() -> void:
 		_fail("Troop practice did not increase army drills.")
 		return
 
+	# Campaign outposts must be captured in order; a locked attack must not consume troops.
+	game._select_outpost(1)
+	var guards_before_locked_attack: int = game.guards
+	game._attack_outpost()
+	if game.outpost_defeated[1] != 0 or game.guards != guards_before_locked_attack or not game.status_message.contains("locked"):
+		_fail("Locked outpost attack changed the army or failed to explain the campaign gate.")
+		return
 	game._select_outpost(0)
 	game._scout()
 	if game.region_scouted[0] != 1:
