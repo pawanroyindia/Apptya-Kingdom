@@ -145,37 +145,32 @@ func _create_articulated_character(uniform_color: String, armor_color: String, c
 	_add_box(torso, Vector3(0.43, 0.48, 0.3), Vector3(0, 0.0, 0), armor_color)
 	_add_box(torso, Vector3(0.46, 0.09, 0.32), Vector3(0, -0.21, 0), "#5b392b")
 	_add_box(torso, Vector3(0.48, 0.065, 0.34), Vector3(0, -0.17, 0), "#e4c77f" if royal else "#bca46e")
-	_add_sphere(torso, Vector3(0, -0.05, 0.17), Vector3(0.09, 0.08, 0.035), "#f1d38a")
+
 	var left_arm := Node3D.new()
 	left_arm.name = "LeftArmJoint"
 	left_arm.position = Vector3(-0.29, 0.15, 0)
 	torso.add_child(left_arm)
 	_add_capsule(left_arm, Vector3(0, -0.2, 0), armor_color)
-	_add_sphere(left_arm, Vector3(0, -0.4, 0.015), Vector3(0.095, 0.09, 0.09), "#d9b18c")
+
 	var right_arm := Node3D.new()
 	right_arm.name = "RightArmJoint"
 	right_arm.position = Vector3(0.29, 0.15, 0)
 	torso.add_child(right_arm)
 	_add_capsule(right_arm, Vector3(0, -0.2, 0), armor_color)
-	_add_sphere(right_arm, Vector3(0, -0.4, 0.015), Vector3(0.095, 0.09, 0.09), "#d9b18c")
+
 	_add_box(right_arm, Vector3(0.07, 0.25, 0.07), Vector3(0.0, -0.45, 0.0), "#bca46e")
 	_add_box(right_arm, Vector3(0.055, 0.5, 0.055), Vector3(0.0, -0.67, 0.0), "#cbd2d5")
-	_add_cone(right_arm, 0.095, 0.16, Vector3(0.0, -0.92, 0.0), "#e4c77f")
-	_add_box(torso, Vector3(0.42, 0.34, 0.055), Vector3(-0.25, 0.0, 0.2), cloth_color)
-	_add_box(torso, Vector3(0.42, 0.34, 0.055), Vector3(0.25, 0.0, 0.2), cloth_color)
+
+	_add_box(torso, Vector3(0.52, 0.4, 0.055), Vector3(0, -0.02, 0.2), cloth_color)
 	var head := Node3D.new()
 	head.name = "HeadPivot"
 	head.position = Vector3(0, 0.38, 0)
 	torso.add_child(head)
 	_add_sphere(head, Vector3(0, 0.0, 0), Vector3(0.205, 0.235, 0.19), "#d9b18c")
-	_add_sphere(head, Vector3(-0.075, 0.015, 0.17), Vector3(0.026, 0.035, 0.018), "#382c27")
-	_add_sphere(head, Vector3(0.075, 0.015, 0.17), Vector3(0.026, 0.035, 0.018), "#382c27")
-	_add_box(head, Vector3(0.09, 0.025, 0.02), Vector3(0, -0.075, 0.18), "#6f3d32")
-	_add_sphere(head, Vector3(-0.22, -0.025, 0), Vector3(0.055, 0.11, 0.12), armor_color)
-	_add_sphere(head, Vector3(0.22, -0.025, 0), Vector3(0.055, 0.11, 0.12), armor_color)
+
 	_add_cone(head, 0.245, 0.22, Vector3(0, 0.19, 0), "#e3bd59" if royal else "#b8bfc4")
 	_add_box(head, Vector3(0.34, 0.06, 0.31), Vector3(0, 0.11, 0), "#e4c77f" if royal else "#858a83")
-	_add_sphere(head, Vector3(0, 0.23, 0), Vector3(0.055, 0.07, 0.055), "#f1d38a" if royal else "#b8bfc4")
+
 	var left_leg := Node3D.new()
 	left_leg.name = "LeftLegJoint"
 	left_leg.position = Vector3(-0.12, 0.46, 0)
