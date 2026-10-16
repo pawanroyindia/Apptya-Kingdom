@@ -45,7 +45,7 @@ jobs:
           test -s GodotProject/assets/production/watchtower.glb
           test -s GodotProject/assets/production/audio/kingdom_theme.wav
           for sound in gather build train victory defeat scout; do test -s "GodotProject/assets/production/audio/$sound.wav"; done
-          test "$(find GodotProject/assets/production/textures -name '*.png' | wc -l)" -ge 8
+          test "$(find GodotProject/assets/production/textures -name '*.png' | wc -l)" -ge 30
           python3 - <<'PY'
           import os, struct, wave
           base="GodotProject/assets/production"
