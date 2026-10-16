@@ -167,9 +167,12 @@ def gameplay_invariants() -> list[str]:
             errors.append("ApptyaBuildingVisuals.cs: visible guard markers must cover the 25-guard barracks capacity")
         for troop_visual_rule in ("state.Data.infantry", "state.Data.archers", "state.Data.cavalry",
                                   "troopRenderer.sharedMaterial = i < state.Data.infantry",
-                                  "i < state.Data.infantry + state.Data.archers", "guardHomePositions[i] = new Vector3", "troopMotionClock * 2.2f", "Quaternion.Euler", "void CreatePracticeTarget()", "Visible Practice Target", "Practice target dummy", "troopMotionClock * 1.7f"):
+                                  "i < state.Data.infantry + state.Data.archers", "guardHomePositions[i] = new Vector3", "troopMotionClock * 2.2f", "Quaternion.Euler"):
             if troop_visual_rule not in visuals:
                 errors.append(f"ApptyaBuildingVisuals.cs: class-specific world troop presentation missing: {troop_visual_rule}")
+        for target_rule in ("void CreatePracticeTarget()", "Visible Practice Target", "Practice target dummy", "troopMotionClock * 1.7f"):
+            if target_rule not in visuals:
+                errors.append(f"ApptyaBuildingVisuals.cs: visible practice target feature missing: {target_rule}")
     else:
         errors.append("ApptyaBuildingVisuals.cs: building visuals source is missing")
 
