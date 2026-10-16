@@ -70,9 +70,14 @@ var troop_training_timer: Timer
 var world_view: Node3D
 var world_viewport: SubViewport
 var graphics_quality := "Balanced"
+var sound_enabled := true
+var sound_player: AudioStreamPlayer
+var sound_streams: Dictionary = {}
+var settings_buttons: Array[Button] = []
 
 func _ready() -> void:
 	_load_game()
+	_setup_audio()
 	_build_ui()
 	_refresh_ui()
 	tick_timer = Timer.new()
@@ -162,8 +167,9 @@ func _build_ui() -> void:
 	_apply_graphics_quality()
 	_add_button_row(column, [
 		{"text": "Cycle Graphics Quality", "action": _cycle_graphics_quality},
-		{"text": "Reset Camera", "action": _reset_camera}
-	])
+		{"text": "Reset Camera", "action": _reset_camera},
+		{"text": "Sound: ON", "action": _toggle_sound}
+	], settings_buttons)
 
 	var resource_panel := PanelContainer.new()
 	resource_panel.add_theme_stylebox_override("panel", _panel_style("#243a30"))
@@ -445,6 +451,49 @@ func _refresh_ui() -> void:
 			world_view.set_hero_level(hero_level)
 		status_label.text = status_message
 
+func _setup_audio() -> void:
+	sound_player = AudioStreamPlayer.new()
+	sound_player.bus = "Master"
+	add_child(sound_player)
+	sound_streams = {
+		"gather": _make_tone(660.0, 0.09),
+		"build": _make_tone(440.0, 0.14),
+		"victory": _make_tone(880.0, 0.22),
+		"defeat": _make_tone(180.0, 0.20),
+		"train": _make_tone(520.0, 0.11)
+	}
+
+func _make_tone(frequency: float, duration: float) -> AudioStreamWAV:
+	const SAMPLE_RATE := 22050
+	var sample_count := int(SAMPLE_RATE * duration)
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	for i in range(sample_count):
+		var t := float(i) / SAMPLE_RATE
+		var envelope := maxf(0.0, minf(minf(1.0, t * 50.0), minf(1.0, (duration - t) * 18.0)))
+		var sample := sin(TAU * frequency * t) * envelope * 0.22
+		pcm.encode_s16(i * 2, int(sample * 32767.0))
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = SAMPLE_RATE
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+func _play_sound(sound_id: String) -> void:
+	if not sound_enabled or not is_instance_valid(sound_player) or not sound_streams.has(sound_id):
+		return
+	sound_player.stream = sound_streams[sound_id]
+	sound_player.play()
+
+func _toggle_sound() -> void:
+	sound_enabled = not sound_enabled
+	status_message = "Sound effects enabled." if sound_enabled else "Sound effects muted."
+	_persist_game()
+	_refresh_ui()
+	if sound_enabled:
+		_play_sound("gather")
+
 func _cycle_graphics_quality() -> void:
 	match graphics_quality:
 		"Low":
@@ -501,6 +550,7 @@ func _gather_resource(resource_type: String, amount: int) -> void:
 			status_message = "Unknown resource type."
 			_refresh_ui()
 			return
+	_play_sound("gather")
 	_persist_game()
 	_refresh_ui()
 
@@ -653,6 +703,7 @@ func _finish_keep_upgrade() -> void:
 	day = mini(day + 1, 1000000)
 	_award_achievement("keep_upgrade", "Keep Upgraded", 50)
 	status_message = "Keep upgrade complete! Keep level is now %d." % keep_level
+	_play_sound("build")
 	_persist_game()
 	_refresh_ui()
 
@@ -832,6 +883,7 @@ func _finish_troop_training() -> void:
 	if tutorial_step == 2:
 		_advance_tutorial(3)
 	status_message = "Troop training complete. Army strength increased."
+	_play_sound("train")
 	_persist_game()
 	_refresh_ui()
 
@@ -876,6 +928,7 @@ func _attack_outpost() -> void:
 	var won_attack := randi_range(1, 100) <= chance
 	if is_instance_valid(world_view):
 		world_view.play_attack(selected_outpost, won_attack)
+	_play_sound("victory" if won_attack else "defeat")
 	day = mini(day + 1, 1000000)
 	if won_attack:
 		_award_hero_xp(25)
@@ -1199,6 +1252,7 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "food", food)
 	config.set_value("kingdom", "stone", stone)
 	config.set_value("kingdom", "graphics_quality", graphics_quality)
+	config.set_value("kingdom", "sound_enabled", sound_enabled)
 	config.set_value("kingdom", "day", day)
 	config.set_value("kingdom", "enemy_level", enemy_level)
 	config.set_value("kingdom", "explored_regions", explored_regions)
@@ -1254,6 +1308,7 @@ func _load_game() -> void:
 	food = int(config.get_value("kingdom", "food", food))
 	stone = int(config.get_value("kingdom", "stone", stone))
 	graphics_quality = str(config.get_value("kingdom", "graphics_quality", graphics_quality))
+	sound_enabled = bool(config.get_value("kingdom", "sound_enabled", sound_enabled))
 	day = int(config.get_value("kingdom", "day", day))
 	enemy_level = int(config.get_value("kingdom", "enemy_level", enemy_level))
 	explored_regions = int(config.get_value("kingdom", "explored_regions", explored_regions))
