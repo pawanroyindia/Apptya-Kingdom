@@ -331,10 +331,10 @@ namespace ApptyaKingdom
         string ResearchCenterSummary(ApptyaGameState state)
         {
             var d = state.Data;
-            return "COMBAT DRILLS  " + d.combatResearch + "/5\\n+2 power per troop per level\\n" + ResearchCostAndGate(d.combatResearch, true) +
-                "\\n\\nEFFICIENT PRODUCTION  " + d.economyResearch + "/5\\n+1 wood, food and stone per level every 30 seconds\\n" + ResearchCostAndGate(d.economyResearch, false) +
-                "\\n\\nCARTOGRAPHY  " + d.scoutingResearch + "/5\\nImproves exploration loot\\n" + ResearchCostAndGate(d.scoutingResearch, false) +
-                "\\n\\nCosts per next level: 60 wood + 40 stone + 25 gold, multiplied by the next level.";
+            return "COMBAT DRILLS  " + d.combatResearch + "/5\n+2 power per troop per level\n" + ResearchCostAndGate(d.combatResearch, true) +
+                "\n\nEFFICIENT PRODUCTION  " + d.economyResearch + "/5\n+1 wood, food and stone per level every 30 seconds\n" + ResearchCostAndGate(d.economyResearch, false) +
+                "\n\nCARTOGRAPHY  " + d.scoutingResearch + "/5\nImproves exploration loot\n" + ResearchCostAndGate(d.scoutingResearch, false) +
+                "\n\nCosts per next level: 60 wood + 40 stone + 25 gold, multiplied by the next level.";
         }
 
         string ResearchCostAndGate(int level, bool combat)
