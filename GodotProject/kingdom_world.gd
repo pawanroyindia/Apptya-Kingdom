@@ -343,9 +343,23 @@ func play_attack(target_index: int, victory: bool) -> void:
 		var soldier := Node3D.new()
 		var lane := float(i % 3) - 1.0
 		soldier.position = Vector3(lane * 0.48, 0.08, 1.0 + float(int(i / 3)) * 0.45)
-		_add_capsule(soldier, Vector3(0, 0.55, 0), "#526e9c")
-		_add_sphere(soldier, Vector3(0, 1.2, 0), Vector3(0.22, 0.22, 0.22), "#d9b18c")
-		_add_box(soldier, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
+		var troop_type := "infantry"
+		if i >= current_infantry and i < current_infantry + current_archers:
+			troop_type = "archer"
+		elif i >= current_infantry + current_archers:
+			troop_type = "cavalry"
+		if troop_type == "cavalry":
+			_add_box(soldier, Vector3(0.55, 0.38, 0.85), Vector3(0, 0.48, 0), "#8c6845")
+			_add_capsule(soldier, Vector3(0, 1.12, 0.05), "#b58b49")
+			_add_sphere(soldier, Vector3(0, 1.75, 0.05), Vector3(0.22, 0.22, 0.22), "#d9b18c")
+		else:
+			var uniform_color := "#526e9c" if troop_type == "infantry" else "#648d55"
+			_add_capsule(soldier, Vector3(0, 0.55, 0), uniform_color)
+			_add_sphere(soldier, Vector3(0, 1.2, 0), Vector3(0.22, 0.22, 0.22), "#d9b18c")
+			if troop_type == "infantry":
+				_add_box(soldier, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
+			else:
+				_add_cylinder(soldier, 0.035, 0.7, Vector3(0.28, 0.78, 0), "#8a6748")
 		add_child(soldier)
 		var destination := target_position + Vector3(lane * 0.55, 0.0, 1.1 + float(int(i / 3)) * 0.4)
 		var march := create_tween()
