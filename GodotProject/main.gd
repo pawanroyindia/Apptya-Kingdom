@@ -82,10 +82,19 @@ var music_stream: AudioStreamWAV
 var sound_streams: Dictionary = {}
 var settings_buttons: Array[Button] = []
 var music_settings_buttons: Array[Button] = []
+var network_session: Node
+var network_address_input: LineEdit
+var network_status_label: Label
+var network_controls: Array[Button] = []
 
 func _ready() -> void:
 	_load_game()
 	_setup_audio()
+	network_session = preload("res://network_session.gd").new()
+	network_session.name = "NetworkSession"
+	add_child(network_session)
+	network_session.configure(self)
+	network_session.status_changed.connect(_on_network_status_changed)
 	_build_ui()
 	_refresh_ui()
 	tick_timer = Timer.new()
@@ -185,6 +194,27 @@ func _build_ui() -> void:
 	_add_button_row(column, [
 		{"text": "Music: ON", "action": _toggle_music}
 	], music_settings_buttons)
+
+	var network_header := Label.new()
+	network_header.text = "LAN CO-OP • SAME WI-FI"
+	network_header.add_theme_font_size_override("font_size", 18)
+	network_header.add_theme_color_override("font_color", Color("#f1d38a"))
+	column.add_child(network_header)
+	network_address_input = LineEdit.new()
+	network_address_input.placeholder_text = "Host local IP (example: 192.168.1.10)"
+	network_address_input.clear_button_enabled = true
+	network_address_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_child(network_address_input)
+	_add_button_row(column, [
+		{"text": "Host LAN Game", "action": _host_lan_game},
+		{"text": "Join Host IP", "action": _join_lan_game},
+		{"text": "Disconnect", "action": _disconnect_lan_game}
+	], network_controls)
+	network_status_label = Label.new()
+	network_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	network_status_label.add_theme_color_override("font_color", Color("#c3d2c7"))
+	network_status_label.text = "Offline. Host and guest must be on the same Wi-Fi; UDP port 24567 must be reachable."
+	column.add_child(network_status_label)
 
 	var resource_panel := PanelContainer.new()
 	resource_panel.add_theme_stylebox_override("panel", _panel_style("#243a30"))
@@ -496,6 +526,39 @@ func _refresh_ui() -> void:
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, infantry, archers, cavalry, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 			world_view.set_hero_level(hero_level)
 		status_label.text = status_message
+	if is_instance_valid(network_session) and network_session.is_network_active() and multiplayer.is_server():
+		network_session.publish_snapshot()
+
+func _on_network_status_changed(message: String) -> void:
+	if is_instance_valid(network_status_label):
+		network_status_label.text = message
+	if is_instance_valid(status_label):
+		status_label.text = message
+
+func _host_lan_game() -> void:
+	if is_instance_valid(network_session):
+		network_session.host_game()
+
+func _join_lan_game() -> void:
+	if is_instance_valid(network_session):
+		network_session.join_game(network_address_input.text if is_instance_valid(network_address_input) else "")
+
+func _disconnect_lan_game() -> void:
+	if is_instance_valid(network_session):
+		network_session.disconnect_game()
+
+func _route_network_action(action: String, payload: Dictionary = {}) -> bool:
+	if is_instance_valid(network_session) and network_session.is_client_connected():
+		var request := payload.duplicate(true)
+		if not request.has("tile"):
+			request["tile"] = selected_tile
+		if not request.has("outpost"):
+			request["outpost"] = selected_outpost
+		network_session.request_host_action(action, request)
+		status_message = "Sent %s request to the host." % action.replace("_", " ")
+		_refresh_ui()
+		return true
+	return false
 
 func _setup_audio() -> void:
 	sound_player = AudioStreamPlayer.new()
@@ -627,6 +690,8 @@ func _reset_camera() -> void:
 	_refresh_ui()
 
 func _gather_resource(resource_type: String, amount: int) -> void:
+	if _route_network_action("gather", {"resource": resource_type, "amount": amount}):
+		return
 	if amount <= 0:
 		status_message = "Gathering amount must be positive."
 		_refresh_ui()
@@ -653,6 +718,8 @@ func _gather_resource(resource_type: String, amount: int) -> void:
 	_refresh_ui()
 
 func _select_tile(index: int) -> void:
+	if _route_network_action("select_tile", {"tile": index}):
+		return
 	if index < 0 or index >= tiles.size():
 		status_message = "That kingdom tile is outside the map."
 		_refresh_ui()
@@ -701,11 +768,15 @@ func _get_outpost_description() -> String:
 	return "Scouted target: Outpost %d • Threat %d • Estimated success chance %d%% • Guards required: %d" % [selected_outpost + 1, threat, chance, 3 + threat]
 
 func _select_outpost(index: int) -> void:
+	if _route_network_action("select_outpost", {"outpost": index}):
+		return
 	selected_outpost = clampi(index, 0, outpost_threat.size() - 1)
 	status_message = "Targeting enemy outpost %d." % (selected_outpost + 1)
 	_refresh_ui()
 
 func _build_farm() -> void:
+	if _route_network_action("build_farm"):
+		return
 	if not _can_build("Farm", 50, 10):
 		return
 	tiles[selected_tile] = "Farm"
@@ -719,6 +790,8 @@ func _build_farm() -> void:
 	_refresh_ui()
 
 func _build_mine() -> void:
+	if _route_network_action("build_mine"):
+		return
 	if not _can_build("Mine", 70, 20):
 		return
 	tiles[selected_tile] = "Mine"
@@ -732,6 +805,8 @@ func _build_mine() -> void:
 	_refresh_ui()
 
 func _build_lumber_camp() -> void:
+	if _route_network_action("build_lumber_camp"):
+		return
 	if not _can_build("Lumber Camp", 60, 15):
 		return
 	tiles[selected_tile] = "Lumber Camp"
@@ -742,6 +817,8 @@ func _build_lumber_camp() -> void:
 	_refresh_ui()
 
 func _build_quarry() -> void:
+	if _route_network_action("build_quarry"):
+		return
 	if not _can_build("Quarry", 70, 25):
 		return
 	tiles[selected_tile] = "Quarry"
@@ -752,6 +829,8 @@ func _build_quarry() -> void:
 	_refresh_ui()
 
 func _build_academy() -> void:
+	if _route_network_action("build_academy"):
+		return
 	if not _can_build("Academy", 120, 45):
 		return
 	tiles[selected_tile] = "Academy"
@@ -770,6 +849,8 @@ func _get_academy_level() -> int:
 	return level
 
 func _build_barracks() -> void:
+	if _route_network_action("build_barracks"):
+		return
 	if not _can_build("Barracks", 80, 30):
 		return
 	tiles[selected_tile] = "Barracks"
@@ -795,6 +876,8 @@ func _can_build(building: String, gold_cost: int, wood_cost: int) -> bool:
 	return true
 
 func _upgrade_keep() -> void:
+	if _route_network_action("upgrade_keep"):
+		return
 	if keep_upgrade_finish_unix > int(Time.get_unix_time_from_system()):
 		status_message = "Keep upgrade is already in progress."
 		_refresh_ui()
@@ -832,6 +915,8 @@ func _finish_keep_upgrade() -> void:
 	_refresh_ui()
 
 func _collect_selected_building() -> void:
+	if _route_network_action("collect"):
+		return
 	match tiles[selected_tile]:
 		"Farm":
 			var food_gain := 10 * tile_levels[selected_tile] * keep_level
@@ -863,6 +948,8 @@ func _collect_selected_building() -> void:
 	_refresh_ui()
 
 func _upgrade_selected_building() -> void:
+	if _route_network_action("upgrade_building"):
+		return
 	if building_upgrade_finish_unix > int(Time.get_unix_time_from_system()):
 		status_message = "Another building upgrade is already in progress."
 		_refresh_ui()
@@ -947,6 +1034,9 @@ func _get_barracks_level() -> int:
 	return level
 
 func _queue_troop(troop_type: String, count: int = 1) -> void:
+	var network_action := "train_infantry" if troop_type == "infantry" else ("train_archers" if troop_type == "archer" else "train_cavalry")
+	if _route_network_action(network_action):
+		return
 	var food_cost := 0
 	var gold_cost := 0
 	var duration := 0
@@ -1012,6 +1102,8 @@ func _finish_troop_training() -> void:
 	_refresh_ui()
 
 func _scout() -> void:
+	if _route_network_action("scout"):
+		return
 	if guards < 1:
 		status_message = "You need at least 1 guard to scout safely."
 	elif outpost_defeated[selected_outpost] == 1:
@@ -1034,6 +1126,8 @@ func _scout() -> void:
 	_refresh_ui()
 
 func _attack_outpost() -> void:
+	if _route_network_action("attack"):
+		return
 	var threat := outpost_threat[selected_outpost]
 	if outpost_defeated[selected_outpost] == 1:
 		status_message = "This outpost is already captured. Select another target."
@@ -1095,6 +1189,8 @@ func _award_hero_xp(amount: int) -> void:
 		hero_xp = 0
 
 func _train_hero() -> void:
+	if _route_network_action("train_hero"):
+		return
 	if hero_level >= 20:
 		status_message = "Royal Captain has reached the maximum hero level 20."
 	elif gold < 25 or food < 25:
@@ -1112,6 +1208,8 @@ func _train_hero() -> void:
 	_refresh_ui()
 
 func _upgrade_hero_skill() -> void:
+	if _route_network_action("upgrade_hero_skill"):
+		return
 	if hero_skill_level >= 5:
 		status_message = "Royal Captain's skill has reached level 5."
 		_refresh_ui()
@@ -1170,6 +1268,8 @@ func _attack_enemy_army() -> void:
 	_refresh_ui()
 
 func _research(research_type: String) -> void:
+	if _route_network_action("research", {"type": research_type}):
+		return
 	var level := combat_research if research_type == "combat" else (economy_research if research_type == "economy" else scouting_research)
 	var research_name := "Combat Drills" if research_type == "combat" else ("Efficient Production" if research_type == "economy" else "Cartography")
 	if level >= 5:
@@ -1213,6 +1313,8 @@ func _research(research_type: String) -> void:
 	_refresh_ui()
 
 func _explore_region() -> void:
+	if _route_network_action("explore"):
+		return
 	if guards < 1:
 		status_message = "Train at least one guard before exploring."
 		_refresh_ui()
@@ -1243,6 +1345,8 @@ func _remove_troops(count: int) -> void:
 	guards = infantry + archers + cavalry
 
 func _practice_troops() -> void:
+	if _route_network_action("practice"):
+		return
 	if guards < 1:
 		status_message = "Train at least one guard before practice."
 	elif practice_drills >= 20:
@@ -1254,6 +1358,8 @@ func _practice_troops() -> void:
 	_refresh_ui()
 
 func _claim_daily_reward() -> void:
+	if _route_network_action("claim_daily"):
+		return
 	var today := int(floor(float(Time.get_unix_time_from_system()) / 86400.0))
 	if daily_reward_claim_day == today:
 		status_message = "Daily reward already claimed. Return after the next daily reset."
@@ -1393,6 +1499,72 @@ func _save_game() -> void:
 	var error := _persist_game()
 	status_message = "Kingdom saved on this device." if error == OK else "Save failed: %s" % error
 	_refresh_ui()
+
+func _export_multiplayer_snapshot() -> Dictionary:
+	return {
+		"gold": gold, "wood": wood, "food": food, "stone": stone,
+		"guards": guards, "infantry": infantry, "archers": archers, "cavalry": cavalry,
+		"queued_troop_type": queued_troop_type, "queued_troop_count": queued_troop_count, "troop_training_finish_unix": troop_training_finish_unix,
+		"keep_level": keep_level, "day": day, "daily_reward_claim_day": daily_reward_claim_day, "daily_reward_streak": daily_reward_streak,
+		"enemy_level": enemy_level, "explored_regions": explored_regions, "victories": victories, "defeats": defeats,
+		"combat_research": combat_research, "economy_research": economy_research, "scouting_research": scouting_research, "practice_drills": practice_drills,
+		"reward_first_victory_claimed": reward_first_victory_claimed, "reward_explorer_claimed": reward_explorer_claimed, "reward_keep_claimed": reward_keep_claimed,
+		"quest_builder_claimed": quest_builder_claimed, "quest_stronghold_claimed": quest_stronghold_claimed, "quest_conqueror_claimed": quest_conqueror_claimed,
+		"hero_level": hero_level, "hero_xp": hero_xp, "hero_skill_level": hero_skill_level,
+		"selected_tile": selected_tile, "selected_outpost": selected_outpost, "keep_upgrade_finish_unix": keep_upgrade_finish_unix,
+		"building_upgrade_finish_unix": building_upgrade_finish_unix, "building_upgrade_tile": building_upgrade_tile, "tutorial_step": tutorial_step,
+		"tiles": tiles.duplicate(), "tile_levels": Array(tile_levels), "outpost_defeated": Array(outpost_defeated), "region_scouted": Array(region_scouted), "achievements": Array(achievements)
+	}
+
+func _apply_multiplayer_snapshot(snapshot: Dictionary) -> void:
+	if not is_instance_valid(network_session) or not network_session._valid_snapshot(snapshot):
+		return
+	for key in ["gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry", "queued_troop_count", "troop_training_finish_unix", "keep_level", "day", "daily_reward_claim_day", "daily_reward_streak", "enemy_level", "explored_regions", "victories", "defeats", "combat_research", "economy_research", "scouting_research", "practice_drills", "hero_level", "hero_xp", "hero_skill_level", "selected_tile", "selected_outpost", "keep_upgrade_finish_unix", "building_upgrade_finish_unix", "building_upgrade_tile", "tutorial_step"]:
+		if snapshot.has(key):
+			set(key, int(snapshot[key]))
+	queued_troop_type = str(snapshot.get("queued_troop_type", ""))
+	for key in ["reward_first_victory_claimed", "reward_explorer_claimed", "reward_keep_claimed", "quest_builder_claimed", "quest_stronghold_claimed", "quest_conqueror_claimed"]:
+		if snapshot.has(key):
+			set(key, bool(snapshot[key]))
+	tiles.clear()
+	for value in snapshot["tiles"]:
+		tiles.append(str(value))
+	tile_levels = PackedInt32Array(snapshot["tile_levels"])
+	outpost_defeated = PackedInt32Array(snapshot["outpost_defeated"])
+	region_scouted = PackedInt32Array(snapshot["region_scouted"])
+	achievements = PackedStringArray(snapshot.get("achievements", []))
+	status_message = "Shared kingdom updated by the host."
+	_resume_timed_upgrades()
+	_refresh_ui()
+	_persist_game()
+
+func _apply_network_action(action: String, payload: Dictionary) -> void:
+	selected_tile = clampi(int(payload.get("tile", selected_tile)), 0, 8)
+	selected_outpost = clampi(int(payload.get("outpost", selected_outpost)), 0, 9)
+	match action:
+		"gather": _gather_resource(str(payload.get("resource", "")), int(payload.get("amount", 0)))
+		"select_tile": _select_tile(int(payload.get("tile", selected_tile)))
+		"select_outpost": _select_outpost(int(payload.get("outpost", selected_outpost)))
+		"build_farm": _build_farm()
+		"build_mine": _build_mine()
+		"build_lumber_camp": _build_lumber_camp()
+		"build_quarry": _build_quarry()
+		"build_academy": _build_academy()
+		"build_barracks": _build_barracks()
+		"upgrade_keep": _upgrade_keep()
+		"collect": _collect_selected_building()
+		"upgrade_building": _upgrade_selected_building()
+		"train_infantry": _queue_troop("infantry")
+		"train_archers": _queue_troop("archer")
+		"train_cavalry": _queue_troop("cavalry")
+		"scout": _scout()
+		"attack": _attack_outpost()
+		"explore": _explore_region()
+		"practice": _practice_troops()
+		"research": _research(str(payload.get("type", "")))
+		"train_hero": _train_hero()
+		"upgrade_hero_skill": _upgrade_hero_skill()
+		"claim_daily": _claim_daily_reward()
 
 func _persist_game() -> int:
 	last_saved_unix = int(Time.get_unix_time_from_system())
