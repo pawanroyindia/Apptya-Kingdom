@@ -20,11 +20,11 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Visible construction/outpost reveal effects, water ripples, exploration scout journey and marching guard squad during attacks.
 
 ## Verification
-- [x] Headless Godot editor parsing, project startup, economy, training, research, exploration, save recovery and touch tests passed ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848450743)).
+- [x] Headless Godot editor parsing, project startup, economy, training, research, exploration, save recovery and touch tests passed ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848617457)).
 - [x] The central 3D tile-picking test has passed in a prior workflow run.
-- [x] Re-run the expanded gameplay/save/touch/troop/research test suite after the latest changes and fix every failure ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848450743)).
+- [x] Re-run the expanded gameplay/save/touch/troop/research test suite after the latest changes and fix every failure ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848617457)).
 - [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity and signature checks align. Actual export remains untested until approved.
-- [ ] Review performance and visual layout for low-end Android devices as far as CI can check without a device.
+- [x] Add a CI mesh-node budget and refresh-stability check: 193 mesh nodes at startup, below the 400-node guardrail; physical-device FPS remains unverified.
 - [ ] Physical-device installation, touch testing, and performance validation are post-export gates and cannot be claimed before an APK exists.
 
 ## Known scope limits before export
