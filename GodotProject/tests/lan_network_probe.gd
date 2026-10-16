@@ -9,6 +9,7 @@ class ProbeKingdom:
 	var levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 	var defeated := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 	var scouted := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+	var network_session: Node
 
 	func _export_multiplayer_snapshot() -> Dictionary:
 		return {
@@ -30,6 +31,10 @@ class ProbeKingdom:
 		battle_stance = str(snapshot.get("battle_stance", battle_stance))
 
 	func _persist_game() -> int:
+		# Mirror the production main.gd contract: a successful host save publishes
+		# local UI/timer changes, not just changes initiated by a guest RPC.
+		if is_instance_valid(network_session) and network_session.is_network_active() and network_session.multiplayer.is_server():
+			network_session.publish_snapshot()
 		return OK
 
 func _initialize() -> void:
@@ -44,6 +49,7 @@ func _run_probe() -> void:
 	var session := preload("res://network_session.gd").new()
 	session.name = "NetworkSession"
 	kingdom.add_child(session)
+	kingdom.network_session = session
 	session.configure(kingdom)
 
 	if role == "--host":
@@ -55,8 +61,11 @@ func _run_probe() -> void:
 		print("LAN_HOST_READY")
 		for attempt in range(100):
 			if kingdom.gold == 320 and kingdom.battle_stance == "Defensive":
-				await create_timer(0.5).timeout
-				print("LAN_HOST_PASS: host applied guest gather and tactical stance actions; gold=%d stance=%s" % [kingdom.gold, kingdom.battle_stance])
+				# Simulate a host-side UI/timer update after the guest's last action.
+				kingdom.gold += 5
+				kingdom._persist_game()
+				await create_timer(0.8).timeout
+				print("LAN_HOST_PASS: guest actions and host-side snapshot publication passed; gold=%d stance=%s" % [kingdom.gold, kingdom.battle_stance])
 				quit(0)
 				return
 			await create_timer(0.1).timeout
@@ -85,14 +94,21 @@ func _run_probe() -> void:
 		# Valid actions still succeed after rejected requests.
 		session.request_host_action("gather", {"resource": "gold", "amount": 20, "tile": 4, "outpost": 0})
 		session.request_host_action("set_stance", {"stance": "Defensive", "tile": 4, "outpost": 0})
+		var received_guest_action_snapshot := false
 		for attempt in range(60):
 			if kingdom.gold == 320 and kingdom.battle_stance == "Defensive":
-				print("LAN_CLIENT_PASS: received authoritative host snapshot; gold=%d stance=%s" % [kingdom.gold, kingdom.battle_stance])
-				session.disconnect_game()
-				quit(0)
-				return
+				received_guest_action_snapshot = true
+				break
 			await create_timer(0.1).timeout
-		printerr("LAN_CLIENT_FAIL: did not receive the host-authoritative snapshot.")
+		if received_guest_action_snapshot:
+			for attempt in range(60):
+				if kingdom.gold == 325 and kingdom.battle_stance == "Defensive":
+					print("LAN_CLIENT_PASS: received guest-action and host-local snapshots; gold=%d stance=%s" % [kingdom.gold, kingdom.battle_stance])
+					session.disconnect_game()
+					quit(0)
+					return
+				await create_timer(0.1).timeout
+		printerr("LAN_CLIENT_FAIL: did not receive both guest-action and host-local snapshots.")
 		session.disconnect_game()
 		quit(1)
 		return
