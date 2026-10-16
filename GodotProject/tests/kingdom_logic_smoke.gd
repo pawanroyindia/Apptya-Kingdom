@@ -235,6 +235,10 @@ func _run_tests() -> void:
 	var saved_tiles: Array = game.tiles.duplicate()
 	var saved_levels: PackedInt32Array = game.tile_levels.duplicate()
 	var saved_keep_level: int = game.keep_level
+	var saved_day: int = game.day
+	var saved_explored_regions: int = game.explored_regions
+	var saved_research: Array = [game.combat_research, game.economy_research, game.scouting_research, game.practice_drills]
+	var saved_rewards: Array = [game.reward_first_victory_claimed, game.reward_explorer_claimed, game.reward_keep_claimed]
 	var saved_defeated: PackedInt32Array = game.outpost_defeated.duplicate()
 	var saved_achievements: PackedStringArray = game.achievements.duplicate()
 	game.gold = 0
@@ -256,6 +260,15 @@ func _run_tests() -> void:
 		return
 	if game.outpost_defeated != saved_defeated or game.achievements != saved_achievements:
 		_fail("Kingdom save/load did not restore campaign and achievement progress.")
+		return
+	if game.day != saved_day or game.explored_regions != saved_explored_regions:
+		_fail("Kingdom save/load did not restore campaign day and exploration progress.")
+		return
+	if [game.combat_research, game.economy_research, game.scouting_research, game.practice_drills] != saved_research:
+		_fail("Kingdom save/load did not restore research and practice progress.")
+		return
+	if [game.reward_first_victory_claimed, game.reward_explorer_claimed, game.reward_keep_claimed] != saved_rewards:
+		_fail("Kingdom save/load did not restore claimed campaign rewards.")
 		return
 	if game.building_upgrade_finish_unix != pending_building_upgrade or game.building_upgrade_tile != 0:
 		_fail("Kingdom save/load did not restore the pending building upgrade timer.")
