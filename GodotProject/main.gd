@@ -117,9 +117,13 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
 		_persist_game()
+		if is_instance_valid(music_player):
+			music_player.stop()
 	elif what == NOTIFICATION_APPLICATION_RESUMED:
 		_apply_offline_production(true)
 		_resume_timed_upgrades()
+		if music_enabled and is_instance_valid(music_player):
+			music_player.play()
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
