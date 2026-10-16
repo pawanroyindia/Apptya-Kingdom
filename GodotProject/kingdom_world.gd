@@ -34,6 +34,10 @@ var current_archers := 0
 var current_cavalry := 0
 var current_outposts := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 var current_scouted := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+var material_cache: Dictionary = {}
+var surface_noise: NoiseTexture2D
+var animated_flags: Array[MeshInstance3D] = []
+var animation_clock := 0.0
 
 func _ready() -> void:
 	_build_environment()
@@ -46,7 +50,17 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	day_phase = fposmod(day_phase + delta / 240.0, 1.0)
+	animation_clock += delta
 	_update_daylight()
+	if is_instance_valid(hero_model):
+		hero_model.position.y = 0.08 + sin(animation_clock * 1.6) * 0.035
+		hero_model.rotation_degrees.y = sin(animation_clock * 0.42) * 2.0
+	for i in range(animated_flags.size() - 1, -1, -1):
+		var flag := animated_flags[i]
+		if not is_instance_valid(flag):
+			animated_flags.remove_at(i)
+			continue
+		flag.rotation_degrees.z = sin(animation_clock * 2.1 + float(i) * 0.7) * 3.0
 
 func _update_daylight() -> void:
 	if not is_instance_valid(world_environment) or not is_instance_valid(sun_light):
@@ -137,8 +151,22 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 		_update_tile_highlight()
 
 func _build_environment() -> void:
+	# Shared seamless noise adds subtle surface breakup without shipping large texture files.
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	noise.frequency = 0.055
+	noise.fractal_type = FastNoiseLite.FRACTAL_FBM
+	noise.fractal_octaves = 3
+	noise.fractal_lacunarity = 2.0
+	surface_noise = NoiseTexture2D.new()
+	surface_noise.width = 128
+	surface_noise.height = 128
+	surface_noise.seamless = true
+	surface_noise.noise = noise
+
 	var environment_node := WorldEnvironment.new()
 	world_environment = Environment.new()
+	world_environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	world_environment.background_mode = Environment.BG_COLOR
 	world_environment.background_color = Color("#a9c6d0")
 	world_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
@@ -297,7 +325,7 @@ func _build_terrain() -> void:
 		_add_cylinder(tree, 0.16, 1.1, Vector3(0, 0.42, 0), "#6b4b35")
 		_add_sphere(tree, Vector3(0, 1.55, 0), Vector3(1.05, 1.25, 1.05), "#3e7547")
 		_add_sphere(tree, Vector3(0.55, 1.85, 0.18), Vector3(0.72, 0.8, 0.72), "#4f8a50")
-		var tree_sway := create_tween().set_loops(2)
+		var tree_sway := create_tween().set_loops()
 		var sway_duration := 1.0 + float(i % 3) * 0.12
 		tree_sway.tween_property(tree, "rotation_degrees", Vector3(0, 0, 2.0), sway_duration).set_delay(float(i % 3) * 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		tree_sway.tween_property(tree, "rotation_degrees", Vector3(0, 0, -2.0), sway_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -386,7 +414,8 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 		_add_box(root, Vector3(0.13, 0.22, 0.045), Vector3(-0.28, 0.78, 0.64), "#e4c77f")
 		_add_box(root, Vector3(0.13, 0.22, 0.045), Vector3(0.28, 0.78, 0.64), "#e4c77f")
 		_add_box(root, Vector3(0.08, 0.95, 0.08), Vector3(0.2, 2.6, 0), "#634a35")
-		_add_box(root, Vector3(0.65, 0.42, 0.06), Vector3(0.48, 2.8, 0), "#f1d38a")
+		var royal_banner := _add_box(root, Vector3(0.65, 0.42, 0.06), Vector3(0.48, 2.8, 0), "#f1d38a")
+		animated_flags.append(royal_banner)
 		_add_textured_level_marker(root, level, Vector3(0, 3.55, 0), "#f1d38a")
 	elif kind == "Farm":
 		_add_box(root, Vector3(1.35, 0.16, 1.25), Vector3(0, 0.12, 0), "#8d714a")
@@ -439,7 +468,38 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 		_add_textured_level_marker(root, level, Vector3(0.48, 1.35, -0.34), "#f5d779")
 	else:
 		_add_box(root, Vector3(0.8, 0.55, 0.8), Vector3(0, 0.32, 0), "#8a6242")
+	_add_architectural_finish(root, kind, level)
 	return root
+
+func _add_architectural_finish(root: Node3D, kind: String, level: int) -> void:
+	# Small silhouette and material accents improve readability without heavy imported assets.
+	match kind:
+		"Keep":
+			for row in range(2):
+				var y := 0.48 + float(row) * 0.48
+				_add_box(root, Vector3(1.38, 0.055, 1.28), Vector3(0, y, 0), "#d0c6b2")
+			_add_box(root, Vector3(0.18, 0.2, 0.06), Vector3(0, 1.0, 0.66), "#e7ad52")
+			_add_box(root, Vector3(0.055, 0.18, 0.04), Vector3(0, 1.0, 0.62), "#fff0c9")
+		"Farm":
+			for row in range(3):
+				_add_box(root, Vector3(1.08, 0.035, 0.035), Vector3(0, 0.2, -0.42 + float(row) * 0.34), "#c2a16a")
+			for crop in range(4):
+				_add_sphere(root, Vector3(-0.42 + float(crop) * 0.28, 0.43 + 0.025 * level, 0.54), Vector3(0.055, 0.07, 0.055), "#d5b957")
+		"Mine":
+			_add_cone(root, 0.16, 0.3, Vector3(0.48, 0.44, 0.34), "#91b8c0")
+			_add_cone(root, 0.12, 0.24, Vector3(-0.46, 0.4, 0.34), "#d4b46c")
+		"Barracks", "Lumber Camp", "Academy":
+			var timber := "#5c3d2d"
+			for side in [-1.0, 1.0]:
+				_add_box(root, Vector3(0.07, 0.66, 0.07), Vector3(side * 0.49, 0.43, 0.53), timber)
+			_add_box(root, Vector3(0.42, 0.07, 0.06), Vector3(0, 0.73, 0.55), "#d6b675")
+			_add_box(root, Vector3(0.12, 0.18, 0.035), Vector3(0.32, 0.56, 0.57), "#e7ad52")
+		"Quarry":
+			for mark in range(3):
+				_add_box(root, Vector3(0.25, 0.025, 0.025), Vector3(-0.25 + float(mark) * 0.22, 0.66, 0.38), "#d0d4cf")
+	# Higher levels receive visible gold studs as an upgrade cue.
+	for i in range(mini(level, 4)):
+		_add_sphere(root, Vector3(-0.52 + float(i) * 0.34, 0.12, 0.58), Vector3(0.045, 0.045, 0.045), "#e4c77f")
 
 func play_attack(target_index: int, victory: bool) -> void:
 	var safe_target := clampi(target_index, 0, 9)
@@ -534,7 +594,8 @@ func _rebuild_outposts() -> void:
 			_add_box(root, Vector3(0.28, 1.45, 0.28), Vector3(side * 0.55, 0.72, -0.48), wall_color)
 			_add_cone(root, 0.22, 0.36, Vector3(side * 0.55, 1.62, -0.48), "#504b46")
 		_add_box(root, Vector3(0.07, 1.1, 0.07), Vector3(0.25, 1.45, 0.3), "#5e4935")
-		_add_box(root, Vector3(0.55, 0.38, 0.06), Vector3(0.52, 1.63, 0.3), banner_color)
+		var outpost_flag := _add_box(root, Vector3(0.55, 0.38, 0.06), Vector3(0.52, 1.63, 0.3), banner_color)
+		animated_flags.append(outpost_flag)
 		# Each campaign region has a distinct enemy doctrine silhouette, so scouting identifies the threat visually.
 		match posmod(i, 3):
 			0:
@@ -613,7 +674,7 @@ func _rebuild_guards() -> void:
 		add_child(guard)
 		guard_nodes.append(guard)
 		var guard_rest_position := guard.position
-		var guard_idle := create_tween().set_loops(2)
+		var guard_idle := create_tween().set_loops()
 		guard_idle.tween_property(guard, "position", guard_rest_position + Vector3(0, 0.07, 0), 0.55).set_delay(float(i % 3) * 0.1).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		guard_idle.tween_property(guard, "position", guard_rest_position, 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
@@ -675,7 +736,23 @@ func _add_capsule(parent: Node3D, pos: Vector3, color_value: String) -> MeshInst
 	return mesh_instance
 
 func _material(color_value: String) -> StandardMaterial3D:
+	if material_cache.has(color_value):
+		return material_cache[color_value] as StandardMaterial3D
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color(color_value)
-	material.roughness = 0.86
+	material.albedo_texture = surface_noise
+	material.uv1_scale = Vector3(2.0, 2.0, 2.0)
+	material.roughness = 0.78
+	var base_color := Color(color_value)
+	# Reflective accents are polished; stone, earth and cloth remain matte.
+	if base_color.r > 0.68 and base_color.g > 0.42 and base_color.b < 0.72:
+		material.metallic = 0.22
+		material.roughness = 0.48
+	elif base_color.r > 0.55 and base_color.g > 0.58 and base_color.b > 0.58:
+		material.metallic = 0.12
+		material.roughness = 0.62
+	if color_value in ["#e7ad52", "#e4c77f", "#f1d38a", "#d7b354"]:
+		material.emission_enabled = true
+		material.emission = base_color * 0.24
+	material_cache[color_value] = material
 	return material
