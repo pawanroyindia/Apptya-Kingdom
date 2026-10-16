@@ -1812,18 +1812,21 @@ func _normalize_save_data() -> void:
 			region_scouted[i] = 0
 	# Keep all persisted timers tied to a valid operation and supported building.
 	var now := int(Time.get_unix_time_from_system())
-	if keep_upgrade_finish_unix < now or keep_level >= 10:
+	if keep_upgrade_finish_unix <= 0 or keep_level >= 10:
 		keep_upgrade_finish_unix = 0
-	if building_upgrade_finish_unix < now or building_upgrade_tile < 0 or building_upgrade_tile >= tiles.size():
+	if building_upgrade_finish_unix <= 0 or building_upgrade_tile < 0 or building_upgrade_tile >= tiles.size():
 		building_upgrade_finish_unix = 0
 		building_upgrade_tile = -1
 	elif tiles[building_upgrade_tile] not in ["Farm", "Mine", "Barracks", "Lumber Camp", "Quarry", "Academy"] or tile_levels[building_upgrade_tile] >= 5:
 		building_upgrade_finish_unix = 0
 		building_upgrade_tile = -1
-	if troop_training_finish_unix < now or queued_troop_count <= 0:
+	if queued_troop_count <= 0:
 		troop_training_finish_unix = 0
-		if queued_troop_count <= 0:
-			queued_troop_type = ""
+		queued_troop_type = ""
+	elif troop_training_finish_unix <= 0:
+		queued_troop_type = ""
+		queued_troop_count = 0
+		troop_training_finish_unix = 0
 
 func _apply_offline_production(refresh_after: bool) -> void:
 	var now := int(Time.get_unix_time_from_system())
