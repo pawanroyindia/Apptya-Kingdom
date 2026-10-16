@@ -292,12 +292,27 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 
 func play_attack(target_index: int, victory: bool) -> void:
 	var safe_target := clampi(target_index, 0, 2)
-	var positions := [Vector3(-8.0, 1.1, -9.0), Vector3(0.0, 1.1, -11.0), Vector3(8.0, 1.1, -9.0)]
+	var positions := [Vector3(-8.0, 0.1, -9.0), Vector3(0.0, 0.1, -11.0), Vector3(8.0, 0.1, -9.0)]
+	var target_position: Vector3 = positions[safe_target]
+	var squad_size := mini(5, maxi(3, current_guards))
+	for i in range(squad_size):
+		var soldier := Node3D.new()
+		var lane := float(i % 3) - 1.0
+		soldier.position = Vector3(lane * 0.48, 0.08, 1.0 + float(int(i / 3)) * 0.45)
+		_add_capsule(soldier, Vector3(0, 0.55, 0), "#526e9c")
+		_add_sphere(soldier, Vector3(0, 1.2, 0), Vector3(0.22, 0.22, 0.22), "#d9b18c")
+		_add_box(soldier, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
+		add_child(soldier)
+		var destination := target_position + Vector3(lane * 0.55, 0.0, 1.1 + float(int(i / 3)) * 0.4)
+		var march := create_tween()
+		march.tween_property(soldier, "position", destination, 0.68 + float(i) * 0.055).set_delay(float(i) * 0.045).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+		march.tween_callback(soldier.queue_free)
+
 	var projectile := _add_sphere(self, Vector3(0, 1.25, 1.0), Vector3(0.25, 0.25, 0.25), "#f1d38a")
 	var tween := create_tween()
-	tween.tween_property(projectile, "position", positions[safe_target], 0.72).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.tween_property(projectile, "position", target_position + Vector3(0, 1.2, 0), 0.72).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	tween.tween_callback(projectile.queue_free)
-	tween.tween_callback(_show_battle_flash.bind(positions[safe_target], victory))
+	tween.tween_callback(_show_battle_flash.bind(target_position + Vector3(0, 1.0, 0), victory))
 
 func _show_battle_flash(position_value: Vector3, victory: bool) -> void:
 	var flash_color := "#e4d17e" if victory else "#b53d36"
