@@ -110,13 +110,32 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 	for key in ["gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry", "keep_level", "hero_level", "tiles", "tile_levels", "outpost_defeated", "region_scouted"]:
 		if not snapshot.has(key):
 			return false
-	for key in ["gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry"]:
+	for key in ["gold", "wood", "food", "stone"]:
 		if int(snapshot[key]) < 0 or int(snapshot[key]) > 2000000000:
+			return false
+	for key in ["guards", "infantry", "archers", "cavalry"]:
+		if int(snapshot[key]) < 0 or int(snapshot[key]) > 100000:
 			return false
 	if int(snapshot["guards"]) != int(snapshot["infantry"]) + int(snapshot["archers"]) + int(snapshot["cavalry"]):
 		return false
 	if int(snapshot["keep_level"]) < 1 or int(snapshot["keep_level"]) > 10 or int(snapshot["hero_level"]) < 1 or int(snapshot["hero_level"]) > 20:
 		return false
+	if snapshot.has("hero_xp") and (int(snapshot["hero_xp"]) < 0 or int(snapshot["hero_xp"]) > 1000000):
+		return false
+	if snapshot.has("hero_skill_level") and (int(snapshot["hero_skill_level"]) < 1 or int(snapshot["hero_skill_level"]) > 5):
+		return false
+	if snapshot.has("enemy_level") and (int(snapshot["enemy_level"]) < 1 or int(snapshot["enemy_level"]) > 100000):
+		return false
+	if snapshot.has("queued_troop_count"):
+		var queued_count := int(snapshot["queued_troop_count"])
+		var queued_type := str(snapshot.get("queued_troop_type", ""))
+		if queued_count < 0 or queued_count > 5 or queued_type not in ["", "infantry", "archer", "cavalry"]:
+			return false
+		if (queued_count == 0) != (queued_type == ""):
+			return false
+	for key in ["combat_research", "economy_research", "scouting_research"]:
+		if snapshot.has(key) and (int(snapshot[key]) < 0 or int(snapshot[key]) > 5):
+			return false
 	if not (snapshot["tiles"] is Array) or snapshot["tiles"].size() != 9:
 		return false
 	if not (snapshot["tile_levels"] is Array) or snapshot["tile_levels"].size() != 9:
@@ -129,7 +148,15 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 	for tile in snapshot["tiles"]:
 		if str(tile) not in valid_buildings:
 			return false
-	if snapshot["tiles"].count("Keep") != 1 or snapshot["tiles"].count("Academy") > 1:
+	if snapshot["tiles"].count("Keep") != 1 or snapshot["tiles"].count("Academy") > 1 or str(snapshot["tiles"][4]) != "Keep":
+		return false
+	var barracks_capacity := 0
+	for i in range(9):
+		if str(snapshot["tiles"][i]) == "Barracks":
+			barracks_capacity = maxi(barracks_capacity, int(snapshot["tile_levels"][i]) * 5)
+	if int(snapshot["guards"]) > barracks_capacity:
+		return false
+	if snapshot.has("queued_troop_count") and int(snapshot["guards"]) + int(snapshot["queued_troop_count"]) > barracks_capacity:
 		return false
 	for level in snapshot["tile_levels"]:
 		if int(level) < 1 or int(level) > 5:
