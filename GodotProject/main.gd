@@ -622,9 +622,10 @@ func _scout() -> void:
 		status_message = "This outpost is already captured. Select another region to explore."
 	else:
 		guards -= 1
-		var reward := randi_range(35, 90) * keep_level
+		var reward := randi_range(35, 90) * keep_level + scouting_research * 10
 		gold += reward
-		wood += randi_range(5, 18)
+		wood += randi_range(5, 18) + scouting_research * 3
+		day = mini(day + 1, 1000000)
 		if region_scouted[selected_outpost] == 0:
 			region_scouted[selected_outpost] = 1
 			status_message = "Scouting revealed Threat %d at Outpost %d. Found %d gold and supplies." % [outpost_threat[selected_outpost], selected_outpost + 1, reward]
@@ -646,11 +647,13 @@ func _attack_outpost() -> void:
 		_refresh_ui()
 		return
 	guards -= required_guards
-	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 - (0 if region_scouted[selected_outpost] == 1 else 15), 10, 90)
+	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 + combat_research * 5 + practice_drills - (0 if region_scouted[selected_outpost] == 1 else 15), 10, 90)
 	var won_attack := randi_range(1, 100) <= chance
 	if is_instance_valid(world_view):
 		world_view.play_attack(selected_outpost, won_attack)
+	day = mini(day + 1, 1000000)
 	if won_attack:
+		victories = mini(victories + 1, 1000000)
 		outpost_defeated[selected_outpost] = 1
 		var reward := 100 * threat + keep_level * 25
 		gold += reward
@@ -662,6 +665,7 @@ func _attack_outpost() -> void:
 		if tutorial_step == 3:
 			_advance_tutorial(4)
 	else:
+		defeats = mini(defeats + 1, 1000000)
 		status_message = "Attack failed at Outpost %d. Your guards lost the battle." % (selected_outpost + 1)
 		if randi_range(0, 1) == 1:
 			guards = max(0, guards - 1)
@@ -926,7 +930,7 @@ func _normalize_save_data() -> void:
 	selected_outpost = clampi(selected_outpost, 0, outpost_threat.size() - 1)
 	tutorial_step = clampi(tutorial_step, 0, 4)
 	if tiles.size() != 9:
-		tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
+		tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
 	var valid_buildings := ["Empty", "Farm", "Mine", "Keep", "Barracks", "Lumber Camp", "Quarry"]
 	for i in range(tiles.size()):
 		if not valid_buildings.has(tiles[i]):
