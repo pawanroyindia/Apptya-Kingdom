@@ -1127,7 +1127,6 @@ func _normalize_save_data() -> void:
 		queued_troop_type = ""
 		queued_troop_count = 0
 		troop_training_finish_unix = 0
-	guards = infantry + archers + cavalry
 	keep_level = clampi(keep_level, 1, 10)
 	selected_tile = clampi(selected_tile, 0, tiles.size() - 1)
 	selected_outpost = clampi(selected_outpost, 0, outpost_threat.size() - 1)
@@ -1139,7 +1138,30 @@ func _normalize_save_data() -> void:
 		if not valid_buildings.has(tiles[i]):
 			tiles[i] = "Empty"
 		tile_levels[i] = clampi(tile_levels[i], 1, 5)
+	# The Keep is fixed to the centre tile; never restore duplicate Keeps from malformed saves.
+	for i in range(tiles.size()):
+		if i != 4 and tiles[i] == "Keep":
+			tiles[i] = "Empty"
 	tiles[4] = "Keep"
+	# Keep the saved army within Barracks capacity, even if a save was edited or partially corrupted.
+	var barracks_capacity := 0
+	for i in range(tiles.size()):
+		if tiles[i] == "Barracks":
+			barracks_capacity = maxi(barracks_capacity, tile_levels[i] * 5)
+	var excess_troops := maxi(0, infantry + archers + cavalry - barracks_capacity)
+	var remove_count := mini(excess_troops, cavalry)
+	cavalry -= remove_count
+	excess_troops -= remove_count
+	remove_count = mini(excess_troops, archers)
+	archers -= remove_count
+	excess_troops -= remove_count
+	infantry = maxi(0, infantry - excess_troops)
+	guards = infantry + archers + cavalry
+	# Queued training reserves capacity; trim or cancel queues that would overflow it.
+	queued_troop_count = mini(queued_troop_count, maxi(0, barracks_capacity - guards))
+	if queued_troop_count == 0:
+		queued_troop_type = ""
+		troop_training_finish_unix = 0
 	for i in range(outpost_defeated.size()):
 		outpost_defeated[i] = 1 if outpost_defeated[i] == 1 else 0
 		region_scouted[i] = 1 if region_scouted[i] == 1 else 0
