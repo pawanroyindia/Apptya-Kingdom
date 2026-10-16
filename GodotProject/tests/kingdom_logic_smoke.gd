@@ -348,6 +348,25 @@ func _run_tests() -> void:
 	if not game.quest_conqueror_claimed:
 		_fail("Frontier Conqueror quest did not unlock after three outposts were captured.")
 		return
+	var reward_today := int(floor(float(Time.get_unix_time_from_system()) / 86400.0))
+	game.daily_reward_claim_day = reward_today - 1
+	game.daily_reward_streak = 2
+	var daily_gold_before: int = game.gold
+	var daily_food_before: int = game.food
+	var daily_wood_before: int = game.wood
+	var daily_stone_before: int = game.stone
+	game._claim_daily_reward()
+	if game.daily_reward_claim_day != reward_today or game.daily_reward_streak != 3:
+		_fail("Daily reward did not advance a consecutive three-day streak.")
+		return
+	if game.gold != daily_gold_before + 175 or game.food != daily_food_before + 95 or game.wood != daily_wood_before + 55 or game.stone != daily_stone_before + 25:
+		_fail("Daily reward did not grant the expected streak-scaled resources.")
+		return
+	var claimed_daily_gold: int = game.gold
+	game._claim_daily_reward()
+	if game.gold != claimed_daily_gold or not game.status_message.contains("already claimed"):
+		_fail("Daily reward could be claimed more than once in the same day.")
+		return
 	for i in range(9):
 		game.outpost_defeated[i] = 1
 	game.outpost_defeated[9] = 0
@@ -433,6 +452,8 @@ func _run_tests() -> void:
 	var saved_graphics_quality: String = game.graphics_quality
 	var saved_sound_enabled: bool = game.sound_enabled
 	var saved_day: int = game.day
+	var saved_daily_claim_day: int = game.daily_reward_claim_day
+	var saved_daily_streak: int = game.daily_reward_streak
 	var saved_enemy_level: int = game.enemy_level
 	var saved_explored_regions: int = game.explored_regions
 	var saved_research: Array = [game.combat_research, game.economy_research, game.scouting_research, game.practice_drills]
@@ -455,6 +476,8 @@ func _run_tests() -> void:
 	game.tiles[0] = "Empty"
 	game.tile_levels[0] = 1
 	game.keep_level = 1
+	game.daily_reward_claim_day = -1
+	game.daily_reward_streak = 0
 	game.graphics_quality = "Low" if saved_graphics_quality != "Low" else "High"
 	game.sound_enabled = not saved_sound_enabled
 	game.outpost_defeated[0] = 0
@@ -489,6 +512,9 @@ func _run_tests() -> void:
 		return
 	if game.day != saved_day or game.enemy_level != saved_enemy_level or game.explored_regions != saved_explored_regions:
 		_fail("Kingdom save/load did not restore campaign day, enemy level and exploration progress.")
+		return
+	if game.daily_reward_claim_day != saved_daily_claim_day or game.daily_reward_streak != saved_daily_streak:
+		_fail("Kingdom save/load did not restore daily reward streak progress.")
 		return
 	if [game.combat_research, game.economy_research, game.scouting_research, game.practice_drills] != saved_research:
 		_fail("Kingdom save/load did not restore research and practice progress.")
