@@ -24,6 +24,8 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Sequential campaign progression: each outpost unlocks only after the previous outpost is captured; locked attacks do not consume troops, and the HUD reports progress through the final campaign-complete state.
 - [x] Save normalization removes duplicate Keeps and enforces Barracks troop capacity, including queued-training capacity.
 - [x] Visible construction/outpost reveal effects, water ripples, exploration scout journey and marching guard squad during attacks.
+- [x] Academy can be upgraded through the normal timed building system; duplicate Academies are rejected and sanitized from malformed saves.
+- [x] Sequential campaign gates now apply to scouting as well as attacks; repeated scouting cannot farm rewards or consume guards.
 
 ## Verification
 - [x] Headless Godot editor parsing, project startup, economy, training, research, exploration, save recovery and touch tests passed ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848762730)).
@@ -34,6 +36,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Verify Academy construction, 3D model parsing, tile inspection, and level-2 research discount ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853359637)).
 - [x] Verify Academy level-5 research discount cap at 25% ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853406776)).
 - [x] Verify Academy construction, 3D model structure, tile inspection, level-2 discount, and the level-5 25% discount cap ([successful integration run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853475729)).
+- [x] Verify Academy timed upgrade costs/completion, duplicate-Academy prevention/save normalization, locked-outpost scouting, and duplicate-scout reward prevention ([latest successful Godot source check](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38854283305)).
 - [x] Recheck hero level-up feedback, 3D hero model/label synchronization, and the updated test suite ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
 - [x] Verify a saved Low-quality preset is applied when the scene starts, including render scale and shadow state ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
 - [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity and signature checks align. Actual export remains untested until approved.
