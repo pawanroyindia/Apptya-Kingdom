@@ -34,6 +34,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Sequential campaign gates now apply to scouting as well as attacks; repeated scouting cannot farm rewards or consume guards.
 
 ## Verification
+- [ ] Confirm a successful source-check workflow after the latest tactical combat, enemy doctrine visuals, LAN snapshot validation, and save-normalization changes. Do not treat these newest changes as validated until that run passes.
 - [x] Headless Godot editor parsing, project startup, economy, training, research, exploration, save recovery and touch tests passed ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848762730)).
 - [x] The central 3D tile-picking test has passed in a prior workflow run.
 - [x] Re-run the expanded gameplay/save/touch/troop/research/quest/hero test suite after the campaign and save-normalization changes ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38852128706)).
