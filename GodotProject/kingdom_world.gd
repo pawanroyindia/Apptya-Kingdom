@@ -191,11 +191,11 @@ func _build_terrain() -> void:
 		_add_box(self, Vector3(0.055, 0.025, 3.45), Vector3(x + 1.72, 0.01, z), "#b6a77a")
 		_add_box(self, Vector3(3.45, 0.025, 0.055), Vector3(x, 0.01, z + 1.72), "#b6a77a")
 		var tile_body := StaticBody3D.new()
-		tile_body.position = Vector3(x, 1.55, z)
+		tile_body.position = Vector3(x, 0.6, z)
 		tile_body.set_meta("tile_index", i)
 		var tile_shape := CollisionShape3D.new()
 		var box_shape := BoxShape3D.new()
-		box_shape.size = Vector3(3.35, 3.1, 3.35)
+		box_shape.size = Vector3(3.35, 1.2, 3.35)
 		tile_shape.shape = box_shape
 		tile_body.add_child(tile_shape)
 		add_child(tile_body)
