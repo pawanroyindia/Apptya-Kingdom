@@ -32,6 +32,7 @@ var outpost_label: Label
 var achievements_label: Label
 var tick_timer: Timer
 var upgrade_timer: Timer
+var world_view: Node3D
 
 func _ready() -> void:
 	_load_game()
@@ -97,6 +98,19 @@ func _build_ui() -> void:
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.add_theme_color_override("font_color", Color("#c3d2c7"))
 	column.add_child(subtitle)
+
+	var world_container := SubViewportContainer.new()
+	world_container.custom_minimum_size = Vector2(0, 260)
+	world_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	world_container.stretch = true
+	column.add_child(world_container)
+	var world_viewport := SubViewport.new()
+	world_viewport.size = Vector2i(640, 360)
+	world_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	world_viewport.gui_disable_input = true
+	world_container.add_child(world_viewport)
+	world_view = load("res://kingdom_world.tscn").instantiate() as Node3D
+	world_viewport.add_child(world_view)
 
 	var resource_panel := PanelContainer.new()
 	resource_panel.add_theme_stylebox_override("panel", _panel_style("#243a30"))
@@ -276,6 +290,8 @@ func _refresh_ui() -> void:
 		outpost_label.text = _get_outpost_description()
 		tutorial_label.text = _get_tutorial_text()
 		achievements_label.text = "Achievements: %d/7 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
+		if is_instance_valid(world_view):
+			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, outpost_defeated, selected_outpost)
 		status_label.text = status_message
 
 func _select_tile(index: int) -> void:
