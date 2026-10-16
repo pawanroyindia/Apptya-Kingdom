@@ -54,6 +54,11 @@ func _run_tests() -> void:
 	if game.gold != 300 or game.tiles.size() != 9:
 		_fail("Initial kingdom state is incorrect.")
 		return
+	var wood_before_gather: int = game.wood
+	game._gather_resource("wood", 25)
+	if game.wood != wood_before_gather + 25:
+		_fail("Direct resource gathering did not award the requested wood.")
+		return
 
 	game._select_tile(0)
 	game._build_farm()
@@ -127,6 +132,30 @@ func _run_tests() -> void:
 	game._finish_keep_upgrade()
 	if game.keep_level != original_keep_level + 1 or not game.achievements.has("keep_upgrade"):
 		_fail("Keep upgrade completion or achievement failed.")
+		return
+
+	# Barracks upgrades increase capacity enough to train ranged and mounted troops.
+	game._select_tile(7)
+	game._upgrade_selected_building()
+	if game.building_upgrade_tile != 7 or game.building_upgrade_finish_unix <= int(Time.get_unix_time_from_system()):
+		_fail("Barracks upgrade did not start.")
+		return
+	game.building_upgrade_finish_unix = int(Time.get_unix_time_from_system()) - 1
+	game._finish_building_upgrade()
+	game._queue_archers()
+	if game.queued_troop_type != "archer" or game.queued_troop_count != 1:
+		_fail("Archer training did not enter the queue.")
+		return
+	game.troop_training_finish_unix = int(Time.get_unix_time_from_system()) - 1
+	game._finish_troop_training()
+	game._queue_cavalry()
+	if game.queued_troop_type != "cavalry" or game.queued_troop_count != 1:
+		_fail("Cavalry training did not enter the queue.")
+		return
+	game.troop_training_finish_unix = int(Time.get_unix_time_from_system()) - 1
+	game._finish_troop_training()
+	if game.archers != 1 or game.cavalry != 1 or game.guards != 7:
+		_fail("Archer/cavalry training completion did not update troop composition.")
 		return
 
 	# Research levels consume the correct resources and persist their bonuses.
