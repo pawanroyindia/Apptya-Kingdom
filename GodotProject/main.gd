@@ -607,6 +607,10 @@ func _setup_audio() -> void:
 		music_stream = load(production_music_path) as AudioStreamWAV
 	else:
 		music_stream = _make_ambient_music()
+	if music_stream and not music_stream.data.is_empty():
+		music_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		music_stream.loop_begin = 0
+		music_stream.loop_end = music_stream.data.size() / (4 if music_stream.stereo else 2)
 	music_player.stream = music_stream
 	if music_enabled:
 		music_player.play()
