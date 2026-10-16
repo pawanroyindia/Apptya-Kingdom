@@ -545,7 +545,7 @@ func _upgrade_selected_building() -> void:
 		return
 	var building := tiles[selected_tile]
 	if building != "Farm" and building != "Mine" and building != "Barracks" and building != "Lumber Camp" and building != "Quarry":
-		status_message = "Select a Farm, Mine, or Barracks to upgrade it."
+		status_message = "Select a Farm, Mine, Barracks, Lumber Camp, or Quarry to upgrade it."
 		_refresh_ui()
 		return
 	var level := tile_levels[selected_tile]
@@ -799,11 +799,10 @@ func _on_production_tick() -> void:
 			"Keep":
 				gold += keep_level
 				wood += 1
-		if economy_research > 0:
-			wood += economy_research
-			food += economy_research
-			stone += economy_research
-			gold += economy_research
+	if economy_research > 0:
+		wood += economy_research
+		food += economy_research
+		stone += economy_research
 	_refresh_ui()
 
 func _save_game() -> void:
@@ -954,16 +953,20 @@ func _apply_offline_production(refresh_after: bool) -> void:
 	for i in range(tiles.size()):
 		match tiles[i]:
 			"Farm":
-				food += (2 * keep_level * tile_levels[i] + economy_research) * ticks
+				food += 2 * keep_level * tile_levels[i] * ticks
 			"Mine":
-				gold += (2 * keep_level * tile_levels[i] + economy_research) * ticks
+				gold += 2 * keep_level * tile_levels[i] * ticks
 			"Lumber Camp":
-				wood += (2 * keep_level * tile_levels[i] + economy_research) * ticks
+				wood += 2 * keep_level * tile_levels[i] * ticks
 			"Quarry":
-				stone += (2 * keep_level * tile_levels[i] + economy_research) * ticks
+				stone += 2 * keep_level * tile_levels[i] * ticks
 			"Keep":
-				gold += (keep_level + economy_research) * ticks
-				wood += (1 + economy_research) * ticks
+				gold += keep_level * ticks
+				wood += ticks
+	if economy_research > 0:
+		wood += economy_research * ticks
+		food += economy_research * ticks
+		stone += economy_research * ticks
 	if elapsed >= 10:
 		status_message = "Welcome back. Offline production was capped at 8 hours."
 	_persist_game()
