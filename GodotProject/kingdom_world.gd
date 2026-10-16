@@ -141,9 +141,13 @@ func _build_hero_model() -> void:
 	if ResourceLoader.exists(production_path):
 		var packed_model := load(production_path) as PackedScene
 		if packed_model:
-			hero_model = packed_model.instantiate() as Node3D
+			hero_model = Node3D.new()
 			hero_model.name = "RoyalCaptain"
 			hero_model.position = Vector3(-1.55, 0.08, 1.8)
+			var hero_visual := packed_model.instantiate() as Node3D
+			hero_visual.name = "RoyalCaptainVisual"
+			hero_visual.rotation.y = PI
+			hero_model.add_child(hero_visual)
 			var imported_player := _find_animation_player(hero_model)
 			hero_rig_data = {"animation_player": imported_player, "royal": true, "combat": false, "offset": 0.0, "speed": 3.2}
 			hero_level_label = Label3D.new()
@@ -198,6 +202,7 @@ func _create_articulated_character(uniform_color: String, armor_color: String, c
 		if packed_model:
 			var imported_model := packed_model.instantiate() as Node3D
 			imported_model.scale = Vector3.ONE * size_scale
+			imported_model.rotation.y = PI
 			var imported_player := _find_animation_player(imported_model)
 			imported_model.set_meta("rig_data", {"animation_player": imported_player, "royal": royal, "combat": false, "walk": 0.42, "speed": 5.2, "offset": randf_range(0.0, TAU), "combat_elapsed": 0.0})
 			_play_animation_clip(imported_player, "Idle" if royal else "Walk")
@@ -555,8 +560,12 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 	if not imported_path.is_empty() and ResourceLoader.exists(imported_path):
 		var packed_building := load(imported_path) as PackedScene
 		if packed_building:
-			var imported_root := packed_building.instantiate() as Node3D
+			var imported_root := Node3D.new()
+			imported_root.name = "Production_" + kind.replace(" ", "")
 			imported_root.position = position_value
+			var imported_visual := packed_building.instantiate() as Node3D
+			imported_visual.rotation.y = PI
+			imported_root.add_child(imported_visual)
 			var marker := Label3D.new()
 			marker.text = "LV %d" % level
 			marker.position = Vector3(0, 3.0 if kind == "Keep" or is_keep else 1.9, 0)
