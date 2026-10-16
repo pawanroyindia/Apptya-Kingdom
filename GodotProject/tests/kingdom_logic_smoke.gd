@@ -54,6 +54,14 @@ func _run_tests() -> void:
 	if game.gold != 300 or game.tiles.size() != 9:
 		_fail("Initial kingdom state is incorrect.")
 		return
+	if game.outpost_threat.size() != 5 or game.world_view.current_outposts.size() != 5:
+		_fail("Five-outpost campaign map was not initialized.")
+		return
+	game._select_outpost(4)
+	if game.selected_outpost != 4 or game.world_view.selected_outpost != 4:
+		_fail("Fifth outpost could not be selected in the campaign UI/world.")
+		return
+	game._select_outpost(0)
 	var wood_before_gather: int = game.wood
 	game._gather_resource("wood", 25)
 	if game.wood != wood_before_gather + 25:
