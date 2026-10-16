@@ -1,11 +1,7 @@
 name: Godot Android APK
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "GodotProject/**"
-      - ".github/workflows/godot-android-apk.yml"
+  # Manual only: do not consume build minutes or create an APK until the user approves.
   workflow_dispatch:
 
 permissions:
