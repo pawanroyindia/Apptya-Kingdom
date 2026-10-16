@@ -32,6 +32,9 @@ var reward_keep_claimed := false
 var quest_builder_claimed := false
 var quest_stronghold_claimed := false
 var quest_conqueror_claimed := false
+var hero_level := 1
+var hero_xp := 0
+var hero_skill_level := 1
 var selected_tile := 4
 var selected_outpost := 0
 var last_saved_unix := 0
@@ -58,6 +61,7 @@ var outpost_label: Label
 var achievements_label: Label
 var campaign_label: Label
 var quest_label: Label
+var hero_label: Label
 var tick_timer: Timer
 var autosave_timer: Timer
 var upgrade_timer: Timer
@@ -311,6 +315,20 @@ func _build_ui() -> void:
 		{"text": "Claim Keep Reward", "action": _claim_reward.bind("keep_builder")}
 	])
 
+	var hero_title := Label.new()
+	hero_title.text = "ROYAL HERO"
+	hero_title.add_theme_font_size_override("font_size", 18)
+	hero_title.add_theme_color_override("font_color", Color("#f1d38a"))
+	column.add_child(hero_title)
+	hero_label = Label.new()
+	hero_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hero_label.add_theme_color_override("font_color", Color("#c3d2c7"))
+	column.add_child(hero_label)
+	_add_button_row(column, [
+		{"text": "Train Hero\n25 gold, 25 food", "action": _train_hero},
+		{"text": "Upgrade Hero Skill\nGold + stone", "action": _upgrade_hero_skill}
+	])
+
 	var quest_title := Label.new()
 	quest_title.text = "QUEST BOARD"
 	quest_title.add_theme_font_size_override("font_size", 18)
@@ -423,6 +441,7 @@ func _refresh_ui() -> void:
 			if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks"]:
 				highest_building_level = maxi(highest_building_level, tile_levels[i])
 		quest_label.text = "1. Builder's Mark: upgrade a building to level 2 (%s)\n2. Royal Stronghold: upgrade Keep to level 3 (%s)\n3. Frontier Conqueror: capture 3 outposts (%d/3)\nRewards are one-time and persist with your save." % ["CLAIMED" if quest_builder_claimed else ("READY" if highest_building_level >= 2 else "LOCKED"), "CLAIMED" if quest_stronghold_claimed else ("READY" if keep_level >= 3 else "LOCKED"), captured_outposts]
+		hero_label.text = "Royal Captain • Level %d/20 • XP %d/%d • Skill %d/5 • Hero power %d" % [hero_level, hero_xp, hero_level * 100, hero_skill_level, _hero_power()]
 		if is_instance_valid(world_view):
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, infantry, archers, cavalry, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 		status_label.text = status_message
@@ -824,6 +843,7 @@ func _scout() -> void:
 		status_message = "This outpost is already captured. Select another region to explore."
 	else:
 		_remove_troops(1)
+		_award_hero_xp(10)
 		var reward := randi_range(35, 90) * keep_level + scouting_research * 10
 		gold += reward
 		wood += randi_range(5, 18) + scouting_research * 3
@@ -859,6 +879,7 @@ func _attack_outpost() -> void:
 		world_view.play_attack(selected_outpost, won_attack)
 	day = mini(day + 1, 1000000)
 	if won_attack:
+		_award_hero_xp(25)
 		victories = mini(victories + 1, 1000000)
 		outpost_defeated[selected_outpost] = 1
 		var reward := 100 * threat + keep_level * 25
@@ -871,6 +892,7 @@ func _attack_outpost() -> void:
 		if tutorial_step == 3:
 			_advance_tutorial(4)
 	else:
+		_award_hero_xp(10)
 		defeats = mini(defeats + 1, 1000000)
 		status_message = "Attack failed at Outpost %d. Your guards lost the battle." % (selected_outpost + 1)
 		if randi_range(0, 1) == 1:
@@ -878,8 +900,54 @@ func _attack_outpost() -> void:
 	_persist_game()
 	_refresh_ui()
 
+func _hero_power() -> int:
+	return hero_level * 5 + hero_skill_level * 3
+
+func _award_hero_xp(amount: int) -> void:
+	if amount <= 0 or hero_level >= 20:
+		return
+	hero_xp += amount
+	while hero_level < 20 and hero_xp >= hero_level * 100:
+		hero_xp -= hero_level * 100
+		hero_level += 1
+		status_message = "Royal Captain reached hero level %d! Army power increased." % hero_level
+	if hero_level >= 20:
+		hero_xp = 0
+
+func _train_hero() -> void:
+	if hero_level >= 20:
+		status_message = "Royal Captain has reached the maximum hero level 20."
+	elif gold < 25 or food < 25:
+		status_message = "Hero training needs 25 gold and 25 food."
+	else:
+		gold -= 25
+		food -= 25
+		_award_hero_xp(25)
+		if hero_level < 20:
+			status_message = "Royal Captain gained 25 XP."
+		_persist_game()
+	_refresh_ui()
+
+func _upgrade_hero_skill() -> void:
+	if hero_skill_level >= 5:
+		status_message = "Royal Captain's skill has reached level 5."
+		_refresh_ui()
+		return
+	var gold_cost := 100 * hero_skill_level
+	var stone_cost := 50 * hero_skill_level
+	if gold < gold_cost or stone < stone_cost:
+		status_message = "Hero skill upgrade needs %d gold and %d stone." % [gold_cost, stone_cost]
+		_refresh_ui()
+		return
+	gold -= gold_cost
+	stone -= stone_cost
+	hero_skill_level += 1
+	status_message = "Royal Captain skill upgraded to level %d. Army power increased." % hero_skill_level
+	_persist_game()
+	_refresh_ui()
+
 func _army_power() -> int:
-	return infantry * (10 + combat_research * 2) + archers * (14 + combat_research * 2) + cavalry * (18 + combat_research * 2) + _get_barracks_level() * 4 + keep_level * 3 + practice_drills
+	return infantry * (10 + combat_research * 2) + archers * (14 + combat_research * 2) + cavalry * (18 + combat_research * 2) + _get_barracks_level() * 4 + keep_level * 3 + practice_drills + _hero_power()
 
 func _enemy_power() -> int:
 	return 10 + enemy_level * 7
@@ -893,6 +961,7 @@ func _attack_enemy_army() -> void:
 	var enemy := _enemy_power()
 	day = mini(day + 1, 1000000)
 	if army >= enemy:
+		_award_hero_xp(40)
 		var lost := mini(guards, maxi(0, int(enemy / 45)))
 		_remove_troops(lost)
 		var wood_reward := 35 + enemy_level * 10
@@ -907,6 +976,7 @@ func _attack_enemy_army() -> void:
 		if tutorial_step == 3:
 			_advance_tutorial(4)
 	else:
+		_award_hero_xp(15)
 		var lost := mini(guards, maxi(1, int(ceil(float(enemy - army) / 18.0))))
 		_remove_troops(lost)
 		var food_lost := mini(food, 15 * lost)
@@ -964,6 +1034,7 @@ func _explore_region() -> void:
 		_refresh_ui()
 		return
 	_remove_troops(1)
+	_award_hero_xp(10)
 	explored_regions = mini(explored_regions + 1, 1000000)
 	day = mini(day + 1, 1000000)
 	var wood_reward := 20 + explored_regions * 5 + scouting_research * 10
@@ -1138,6 +1209,9 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "quest_builder_claimed", quest_builder_claimed)
 	config.set_value("kingdom", "quest_stronghold_claimed", quest_stronghold_claimed)
 	config.set_value("kingdom", "quest_conqueror_claimed", quest_conqueror_claimed)
+	config.set_value("kingdom", "hero_level", hero_level)
+	config.set_value("kingdom", "hero_xp", hero_xp)
+	config.set_value("kingdom", "hero_skill_level", hero_skill_level)
 	config.set_value("kingdom", "guards", guards)
 	config.set_value("kingdom", "infantry", infantry)
 	config.set_value("kingdom", "archers", archers)
@@ -1190,6 +1264,9 @@ func _load_game() -> void:
 	quest_builder_claimed = bool(config.get_value("kingdom", "quest_builder_claimed", quest_builder_claimed))
 	quest_stronghold_claimed = bool(config.get_value("kingdom", "quest_stronghold_claimed", quest_stronghold_claimed))
 	quest_conqueror_claimed = bool(config.get_value("kingdom", "quest_conqueror_claimed", quest_conqueror_claimed))
+	hero_level = int(config.get_value("kingdom", "hero_level", hero_level))
+	hero_xp = int(config.get_value("kingdom", "hero_xp", hero_xp))
+	hero_skill_level = int(config.get_value("kingdom", "hero_skill_level", hero_skill_level))
 	guards = int(config.get_value("kingdom", "guards", guards))
 	infantry = int(config.get_value("kingdom", "infantry", guards))
 	archers = int(config.get_value("kingdom", "archers", archers))
@@ -1241,6 +1318,14 @@ func _normalize_save_data() -> void:
 	stone = maxi(stone, 0)
 	if graphics_quality not in ["Low", "Balanced", "High"]:
 		graphics_quality = "Balanced"
+	hero_level = clampi(hero_level, 1, 20)
+	hero_skill_level = clampi(hero_skill_level, 1, 5)
+	hero_xp = maxi(hero_xp, 0)
+	while hero_level < 20 and hero_xp >= hero_level * 100:
+		hero_xp -= hero_level * 100
+		hero_level += 1
+	if hero_level >= 20:
+		hero_xp = 0
 	day = clampi(day, 1, 1000000)
 	enemy_level = clampi(enemy_level, 1, 100000)
 	explored_regions = clampi(explored_regions, 0, 1000000)
