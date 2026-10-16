@@ -360,6 +360,7 @@ func _build_farm() -> void:
 	_award_achievement("farm", "First Farm", 20)
 	if tutorial_step == 0:
 		_advance_tutorial(1)
+	_persist_game()
 	_refresh_ui()
 
 func _build_mine() -> void:
@@ -372,6 +373,7 @@ func _build_mine() -> void:
 	_award_achievement("mine", "First Mine", 20)
 	if tutorial_step == 1:
 		_advance_tutorial(2)
+	_persist_game()
 	_refresh_ui()
 
 func _build_barracks() -> void:
@@ -381,6 +383,7 @@ func _build_barracks() -> void:
 	gold -= 80
 	wood -= 30
 	status_message = "Barracks built. Train guards to protect your realm."
+	_persist_game()
 	_refresh_ui()
 
 func _can_build(building: String, gold_cost: int, wood_cost: int) -> bool:
@@ -513,6 +516,7 @@ func _train_guard() -> void:
 			_award_achievement("five_guards", "Five Guards", 35)
 		if tutorial_step == 2:
 			_advance_tutorial(3)
+		_persist_game()
 	_refresh_ui()
 
 func _scout() -> void:
@@ -531,6 +535,7 @@ func _scout() -> void:
 		else:
 			status_message = "The region is already mapped. Scouting party returned with %d gold and supplies." % reward
 		_award_achievement("scout", "First Scout", 25)
+		_persist_game()
 	_refresh_ui()
 
 func _attack_outpost() -> void:
@@ -564,6 +569,7 @@ func _attack_outpost() -> void:
 		status_message = "Attack failed at Outpost %d. Your guards lost the battle." % (selected_outpost + 1)
 		if randi_range(0, 1) == 1:
 			guards = max(0, guards - 1)
+	_persist_game()
 	_refresh_ui()
 
 func _all_outposts_captured() -> bool:
