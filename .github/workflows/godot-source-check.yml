@@ -93,3 +93,7 @@ jobs:
           cat /tmp/lan-host.log
           grep -q "LAN_CLIENT_PASS" /tmp/lan-client.log
           grep -q "LAN_HOST_PASS" /tmp/lan-host.log
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|APPTYA_LAN_(HOST|CLIENT)_FAIL" /tmp/lan-client.log /tmp/lan-host.log; then
+            echo "LAN host/client probe reported a script error or failure marker."
+            exit 1
+          fi
