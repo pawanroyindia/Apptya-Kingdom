@@ -83,7 +83,7 @@ func _run_tests() -> void:
 	if not game.sound_enabled or game.settings_buttons[2].text != "Sound: ON":
 		_fail("Sound toggle did not re-enable effects or update its button.")
 		return
-	var music_seconds := game.music_stream.get_length()
+	var music_seconds: float = game.music_stream.get_length()
 	if game.music_stream.data.is_empty() or game.music_stream.loop_mode != AudioStreamWAV.LOOP_FORWARD or game.music_stream.loop_end <= 0 or music_seconds < 30.0 or music_seconds > 40.0:
 		_fail("The original score did not initialize as a valid 30–40 second looping WAV stream. Length=%s, loop_end=%s, rate=%s, stereo=%s" % [music_seconds, game.music_stream.loop_end, game.music_stream.mix_rate, game.music_stream.stereo])
 		return
