@@ -115,6 +115,9 @@ func _run_tests() -> void:
 	if refreshed_mesh_count > stable_mesh_count + 10:
 		_fail("Repeated UI refreshes caused procedural world node growth.")
 		return
+	if refreshed_mesh_count != stable_mesh_count:
+		_fail("Repeated UI refreshes changed the stable 3D mesh count.")
+		return
 	var wood_before_gather: int = game.wood
 	game._gather_resource("wood", 25)
 	if game.wood != wood_before_gather + 25:
