@@ -88,23 +88,34 @@ func _receive_snapshot(snapshot: Dictionary) -> void:
 	game_root._apply_multiplayer_snapshot(snapshot)
 
 func _is_allowed_action(action: String, payload: Dictionary) -> bool:
+	# All normal UI requests include the client's current selection. Validate it
+	# before _apply_network_action can mutate shared selection state.
+	if not payload.has("tile") or not payload.has("outpost"):
+		return false
+	if not (payload["tile"] is int) or not (payload["outpost"] is int):
+		return false
+	if int(payload["tile"]) < 0 or int(payload["tile"]) >= 9:
+		return false
+	if int(payload["outpost"]) < 0 or int(payload["outpost"]) >= 10:
+		return false
+
 	match action:
 		"gather":
-			return str(payload.get("resource", "")) in ["wood", "food", "stone", "gold"] and int(payload.get("amount", 0)) in [15, 20, 25, 30]
+			return payload.get("resource", null) is String and payload.get("resource", "") in ["wood", "food", "stone", "gold"] and payload.get("amount", null) is int and int(payload.get("amount", 0)) in [15, 20, 25, 30]
 		"set_stance":
-			return str(payload.get("stance", "")) in ["Balanced", "Aggressive", "Defensive"]
+			return payload.get("stance", null) is String and payload.get("stance", "") in ["Balanced", "Aggressive", "Defensive"]
+		"claim_reward":
+			return payload.get("reward_id", null) is String and payload.get("reward_id", "") in ["first_victory", "explorer", "keep_builder"]
+		"claim_quest":
+			return payload.get("quest_id", null) is String and payload.get("quest_id", "") in ["builder", "stronghold", "conqueror"]
+		"research":
+			return payload.get("type", null) is String and payload.get("type", "") in ["combat", "economy", "scouting"]
+		"select_tile":
+			return true
+		"select_outpost":
+			return true
 		"build_farm", "build_mine", "build_lumber_camp", "build_quarry", "build_academy", "build_barracks", "upgrade_keep", "collect", "upgrade_building", "train_infantry", "train_archers", "train_cavalry", "scout", "attack", "explore", "practice", "train_hero", "upgrade_hero_skill", "claim_daily", "army_battle":
 			return true
-		"claim_reward":
-			return str(payload.get("reward_id", "")) in ["first_victory", "explorer", "keep_builder"]
-		"claim_quest":
-			return str(payload.get("quest_id", "")) in ["builder", "stronghold", "conqueror"]
-		"research":
-			return str(payload.get("type", "")) in ["combat", "economy", "scouting"]
-		"select_tile":
-			return int(payload.get("tile", -1)) >= 0 and int(payload.get("tile", -1)) < 9
-		"select_outpost":
-			return int(payload.get("outpost", -1)) >= 0 and int(payload.get("outpost", -1)) < 10
 		_:
 			return false
 
