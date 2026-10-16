@@ -556,7 +556,7 @@ func _attack_outpost() -> void:
 		food += 20 * threat
 		status_message = "Victory at Outpost %d! Reward: %d gold and %d food." % [selected_outpost + 1, reward, 20 * threat]
 		_award_achievement("outpost", "First Outpost", 50, 10)
-		if outpost_defeated.count(1) == outpost_defeated.size():
+		if _all_outposts_captured():
 			_award_achievement("all_outposts", "Realm Conqueror", 250, 100)
 		if tutorial_step == 3:
 			_advance_tutorial(4)
@@ -565,6 +565,12 @@ func _attack_outpost() -> void:
 		if randi_range(0, 1) == 1:
 			guards = max(0, guards - 1)
 	_refresh_ui()
+
+func _all_outposts_captured() -> bool:
+	for defeated in outpost_defeated:
+		if defeated != 1:
+			return false
+	return true
 
 func _on_production_tick() -> void:
 	for i in range(tiles.size()):
