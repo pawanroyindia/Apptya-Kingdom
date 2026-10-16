@@ -13,7 +13,8 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Gold, wood, food and stone economy with direct gathering, active and capped offline production.
 - [x] Farm, mine, Lumber Camp, Quarry, Barracks and Keep construction/collection/upgrades.
 - [x] Queued infantry, archer and cavalry training; scouting, exploration, five enemy outposts, battle outcomes, rewards and achievements.
-- [x] Four-step tutorial, combat/economy/scouting research, troop practice and three claimable campaign rewards.
+- [x] Four-step tutorial, combat/economy/scouting research, troop practice, three claimable campaign rewards and a persistent three-objective quest board.
+- [x] Royal Captain hero progression: XP from battle/scouting/exploration, level cap 20, skill upgrades to level 5, army-power bonus, and save/load persistence.
 - [x] Local save/load, backup recovery, save-data normalization, timed upgrade restoration, and periodic autosave.
 - [x] Procedural 3D valley, castle, buildings, stone perimeter wall with four watchtowers and a southern gate, river/bridge, hills, boulders, lanterns, five enemy outposts, and distinct infantry/archer/cavalry silhouettes.
 - [x] Touch camera orbit, two-finger pinch zoom, tile selection, and camera reset.
@@ -25,7 +26,8 @@ This checklist tracks development before the first APK export. **Do not run the 
 ## Verification
 - [x] Headless Godot editor parsing, project startup, economy, training, research, exploration, save recovery and touch tests passed ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848762730)).
 - [x] The central 3D tile-picking test has passed in a prior workflow run.
-- [x] Re-run the expanded gameplay/save/touch/troop/research test suite after the campaign and save-normalization changes ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851302511)).
+- [x] Re-run the expanded gameplay/save/touch/troop/research/quest/hero test suite after the campaign and save-normalization changes ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851511926)).
+- [ ] Recheck hero feedback polish and final documentation changes in CI ([run pending](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851511926)).
 - [x] Verify a saved Low-quality preset is applied when the scene starts, including render scale and shadow state ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851302511)).
 - [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity and signature checks align. Actual export remains untested until approved.
 - [x] Add a CI mesh-node budget and refresh-stability check: 193 mesh nodes at startup, below the 400-node guardrail; physical-device FPS remains unverified.
