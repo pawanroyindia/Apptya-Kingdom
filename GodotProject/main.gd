@@ -22,6 +22,7 @@ var day := 1
 var daily_reward_claim_day := -1
 var daily_reward_streak := 0
 var enemy_level := 1
+var battle_stance := "Balanced"
 var explored_regions := 0
 var victories := 0
 var defeats := 0
@@ -87,6 +88,7 @@ var network_session: Node
 var network_address_input: LineEdit
 var network_status_label: Label
 var network_controls: Array[Button] = []
+var battle_stance_buttons: Array[Button] = []
 
 func _ready() -> void:
 	_load_game()
@@ -328,6 +330,11 @@ func _build_ui() -> void:
 	army_title.add_theme_color_override("font_color", Color("#f1d38a"))
 	column.add_child(army_title)
 	_add_button_row(column, [
+		{"text": "Balanced Stance", "action": _set_battle_stance.bind("Balanced")},
+		{"text": "Aggressive Stance", "action": _set_battle_stance.bind("Aggressive")},
+		{"text": "Defensive Stance", "action": _set_battle_stance.bind("Defensive")}
+	], battle_stance_buttons)
+	_add_button_row(column, [
 		{"text": "Queue Infantry\n10 gold, 25 food", "action": _train_guard},
 		{"text": "Queue Archers\n15 gold, 35 food", "action": _queue_archers}
 	])
@@ -506,7 +513,11 @@ func _refresh_ui() -> void:
 		for defeated in outpost_defeated:
 			captured_outposts += 1 if defeated == 1 else 0
 		var campaign_progress := "CAMPAIGN COMPLETE" if captured_outposts >= outpost_defeated.size() else "Outposts captured: %d/%d" % [captured_outposts, outpost_defeated.size()]
-		campaign_label.text = "%s\nArmy power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s • Sound: %s • Music: %s" % [campaign_progress, _army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality, "ON" if sound_enabled else "OFF", "ON" if music_enabled else "OFF"]
+		campaign_label.text = "%s\nArmy power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nBattle stance: %s • Graphics: %s • Sound: %s • Music: %s" % [campaign_progress, _army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, battle_stance, graphics_quality, "ON" if sound_enabled else "OFF", "ON" if music_enabled else "OFF"]
+		for i in range(battle_stance_buttons.size()):
+			var stance_names := ["Balanced", "Aggressive", "Defensive"]
+			battle_stance_buttons[i].text = ("▶ " if battle_stance == stance_names[i] else "") + stance_names[i] + " Stance"
+			battle_stance_buttons[i].modulate = Color("#f4d994") if battle_stance == stance_names[i] else Color("#ffffff")
 		if not settings_buttons.is_empty():
 			settings_buttons[2].text = "Sound: ON" if sound_enabled else "Sound: OFF"
 		if not music_settings_buttons.is_empty():
@@ -528,6 +539,18 @@ func _refresh_ui() -> void:
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, infantry, archers, cavalry, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 			world_view.set_hero_level(hero_level)
 		status_label.text = status_message
+func _set_battle_stance(stance: String) -> void:
+	if stance not in ["Balanced", "Aggressive", "Defensive"]:
+		status_message = "Unknown battle stance."
+		_refresh_ui()
+		return
+	if _route_network_action("set_stance", {"stance": stance}):
+		return
+	battle_stance = stance
+	status_message = "Battle stance set to %s. Aggressive improves odds but raises casualties; Defensive reduces casualties but lowers odds." % battle_stance
+	_persist_game()
+	_refresh_ui()
+
 	if is_instance_valid(network_session) and network_session.is_network_active() and multiplayer.is_server():
 		network_session.publish_snapshot()
 
@@ -1150,7 +1173,7 @@ func _attack_outpost() -> void:
 		status_message = "Outpost %d requires at least %d guards." % [selected_outpost + 1, required_guards]
 		_refresh_ui()
 		return
-	var battle: Dictionary = COMBAT_DIRECTOR.resolve_outpost(infantry, archers, cavalry, _hero_power(), combat_research, practice_drills, keep_level, _get_barracks_level(), threat, selected_outpost, region_scouted[selected_outpost] == 1)
+	var battle: Dictionary = COMBAT_DIRECTOR.resolve_outpost(infantry, archers, cavalry, _hero_power(), combat_research, practice_drills, keep_level, _get_barracks_level(), threat, selected_outpost, region_scouted[selected_outpost] == 1, battle_stance)
 	var chance := int(battle["chance"])
 	var won_attack := randi_range(1, 100) <= chance
 	var casualties := int(battle["win_losses"] if won_attack else battle["loss_losses"])
@@ -1248,7 +1271,7 @@ func _attack_enemy_army() -> void:
 		status_message = "Train guards before attacking the enemy army."
 		_refresh_ui()
 		return
-	var battle: Dictionary = COMBAT_DIRECTOR.resolve_enemy_army(infantry, archers, cavalry, _hero_power(), combat_research, practice_drills, keep_level, _get_barracks_level(), enemy_level)
+	var battle: Dictionary = COMBAT_DIRECTOR.resolve_enemy_army(infantry, archers, cavalry, _hero_power(), combat_research, practice_drills, keep_level, _get_barracks_level(), enemy_level, battle_stance)
 	var army := int(battle["kingdom_power"])
 	var enemy := int(battle["enemy_power"])
 	var chance := int(battle["chance"])
@@ -1523,7 +1546,7 @@ func _export_multiplayer_snapshot() -> Dictionary:
 		"guards": guards, "infantry": infantry, "archers": archers, "cavalry": cavalry,
 		"queued_troop_type": queued_troop_type, "queued_troop_count": queued_troop_count, "troop_training_finish_unix": troop_training_finish_unix,
 		"keep_level": keep_level, "day": day, "daily_reward_claim_day": daily_reward_claim_day, "daily_reward_streak": daily_reward_streak,
-		"enemy_level": enemy_level, "explored_regions": explored_regions, "victories": victories, "defeats": defeats,
+		"enemy_level": enemy_level, "battle_stance": battle_stance, "explored_regions": explored_regions, "victories": victories, "defeats": defeats,
 		"combat_research": combat_research, "economy_research": economy_research, "scouting_research": scouting_research, "practice_drills": practice_drills,
 		"reward_first_victory_claimed": reward_first_victory_claimed, "reward_explorer_claimed": reward_explorer_claimed, "reward_keep_claimed": reward_keep_claimed,
 		"quest_builder_claimed": quest_builder_claimed, "quest_stronghold_claimed": quest_stronghold_claimed, "quest_conqueror_claimed": quest_conqueror_claimed,
@@ -1540,6 +1563,9 @@ func _apply_multiplayer_snapshot(snapshot: Dictionary) -> void:
 		if snapshot.has(key):
 			set(key, int(snapshot[key]))
 	queued_troop_type = str(snapshot.get("queued_troop_type", ""))
+	battle_stance = str(snapshot.get("battle_stance", "Balanced"))
+	if battle_stance not in ["Balanced", "Aggressive", "Defensive"]:
+		battle_stance = "Balanced"
 	for key in ["reward_first_victory_claimed", "reward_explorer_claimed", "reward_keep_claimed", "quest_builder_claimed", "quest_stronghold_claimed", "quest_conqueror_claimed"]:
 		if snapshot.has(key):
 			set(key, bool(snapshot[key]))
@@ -1585,6 +1611,7 @@ func _apply_network_action(action: String, payload: Dictionary) -> void:
 		"army_battle": _attack_enemy_army()
 		"claim_reward": _claim_reward(str(payload.get("reward_id", "")))
 		"claim_quest": _claim_quest(str(payload.get("quest_id", "")))
+		"set_stance": _set_battle_stance(str(payload.get("stance", "Balanced")))
 
 func _persist_game() -> int:
 	last_saved_unix = int(Time.get_unix_time_from_system())
@@ -1604,6 +1631,7 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "daily_reward_claim_day", daily_reward_claim_day)
 	config.set_value("kingdom", "daily_reward_streak", daily_reward_streak)
 	config.set_value("kingdom", "enemy_level", enemy_level)
+	config.set_value("kingdom", "battle_stance", battle_stance)
 	config.set_value("kingdom", "explored_regions", explored_regions)
 	config.set_value("kingdom", "victories", victories)
 	config.set_value("kingdom", "defeats", defeats)
@@ -1663,6 +1691,7 @@ func _load_game() -> void:
 	daily_reward_claim_day = int(config.get_value("kingdom", "daily_reward_claim_day", daily_reward_claim_day))
 	daily_reward_streak = int(config.get_value("kingdom", "daily_reward_streak", daily_reward_streak))
 	enemy_level = int(config.get_value("kingdom", "enemy_level", enemy_level))
+	battle_stance = str(config.get_value("kingdom", "battle_stance", battle_stance))
 	explored_regions = int(config.get_value("kingdom", "explored_regions", explored_regions))
 	victories = int(config.get_value("kingdom", "victories", victories))
 	defeats = int(config.get_value("kingdom", "defeats", defeats))
@@ -1735,6 +1764,8 @@ func _normalize_save_data() -> void:
 	stone = clampi(stone, 0, MAX_RESOURCE)
 	if graphics_quality not in ["Low", "Balanced", "High"]:
 		graphics_quality = "Balanced"
+	if battle_stance not in ["Balanced", "Aggressive", "Defensive"]:
+		battle_stance = "Balanced"
 	hero_level = clampi(hero_level, 1, 20)
 	hero_skill_level = clampi(hero_skill_level, 1, 5)
 	hero_xp = clampi(hero_xp, 0, 1000000)
