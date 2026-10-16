@@ -117,8 +117,9 @@ def export_glb(path,objects):
     for o in objects: o.select_set(True)
     bpy.context.view_layer.objects.active=objects[0]
     bpy.ops.export_scene.gltf(filepath=path,export_format="GLB",use_selection=True,
-      export_animations=True,export_skins=True,export_apply=False,export_texcoords=True,
-      export_normals=True,export_materials="EXPORT",export_image_format="AUTO",
+      export_animations=True,export_animation_mode="NLA_TRACKS",export_skins=True,
+      export_apply=False,export_texcoords=True,export_normals=True,
+      export_materials="EXPORT",export_image_format="AUTO",
       export_frame_range=True,export_force_sampling=True,export_nla_strips=True)
     bpy.ops.object.select_all(action="DESELECT")
 
