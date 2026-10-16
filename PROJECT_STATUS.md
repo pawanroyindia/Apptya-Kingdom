@@ -43,7 +43,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Verify Academy timed upgrade costs/completion, duplicate-Academy prevention/save normalization, locked-outpost scouting, and duplicate-scout reward prevention ([latest successful Godot source check](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38854283305)).
 - [x] Recheck hero level-up feedback, 3D hero model/label synchronization, and the updated test suite ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
 - [x] Verify a saved Low-quality preset is applied when the scene starts, including render scale and shadow state ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
-- [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity and signature checks align. Actual export remains untested until approved.
+- [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity/signature checks, and Android INTERNET permission for LAN co-op are configured. CI asserts the networking permission remains enabled. Actual export remains untested until approved.
 - [x] Add a CI mesh-node budget and refresh-stability check: 256 mesh nodes at startup, with no mesh growth after repeated UI refreshes, below the 400-node guardrail; physical-device FPS remains unverified.
 - [ ] Physical-device installation, touch testing, and performance validation are post-export gates and cannot be claimed before an APK exists.
 
