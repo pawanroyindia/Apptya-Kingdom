@@ -52,7 +52,7 @@ jobs:
       - name: Configure Godot Android SDK paths
         run: |
           mkdir -p "$HOME/.config/godot"
-          printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/android_sdk_path = "/usr/local/lib/android/sdk"\nexport/android/java_sdk_path = "%s"\n' "$JAVA_HOME" > "$HOME/.config/godot/editor_settings-4.5.tres"
+          printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/android_sdk_path = "/usr/local/lib/android/sdk"\nexport/android/java_sdk_path = "%s"\nexport/android/debug_keystore = "%s/debug.keystore"\n' "$JAVA_HOME" "$RUNNER_TEMP" > "$HOME/.config/godot/editor_settings-4.5.tres"
 
       - name: Export Godot Android APK
         uses: firebelley/godot-export@v8.0.0
