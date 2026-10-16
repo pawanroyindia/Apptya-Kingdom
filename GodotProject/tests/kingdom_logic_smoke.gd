@@ -171,6 +171,17 @@ func _run_tests() -> void:
 	if game.tile_levels[0] != original_level + 1 or not game.achievements.has("building_upgrade"):
 		_fail("Building upgrade completion or achievement failed.")
 		return
+	var builder_gold_before: int = game.gold
+	var builder_wood_before: int = game.wood
+	game._claim_quest("builder")
+	if not game.quest_builder_claimed or game.gold != builder_gold_before + 75 or game.wood != builder_wood_before + 50:
+		_fail("Builder's Mark quest did not unlock or grant its exact reward.")
+		return
+	var claimed_builder_gold: int = game.gold
+	game._claim_quest("builder")
+	if game.gold != claimed_builder_gold:
+		_fail("Builder's Mark quest reward could be claimed more than once.")
+		return
 
 	var original_keep_level: int = game.keep_level
 	game._upgrade_keep()
@@ -280,6 +291,17 @@ func _run_tests() -> void:
 	if not game.reward_keep_claimed:
 		_fail("Keep Builder reward did not unlock at Keep level 3.")
 		return
+	game._claim_quest("stronghold")
+	if not game.quest_stronghold_claimed:
+		_fail("Royal Stronghold quest did not unlock at Keep level 3.")
+		return
+	game.outpost_defeated[0] = 1
+	game.outpost_defeated[1] = 1
+	game.outpost_defeated[2] = 1
+	game._claim_quest("conqueror")
+	if not game.quest_conqueror_claimed:
+		_fail("Frontier Conqueror quest did not unlock after three outposts were captured.")
+		return
 
 	# Production must award resources and preserve the capped-offline economy.
 	var gold_before_tick: int = game.gold
@@ -356,6 +378,7 @@ func _run_tests() -> void:
 	var saved_explored_regions: int = game.explored_regions
 	var saved_research: Array = [game.combat_research, game.economy_research, game.scouting_research, game.practice_drills]
 	var saved_rewards: Array = [game.reward_first_victory_claimed, game.reward_explorer_claimed, game.reward_keep_claimed]
+	var saved_quests: Array = [game.quest_builder_claimed, game.quest_stronghold_claimed, game.quest_conqueror_claimed]
 	var saved_defeated: PackedInt32Array = game.outpost_defeated.duplicate()
 	var saved_achievements: PackedStringArray = game.achievements.duplicate()
 	game.gold = 0
@@ -375,6 +398,9 @@ func _run_tests() -> void:
 	game.graphics_quality = "Low" if saved_graphics_quality != "Low" else "High"
 	game.outpost_defeated[0] = 0
 	game.achievements.clear()
+	game.quest_builder_claimed = false
+	game.quest_stronghold_claimed = false
+	game.quest_conqueror_claimed = false
 	game._load_game()
 	if game.gold != saved_gold or game.wood != saved_wood or game.food != saved_food or game.stone != saved_stone or game.guards != saved_guards:
 		_fail("Kingdom save/load did not restore resource and guard values.")
@@ -402,6 +428,9 @@ func _run_tests() -> void:
 		return
 	if [game.reward_first_victory_claimed, game.reward_explorer_claimed, game.reward_keep_claimed] != saved_rewards:
 		_fail("Kingdom save/load did not restore claimed campaign rewards.")
+		return
+	if [game.quest_builder_claimed, game.quest_stronghold_claimed, game.quest_conqueror_claimed] != saved_quests:
+		_fail("Kingdom save/load did not restore quest claim progress.")
 		return
 	if game.building_upgrade_finish_unix != pending_building_upgrade or game.building_upgrade_tile != 0:
 		_fail("Kingdom save/load did not restore the pending building upgrade timer.")
