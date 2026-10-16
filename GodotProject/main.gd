@@ -29,6 +29,9 @@ var practice_drills := 0
 var reward_first_victory_claimed := false
 var reward_explorer_claimed := false
 var reward_keep_claimed := false
+var quest_builder_claimed := false
+var quest_stronghold_claimed := false
+var quest_conqueror_claimed := false
 var selected_tile := 4
 var selected_outpost := 0
 var last_saved_unix := 0
@@ -54,6 +57,7 @@ var tutorial_label: Label
 var outpost_label: Label
 var achievements_label: Label
 var campaign_label: Label
+var quest_label: Label
 var tick_timer: Timer
 var autosave_timer: Timer
 var upgrade_timer: Timer
@@ -307,6 +311,23 @@ func _build_ui() -> void:
 		{"text": "Claim Keep Reward", "action": _claim_reward.bind("keep_builder")}
 	])
 
+	var quest_title := Label.new()
+	quest_title.text = "QUEST BOARD"
+	quest_title.add_theme_font_size_override("font_size", 18)
+	quest_title.add_theme_color_override("font_color", Color("#f1d38a"))
+	column.add_child(quest_title)
+	quest_label = Label.new()
+	quest_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	quest_label.add_theme_color_override("font_color", Color("#c3d2c7"))
+	column.add_child(quest_label)
+	_add_button_row(column, [
+		{"text": "Claim Builder Quest", "action": _claim_quest.bind("builder")},
+		{"text": "Claim Stronghold Quest", "action": _claim_quest.bind("stronghold")}
+	])
+	_add_button_row(column, [
+		{"text": "Claim Conqueror Quest", "action": _claim_quest.bind("conqueror")}
+	])
+
 	tutorial_label = Label.new()
 	tutorial_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tutorial_label.add_theme_color_override("font_color", Color("#f1d38a"))
@@ -394,6 +415,14 @@ func _refresh_ui() -> void:
 		tutorial_label.text = _get_tutorial_text()
 		achievements_label.text = "Achievements: %d/8 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
 		campaign_label.text = "Army power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s" % [_army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality]
+		var captured_outposts := 0
+		for defeated in outpost_defeated:
+			captured_outposts += 1 if defeated == 1 else 0
+		var highest_building_level := 1
+		for i in range(tiles.size()):
+			if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks"]:
+				highest_building_level = maxi(highest_building_level, tile_levels[i])
+		quest_label.text = "1. Builder's Mark: upgrade a building to level 2 (%s)\n2. Royal Stronghold: upgrade Keep to level 3 (%s)\n3. Frontier Conqueror: capture 3 outposts (%d/3)\nRewards are one-time and persist with your save." % ["CLAIMED" if quest_builder_claimed else ("READY" if highest_building_level >= 2 else "LOCKED"), "CLAIMED" if quest_stronghold_claimed else ("READY" if keep_level >= 3 else "LOCKED"), captured_outposts]
 		if is_instance_valid(world_view):
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, infantry, archers, cavalry, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 		status_label.text = status_message
@@ -969,6 +998,50 @@ func _practice_troops() -> void:
 		_persist_game()
 	_refresh_ui()
 
+func _claim_quest(quest_id: String) -> void:
+	var captured_outposts := 0
+	for defeated in outpost_defeated:
+		captured_outposts += 1 if defeated == 1 else 0
+	var highest_building_level := 1
+	for i in range(tiles.size()):
+		if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks"]:
+			highest_building_level = maxi(highest_building_level, tile_levels[i])
+	match quest_id:
+		"builder":
+			if quest_builder_claimed:
+				status_message = "Builder's Mark quest reward already claimed."
+			elif highest_building_level < 2:
+				status_message = "Builder's Mark requires any resource or military building at level 2."
+			else:
+				quest_builder_claimed = true
+				gold += 75
+				wood += 50
+				status_message = "Quest complete: Builder's Mark. +75 gold, +50 wood."
+		"stronghold":
+			if quest_stronghold_claimed:
+				status_message = "Royal Stronghold quest reward already claimed."
+			elif keep_level < 3:
+				status_message = "Royal Stronghold requires Keep level 3."
+			else:
+				quest_stronghold_claimed = true
+				stone += 100
+				food += 100
+				status_message = "Quest complete: Royal Stronghold. +100 stone, +100 food."
+		"conqueror":
+			if quest_conqueror_claimed:
+				status_message = "Frontier Conqueror quest reward already claimed."
+			elif captured_outposts < 3:
+				status_message = "Frontier Conqueror requires 3 captured outposts (%d/3)." % captured_outposts
+			else:
+				quest_conqueror_claimed = true
+				gold += 150
+				stone += 150
+				status_message = "Quest complete: Frontier Conqueror. +150 gold, +150 stone."
+		_:
+			status_message = "Unknown quest."
+	_persist_game()
+	_refresh_ui()
+
 func _claim_reward(reward_id: String) -> void:
 	match reward_id:
 		"first_victory":
@@ -1062,6 +1135,9 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "reward_first_victory_claimed", reward_first_victory_claimed)
 	config.set_value("kingdom", "reward_explorer_claimed", reward_explorer_claimed)
 	config.set_value("kingdom", "reward_keep_claimed", reward_keep_claimed)
+	config.set_value("kingdom", "quest_builder_claimed", quest_builder_claimed)
+	config.set_value("kingdom", "quest_stronghold_claimed", quest_stronghold_claimed)
+	config.set_value("kingdom", "quest_conqueror_claimed", quest_conqueror_claimed)
 	config.set_value("kingdom", "guards", guards)
 	config.set_value("kingdom", "infantry", infantry)
 	config.set_value("kingdom", "archers", archers)
@@ -1111,6 +1187,9 @@ func _load_game() -> void:
 	reward_first_victory_claimed = bool(config.get_value("kingdom", "reward_first_victory_claimed", reward_first_victory_claimed))
 	reward_explorer_claimed = bool(config.get_value("kingdom", "reward_explorer_claimed", reward_explorer_claimed))
 	reward_keep_claimed = bool(config.get_value("kingdom", "reward_keep_claimed", reward_keep_claimed))
+	quest_builder_claimed = bool(config.get_value("kingdom", "quest_builder_claimed", quest_builder_claimed))
+	quest_stronghold_claimed = bool(config.get_value("kingdom", "quest_stronghold_claimed", quest_stronghold_claimed))
+	quest_conqueror_claimed = bool(config.get_value("kingdom", "quest_conqueror_claimed", quest_conqueror_claimed))
 	guards = int(config.get_value("kingdom", "guards", guards))
 	infantry = int(config.get_value("kingdom", "infantry", guards))
 	archers = int(config.get_value("kingdom", "archers", archers))
