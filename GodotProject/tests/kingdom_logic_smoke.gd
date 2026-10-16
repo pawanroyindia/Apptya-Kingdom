@@ -28,8 +28,9 @@ func _run_tests() -> void:
 		_fail("Pinch zoom control did not zoom the camera.")
 		return
 	game._select_tile(0)
-	var picked_tile: int = game.world_view._pick_tile(Vector2(320, 180))
-	print("APPTYA_TILE_PICK_RESULT=", picked_tile, " SELECTED=", game.selected_tile)
+	var world_view_size: Vector2 = game.world_view.get_viewport().get_visible_rect().size
+	var picked_tile: int = game.world_view._pick_tile(world_view_size * 0.5)
+	print("APPTYA_TILE_PICK_RESULT=", picked_tile, " SELECTED=", game.selected_tile, " VIEWPORT=", world_view_size)
 	if picked_tile != 4 or game.selected_tile != 4:
 		_fail("Tapping the 3D world did not select the central Keep tile.")
 		return
