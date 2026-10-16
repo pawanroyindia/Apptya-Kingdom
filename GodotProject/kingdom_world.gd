@@ -119,9 +119,14 @@ func _update_daylight() -> void:
 	if not is_instance_valid(world_environment) or not is_instance_valid(sun_light):
 		return
 	var daylight := clampf(sin(day_phase * TAU), 0.08, 1.0)
-	world_environment.background_color = Color("#17253b").lerp(Color("#a9c6d0"), daylight)
+	var night_sky := Color("#17253b")
+	var day_sky := Color("#a9c6d0")
+	world_environment.background_color = night_sky.lerp(day_sky, daylight)
 	world_environment.ambient_light_color = Color("#37425e").lerp(Color("#d8e6d7"), daylight)
 	world_environment.ambient_light_energy = 0.15 + daylight * 0.6
+	# Match the haze to the changing sky so it does not stay blue at night.
+	world_environment.fog_light_color = Color("#202d48").lerp(Color("#b8d0d3"), daylight)
+	world_environment.fog_light_energy = 0.55 + daylight * 0.3
 	sun_light.light_color = Color("#e29a60").lerp(Color("#fff0d4"), daylight)
 	sun_light.light_energy = (0.15 + daylight * 1.1) * (0.88 if quality_preset == "Low" else 1.0)
 	sun_light.rotation_degrees.x = -15.0 - daylight * 42.0
@@ -341,6 +346,13 @@ func _build_environment() -> void:
 	world_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	world_environment.ambient_light_color = Color("#d8e6d7")
 	world_environment.ambient_light_energy = 0.75
+	# A light distance haze separates the hills from the playable village without
+	# requiring expensive screen-space effects on mobile Compatibility rendering.
+	world_environment.fog_enabled = true
+	world_environment.fog_light_color = Color("#a9c6d0")
+	world_environment.fog_light_energy = 0.8
+	world_environment.fog_density = 0.003
+	world_environment.fog_sun_scatter = 0.12
 	environment_node.environment = world_environment
 	add_child(environment_node)
 
@@ -349,6 +361,10 @@ func _build_environment() -> void:
 	sun_light.light_color = Color("#fff0d4")
 	sun_light.light_energy = 1.25
 	sun_light.shadow_enabled = true
+	# Keep shadows stable and useful at the current strategy-camera distance.
+	sun_light.directional_shadow_max_distance = 42.0
+	sun_light.shadow_bias = 0.04
+	sun_light.shadow_normal_bias = 1.2
 	add_child(sun_light)
 
 	world_camera = Camera3D.new()
