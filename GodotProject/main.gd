@@ -445,6 +445,7 @@ func _refresh_ui() -> void:
 		hero_label.text = "Royal Captain • Level %d/20 • %s • Skill %d/5 • Hero power %d" % [hero_level, hero_progress, hero_skill_level, _hero_power()]
 		if is_instance_valid(world_view):
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, infantry, archers, cavalry, outpost_defeated, region_scouted, selected_outpost, selected_tile)
+			world_view.set_hero_level(hero_level)
 		status_label.text = status_message
 
 func _cycle_graphics_quality() -> void:
