@@ -35,6 +35,7 @@ var tutorial_label: Label
 var outpost_label: Label
 var achievements_label: Label
 var tick_timer: Timer
+var autosave_timer: Timer
 var upgrade_timer: Timer
 var building_upgrade_timer: Timer
 var world_view: Node3D
@@ -49,6 +50,12 @@ func _ready() -> void:
 	tick_timer.timeout.connect(_on_production_tick)
 	add_child(tick_timer)
 	tick_timer.start()
+	autosave_timer = Timer.new()
+	autosave_timer.wait_time = 60.0
+	autosave_timer.one_shot = false
+	autosave_timer.timeout.connect(_on_autosave_tick)
+	add_child(autosave_timer)
+	autosave_timer.start()
 	upgrade_timer = Timer.new()
 	upgrade_timer.one_shot = true
 	upgrade_timer.timeout.connect(_finish_keep_upgrade)
@@ -577,6 +584,9 @@ func _all_outposts_captured() -> bool:
 		if defeated != 1:
 			return false
 	return true
+
+func _on_autosave_tick() -> void:
+	_persist_game()
 
 func _on_production_tick() -> void:
 	for i in range(tiles.size()):
