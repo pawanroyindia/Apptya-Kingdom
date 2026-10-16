@@ -36,6 +36,17 @@ func _run_tests() -> void:
 	if not game.sound_enabled or game.settings_buttons[2].text != "Sound: ON":
 		_fail("Sound toggle did not re-enable effects or update its button.")
 		return
+	if game.music_stream.data.is_empty() or game.music_stream.loop_mode != AudioStreamWAV.LOOP_FORWARD or game.music_stream.loop_end != game.music_stream.data.size() / 2:
+		_fail("Procedural ambient soundtrack did not initialize as a valid looping WAV stream.")
+		return
+	game._toggle_music()
+	if game.music_enabled or game.music_settings_buttons[0].text != "Music: OFF" or game.music_player.playing:
+		_fail("Music toggle did not stop playback or update its button.")
+		return
+	game._toggle_music()
+	if not game.music_enabled or game.music_settings_buttons[0].text != "Music: ON" or not game.music_player.playing:
+		_fail("Music toggle did not resume playback or update its button.")
+		return
 
 	var initial_yaw: float = game.world_view.camera_yaw
 	var drag_event := InputEventScreenDrag.new()
@@ -515,6 +526,7 @@ func _run_tests() -> void:
 	var saved_keep_level: int = game.keep_level
 	var saved_graphics_quality: String = game.graphics_quality
 	var saved_sound_enabled: bool = game.sound_enabled
+	var saved_music_enabled: bool = game.music_enabled
 	var saved_day: int = game.day
 	var saved_daily_claim_day: int = game.daily_reward_claim_day
 	var saved_daily_streak: int = game.daily_reward_streak
@@ -544,6 +556,7 @@ func _run_tests() -> void:
 	game.daily_reward_streak = 0
 	game.graphics_quality = "Low" if saved_graphics_quality != "Low" else "High"
 	game.sound_enabled = not saved_sound_enabled
+	game.music_enabled = not saved_music_enabled
 	game.outpost_defeated[0] = 0
 	game.achievements.clear()
 	game.quest_builder_claimed = false
@@ -570,6 +583,9 @@ func _run_tests() -> void:
 		return
 	if game.sound_enabled != saved_sound_enabled:
 		_fail("Kingdom save/load did not restore the sound preference.")
+		return
+	if game.music_enabled != saved_music_enabled:
+		_fail("Kingdom save/load did not restore the music preference.")
 		return
 	if game.outpost_defeated != saved_defeated or game.achievements != saved_achievements:
 		_fail("Kingdom save/load did not restore campaign and achievement progress.")
