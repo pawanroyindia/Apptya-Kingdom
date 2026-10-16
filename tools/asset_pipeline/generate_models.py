@@ -341,15 +341,39 @@ def building(path,kind):
         for z in [0.75,1.25,1.75]: add(cube("GoldTrim",(0,-0.79,z),(1.8,0.035,0.035),"gold",0.008))
         for x in [-0.9,-0.45,0.0,0.45,0.9]:
             add(cube("FrontBattlement",(x,-0.92,2.48),(0.18,0.18,0.22),"stone",0.018))
+        # Layered roof courses, corner quoins and framed windows break up the large flat faces.
+        for row in range(4):
+            y=-0.66+row*0.43
+            add(cube("KeepRoofCourse",(0,y,2.285),(1.92,0.035,0.035),"gold" if row==0 else "roof",0.008))
+        for x in [-0.96,0.96]:
+            for z in [0.55,0.95,1.35,1.75]:
+                add(cube("KeepCornerQuoin",(x,-0.79,z),(0.16,0.045,0.22),"linen",0.018))
         for x in [-0.72,0.72]:
             add(cube("FrontWindow",(x,-0.785,1.45),(0.15,0.025,0.22),"leather",0.008))
             add(cube("WindowLintel",(x,-0.80,1.58),(0.22,0.035,0.04),"gold",0.006))
+            add(cube("WindowSill",(x,-0.80,1.31),(0.22,0.04,0.045),"linen",0.006))
+            add(cube("WindowMullion",(x,-0.81,1.45),(0.025,0.018,0.20),"gold",0.004))
+        # A compact royal pennant gives the keep a strong landmark silhouette.
+        add(cylinder("KeepFlagPole",(0.94,0.25,2.93),0.025,0.78,"gold",10))
+        add(cube("KeepPennant",(1.10,0.25,2.98),(0.30,0.035,0.34),"red",0.012))
+        add(cube("PennantMark",(1.10,0.225,2.98),(0.055,0.018,0.20),"gold",0.004))
     elif kind=="barracks":
         add(cube("BarracksBase",(0,0,0.18),(2.1,1.8,0.35),"stone",0.05))
         add(cube("BarracksBody",(0,0,0.82),(1.8,1.5,1.1),"wood",0.04))
         add(cube("BarracksRoof",(0,0,1.55),(2.0,1.7,0.25),"roof",0.03))
         add(cube("Door",(0,-0.76,0.55),(0.46,0.035,0.78),"leather",0.015))
-        for x in [-0.72,-0.35,0.35,0.72]: add(cube("RoofRafter",(x,0,1.47),(0.055,1.76,0.28),"wood",0.01))
+        add(cube("DoorLintel",(0,-0.79,0.98),(0.66,0.07,0.09),"linen",0.012))
+        for x in [-0.72,-0.35,0.35,0.72]:
+            add(cube("RoofRafter",(x,0,1.47),(0.055,1.76,0.28),"wood",0.01))
+        # Roof seams and crossed timber braces give the barracks more readable construction.
+        for y in [-0.62,-0.30,0.02,0.34,0.62]:
+            add(cube("RoofSeam",(0,y,1.69),(1.88,0.025,0.035),"gold",0.005))
+        for x in [-0.62,0.62]:
+            add(cube("WallBrace",(x,-0.765,0.82),(0.055,0.035,0.72),"linen",0.008))
+            add(cube("WallBraceCross",(x,-0.785,0.82),(0.50,0.035,0.045),"linen",0.008))
+        for x in [-0.55,0.55]:
+            add(cube("BarracksWindow",(x,-0.765,0.92),(0.13,0.03,0.20),"leather",0.008))
+            add(cube("BarracksWindowFrame",(x,-0.79,0.92),(0.17,0.025,0.035),"gold",0.005))
     else:
         add(cylinder("TowerBase",(0,0,0.18),0.72,0.36,"stone",12))
         add(cylinder("TowerBody",(0,0,1.15),0.55,1.65,"stone",12))
