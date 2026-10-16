@@ -631,11 +631,12 @@ func _load_game() -> void:
 	guards = int(config.get_value("kingdom", "guards", guards))
 	keep_level = int(config.get_value("kingdom", "keep_level", keep_level))
 	selected_tile = clampi(int(config.get_value("kingdom", "selected_tile", selected_tile)), 0, tiles.size() - 1)
-	var loaded_tiles = config.get_value("kingdom", "tiles", tiles)
-	if loaded_tiles is Array and loaded_tiles.size() == tiles.size():
-		tiles.clear()
+	var loaded_tiles = config.get_value("kingdom", "tiles", tiles.duplicate())
+	if loaded_tiles is Array and loaded_tiles.size() == 9:
+		var normalized_tiles: Array[String] = []
 		for building in loaded_tiles:
-			tiles.append(str(building))
+			normalized_tiles.append(str(building))
+		tiles = normalized_tiles
 	var loaded_levels = config.get_value("kingdom", "tile_levels", tile_levels)
 	if (loaded_levels is PackedInt32Array or loaded_levels is Array) and loaded_levels.size() == tile_levels.size():
 		for i in range(tile_levels.size()):
@@ -673,6 +674,8 @@ func _normalize_save_data() -> void:
 	selected_tile = clampi(selected_tile, 0, tiles.size() - 1)
 	selected_outpost = clampi(selected_outpost, 0, outpost_threat.size() - 1)
 	tutorial_step = clampi(tutorial_step, 0, 4)
+	if tiles.size() != 9:
+		tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
 	var valid_buildings := ["Empty", "Farm", "Mine", "Keep", "Barracks"]
 	for i in range(tiles.size()):
 		if not valid_buildings.has(tiles[i]):
