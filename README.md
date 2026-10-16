@@ -26,4 +26,4 @@ See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for the detailed pre-APK checklist 
 
 ## Verification status
 
-The Godot project files and GitHub Actions workflows have been committed. A headless source-parse/runtime smoke check is configured; its current run must finish before code validation can be claimed. The APK workflow is manual-only and has not been run. APK export, installation, gameplay regression, and physical-device tests are not yet verified. The original Unity project remains in the repository as a fallback until the Godot port is validated.
+The Godot project files and GitHub Actions workflows have been committed. The latest headless Godot source, runtime, gameplay, save-recovery, and touch-control checks passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38847387686)). The APK workflow is manual-only and has not been run. APK export, installation, gameplay regression, and physical-device tests are not yet verified. The original Unity project remains in the repository as a fallback until the Godot port is validated.
