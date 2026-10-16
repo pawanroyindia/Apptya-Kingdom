@@ -12,6 +12,10 @@ on:
       - ".github/workflows/production-assets.yml"
   workflow_dispatch:
 
+concurrency:
+  group: apptya-production-assets-main
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
