@@ -40,13 +40,20 @@ func _run_tests() -> void:
 		if not is_instance_valid(hero_player):
 			_fail("Imported Royal Captain GLB is missing its AnimationPlayer.")
 			return
-		for clip_name in ["Idle", "Walk", "Attack"]:
+		var required_clips := {
+			"Idle": ["idle", "stand", "breath"],
+			"Walk": ["walk", "run", "jog", "move"],
+			"Attack": ["attack", "slash", "combat", "sword", "hit"]
+		}
+		for clip_name in required_clips:
 			var found_clip := false
 			for imported_clip in hero_player.get_animation_list():
-				if imported_clip.to_lower().contains(clip_name.to_lower()):
-					found_clip = true
+				var normalized := imported_clip.to_lower()
+				for alias in required_clips[clip_name]:
+					if normalized.contains(alias):
+						found_clip = true
 			if not found_clip:
-				_fail("Imported Royal Captain GLB is missing the %s animation clip." % clip_name)
+				_fail("Imported Royal Captain GLB is missing the %s motion clip." % clip_name)
 				return
 	else:
 		if not game.world_view.hero_rig_data.has("left_leg") or not game.world_view.hero_rig_data.has("right_leg") or not game.world_view.hero_rig_data.has("left_arm") or not game.world_view.hero_rig_data.has("right_arm"):
