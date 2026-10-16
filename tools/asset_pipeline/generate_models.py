@@ -114,25 +114,58 @@ def animate_rig(arm):
         act=bpy.data.actions.new(name)
         arm.animation_data.action=act
         for frame in frames:
+            phase=(frame-1)/24.0
+            cycle=sin(phase*2*pi)
             for pb in arm.pose.bones:
                 pb.rotation_mode="XYZ"; pb.rotation_euler=(0,0,0)
                 if mode=="Walk":
-                    if pb.name=="Leg.L": pb.rotation_euler.x=0.48*sin(frame*pi/12)
-                    if pb.name=="Leg.R": pb.rotation_euler.x=-0.48*sin(frame*pi/12)
-                    if pb.name=="Arm.L": pb.rotation_euler.x=-0.25*sin(frame*pi/12)
-                    if pb.name=="Arm.R": pb.rotation_euler.x=0.25*sin(frame*pi/12)
-                    if pb.name=="Spine": pb.rotation_euler.z=0.035*sin(frame*pi/6)
+                    # Opposed leg/arm swing, shin follow-through and subtle torso counter-rotation.
+                    if pb.name=="Leg.L": pb.rotation_euler.x=0.48*cycle
+                    elif pb.name=="Leg.R": pb.rotation_euler.x=-0.48*cycle
+                    elif pb.name=="Shin.L": pb.rotation_euler.x=max(0.0,-cycle)*0.32
+                    elif pb.name=="Shin.R": pb.rotation_euler.x=max(0.0,cycle)*0.32
+                    elif pb.name=="Arm.L": pb.rotation_euler.x=-0.28*cycle
+                    elif pb.name=="Arm.R": pb.rotation_euler.x=0.28*cycle
+                    elif pb.name=="Forearm.L": pb.rotation_euler.x=-0.10+max(0.0,cycle)*0.12
+                    elif pb.name=="Forearm.R": pb.rotation_euler.x=-0.10-max(0.0,cycle)*0.12
+                    elif pb.name=="Spine":
+                        pb.rotation_euler.x=0.025*abs(cycle)
+                        pb.rotation_euler.z=0.035*cycle
+                    elif pb.name=="Head": pb.rotation_euler.z=-0.018*cycle
                 elif mode=="Attack":
-                    if pb.name=="Spine": pb.rotation_euler.z=0.18*sin(frame*pi/16)
-                    if pb.name=="Arm.R": pb.rotation_euler.x=-1.2 if frame<9 else (0.85 if frame<15 else 0.0)
-                    if pb.name=="Forearm.R": pb.rotation_euler.x=-0.55 if frame<12 else 0.1
-                    if pb.name=="Leg.L": pb.rotation_euler.x=-0.18 if frame<12 else 0.05
+                    # Three readable phases: wind-up, committed strike, then recovery.
+                    if pb.name=="Spine":
+                        pb.rotation_euler.x=-0.08 if frame<9 else (0.10 if frame<15 else 0.0)
+                        pb.rotation_euler.z=-0.12 if frame<9 else (0.22 if frame<15 else 0.0)
+                    elif pb.name=="Arm.R":
+                        pb.rotation_euler.x=-1.15 if frame<9 else (0.90 if frame<15 else 0.0)
+                        pb.rotation_euler.z=-0.10 if frame<9 else (0.12 if frame<15 else 0.0)
+                    elif pb.name=="Forearm.R":
+                        pb.rotation_euler.x=-0.45 if frame<9 else (-0.70 if frame<15 else 0.08)
+                    elif pb.name=="Arm.L":
+                        pb.rotation_euler.x=0.25 if frame<9 else (-0.18 if frame<15 else 0.0)
+                    elif pb.name=="Forearm.L":
+                        pb.rotation_euler.x=-0.15 if frame<15 else 0.0
+                    elif pb.name=="Leg.L":
+                        pb.rotation_euler.x=-0.20 if frame<9 else (0.12 if frame<15 else 0.0)
+                    elif pb.name=="Leg.R":
+                        pb.rotation_euler.x=0.08 if frame<9 else (-0.12 if frame<15 else 0.0)
+                    elif pb.name=="Head":
+                        pb.rotation_euler.z=0.04 if frame<9 else (-0.06 if frame<15 else 0.0)
                 else:
-                    if pb.name=="Spine": pb.rotation_euler.x=0.025*sin(frame*pi/12)
-                    if pb.name=="Head": pb.rotation_euler.z=0.035*sin(frame*pi/16)
+                    if pb.name=="Spine":
+                        pb.rotation_euler.x=0.025*sin(phase*2*pi)
+                        pb.rotation_euler.z=0.012*sin(phase*2*pi)
+                    elif pb.name=="Head":
+                        pb.rotation_euler.z=0.025*sin(phase*2*pi)
+                    elif pb.name=="Arm.L":
+                        pb.rotation_euler.x=0.018*sin(phase*2*pi)
+                    elif pb.name=="Arm.R":
+                        pb.rotation_euler.x=-0.018*sin(phase*2*pi)
                 pb.keyframe_insert(data_path="rotation_euler",frame=frame,group=pb.name)
         for fc in act.fcurves:
-            for kp in fc.keyframe_points: kp.interpolation="BEZIER"
+            for kp in fc.keyframe_points:
+                kp.interpolation="BEZIER"
         act.use_fake_user=True
         # One NLA track per clip makes every animation a separately exported glTF animation.
         track=arm.animation_data.nla_tracks.new(); track.name=name
