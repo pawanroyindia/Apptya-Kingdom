@@ -397,6 +397,11 @@ func _run_tests() -> void:
 	if game.gold != research_gold_before - 45 or game.wood != research_wood_before - 108 or game.stone != research_stone_before - 72 or game.economy_research != 2:
 		_fail("Level-2 Academy discount was not applied to research costs.")
 		return
+	game.tile_levels[2] = 5
+	game._refresh_ui()
+	if not game.tile_detail_label.text.contains("Research discount: 25%"):
+		_fail("Maximum-level Academy did not respect the 25% research discount cap.")
+		return
 	for i in range(9):
 		game.outpost_defeated[i] = 1
 	game.outpost_defeated[9] = 0
