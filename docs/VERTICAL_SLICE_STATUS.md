@@ -13,6 +13,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Redundant PlayerPrefs backup snapshot with fallback loading if the primary save cannot be parsed.
 - Resource gathering, building upgrades, guard training, scouting, exploration and enemy battle calculations.
 - Three persistent research branches (Combat Drills, Efficient Production and Cartography), each capped at level 5; combat improves army power, economy improves active/offline passive production, and cartography improves both wood and stone exploration rewards. Save schema version 4 normalizes research levels before offline calculations, and offline return summaries include the economy research bonus.
+- Research progression now has building prerequisites: each next research level requires the Keep to reach that level, and Combat Drills also requires the Barracks to reach that level. The source preflight checks these progression gates.
 - Tap-to-inspect for Keep, Lumber Camp, Farmstead, Barracks, Quarry and enemy outpost.
 - Multiple visible parts of each building (including roof sections and doors) share the same interaction target, while decorative colliders are removed.
 - Gold-tint feedback across all separately tappable mesh parts of the selected building.
@@ -41,7 +42,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
 - Compile and test timed upgrade completion, save/reload countdown continuity, and edge cases in Unity.
 - Add distinct troop classes and a troop training queue, richer troop/combat animation and a visible practice/combat target in the world; current squad presentation uses simple markers.
-- Expand research into a dedicated research screen with prerequisites, clearer per-technology costs, and research-specific icons; current research is available through the scrollable action HUD. Research is persistent but has no technology prerequisites yet.
+- Expand research into a dedicated research screen with clearer per-technology costs, research-specific icons, and visible prerequisite indicators; progression gates now exist in game logic, but the HUD does not yet explain them before a tap.
 - Test bounded camera pan/zoom gestures against HUD interactions in Unity Play Mode and on Android.
 - Improve authored art, animations, audio, lighting, terrain and mobile UI polish.
 - Test save/reload, screen scaling, performance and heat on real Android devices.
