@@ -168,9 +168,9 @@ func _input(event: InputEvent) -> void:
 		camera_elevation = clampf(camera_elevation + event.relative.y * 0.003, 0.32, 1.05)
 		_update_camera()
 
-func _pick_tile(screen_position: Vector2) -> void:
+func _pick_tile(screen_position: Vector2) -> int:
 	if not is_instance_valid(world_camera):
-		return
+		return -1
 	var ray_origin := world_camera.project_ray_origin(screen_position)
 	var ray_direction := world_camera.project_ray_normal(screen_position)
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_direction * 100.0)
@@ -178,8 +178,11 @@ func _pick_tile(screen_position: Vector2) -> void:
 	if hit.has("collider"):
 		var collider = hit["collider"]
 		if collider is Node and collider.has_meta("tile_index"):
-			tile_selected.emit(int(collider.get_meta("tile_index")))
+			var tile_index := int(collider.get_meta("tile_index"))
+			tile_selected.emit(tile_index)
 			get_viewport().set_input_as_handled()
+			return tile_index
+	return -1
 
 func _build_terrain() -> void:
 	_add_box(self, Vector3(30, 0.35, 30), Vector3(0, -0.28, -1), "#668b52")
