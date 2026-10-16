@@ -305,6 +305,7 @@ func _run_tests() -> void:
 	game.queued_troop_type = ""
 	game.queued_troop_count = 0
 	game.troop_training_finish_unix = 0
+	game._persist_game()
 	if game.outpost_threat.size() != 10 or game.world_view.current_outposts.size() != 10:
 		_fail("Ten-outpost campaign map was not initialized.")
 		return
