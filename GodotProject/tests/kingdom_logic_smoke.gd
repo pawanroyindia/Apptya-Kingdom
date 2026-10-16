@@ -160,7 +160,7 @@ func _run_tests() -> void:
 	if game.building_upgrade_finish_unix <= int(Time.get_unix_time_from_system()):
 		_fail("Could not create a pending upgrade for save persistence.")
 		return
-	var pending_building_upgrade := game.building_upgrade_finish_unix
+	var pending_building_upgrade: int = game.building_upgrade_finish_unix
 	game._persist_game()
 	var saved_gold: int = game.gold
 	var saved_wood: int = game.wood
