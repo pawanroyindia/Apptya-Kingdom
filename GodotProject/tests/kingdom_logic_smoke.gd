@@ -162,6 +162,11 @@ func _run_tests() -> void:
 	if not game.reward_first_victory_claimed:
 		_fail("First Victory reward could not be claimed after a victory.")
 		return
+	# Seed a small test army for the exploration loop after the battle consumed its force.
+	game.infantry = 4
+	game.archers = 0
+	game.cavalry = 0
+	game.guards = 4
 	var guards_before_exploration: int = game.guards
 	game._explore_region()
 	game._explore_region()
@@ -228,12 +233,23 @@ func _run_tests() -> void:
 		_fail("Could not create a pending upgrade for save persistence.")
 		return
 	var pending_building_upgrade: int = game.building_upgrade_finish_unix
+	game._queue_troop("archer", 1)
+	if game.queued_troop_type != "archer" or game.queued_troop_count != 1:
+		_fail("Archer training did not enter the queue for timer persistence.")
+		return
+	var pending_troop_training: int = game.troop_training_finish_unix
 	game._persist_game()
 	var saved_gold: int = game.gold
 	var saved_wood: int = game.wood
 	var saved_food: int = game.food
 	var saved_stone: int = game.stone
 	var saved_guards: int = game.guards
+	var saved_infantry: int = game.infantry
+	var saved_archers: int = game.archers
+	var saved_cavalry: int = game.cavalry
+	var saved_queued_troop_type: String = game.queued_troop_type
+	var saved_queued_troop_count: int = game.queued_troop_count
+	var saved_troop_training_finish: int = game.troop_training_finish_unix
 	var saved_tiles: Array = game.tiles.duplicate()
 	var saved_levels: PackedInt32Array = game.tile_levels.duplicate()
 	var saved_keep_level: int = game.keep_level
@@ -248,6 +264,12 @@ func _run_tests() -> void:
 	game.food = 0
 	game.stone = 0
 	game.guards = 0
+	game.infantry = 0
+	game.archers = 0
+	game.cavalry = 0
+	game.queued_troop_type = ""
+	game.queued_troop_count = 0
+	game.troop_training_finish_unix = 0
 	game.tiles[0] = "Empty"
 	game.tile_levels[0] = 1
 	game.keep_level = 1
@@ -256,6 +278,12 @@ func _run_tests() -> void:
 	game._load_game()
 	if game.gold != saved_gold or game.wood != saved_wood or game.food != saved_food or game.stone != saved_stone or game.guards != saved_guards:
 		_fail("Kingdom save/load did not restore resource and guard values.")
+		return
+	if game.infantry != saved_infantry or game.archers != saved_archers or game.cavalry != saved_cavalry:
+		_fail("Kingdom save/load did not restore troop composition.")
+		return
+	if game.queued_troop_type != saved_queued_troop_type or game.queued_troop_count != saved_queued_troop_count or game.troop_training_finish_unix != saved_troop_training_finish:
+		_fail("Kingdom save/load did not restore the troop training queue timer.")
 		return
 	if game.tiles != saved_tiles or game.tile_levels != saved_levels or game.keep_level != saved_keep_level:
 		_fail("Kingdom save/load did not restore building levels.")
@@ -296,6 +324,9 @@ func _run_tests() -> void:
 	game.infantry = -7
 	game.archers = -2
 	game.cavalry = -3
+	game.queued_troop_type = ""
+	game.queued_troop_count = 0
+	game.troop_training_finish_unix = 0
 	game.keep_level = 0
 	game.selected_tile = 99
 	game.tiles[0] = "UnknownBuilding"
