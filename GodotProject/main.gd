@@ -1239,7 +1239,7 @@ func _army_power() -> int:
 	return infantry * (10 + combat_research * 2) + archers * (14 + combat_research * 2) + cavalry * (18 + combat_research * 2) + _get_barracks_level() * 4 + keep_level * 3 + practice_drills + _hero_power()
 
 func _enemy_power() -> int:
-	return 10 + enemy_level * 7
+	return 35 + clampi(enemy_level, 1, 100000) * 18
 
 func _attack_enemy_army() -> void:
 	if _route_network_action("army_battle"):
