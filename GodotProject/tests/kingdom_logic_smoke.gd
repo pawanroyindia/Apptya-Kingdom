@@ -86,6 +86,7 @@ func _run_tests() -> void:
 	var music_sample_bytes := 4 if game.music_stream.stereo else 2
 	var music_frames: int = int(game.music_stream.data.size() / music_sample_bytes)
 	var music_seconds := float(music_frames) / float(game.music_stream.mix_rate)
+	print("APPTYA_AUDIO_DIAG bytes=%d stereo=%s rate=%d loop_end=%d frames=%d seconds=%.3f loop_mode=%d" % [game.music_stream.data.size(), str(game.music_stream.stereo), game.music_stream.mix_rate, game.music_stream.loop_end, music_frames, music_seconds, game.music_stream.loop_mode])
 	if game.music_stream.data.is_empty() or game.music_stream.loop_mode != AudioStreamWAV.LOOP_FORWARD or game.music_stream.loop_end != music_frames or music_seconds < 30.0 or music_seconds > 40.0:
 		_fail("The original score did not initialize as a valid 30–40 second looping WAV stream.")
 		return
