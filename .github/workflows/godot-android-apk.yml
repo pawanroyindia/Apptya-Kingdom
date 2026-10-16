@@ -53,7 +53,7 @@ jobs:
         run: |
           test -s GodotProject/build/ApptyaKingdom.apk
           unzip -t GodotProject/build/ApptyaKingdom.apk
-          apksigner verify --verbose GodotProject/build/ApptyaKingdom.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose GodotProject/build/ApptyaKingdom.apk
 
       - name: Upload APK
         if: always()
