@@ -298,8 +298,8 @@ func _refresh_ui() -> void:
 		var upgrade_text := ""
 		if keep_upgrade_finish_unix > int(Time.get_unix_time_from_system()):
 			upgrade_text = "   •   Keep upgrade: %ds" % (keep_upgrade_finish_unix - int(Time.get_unix_time_from_system()))
-		keep_label.text = "Keep level: %d   •   Selected tile: %d%s" % [keep_level, selected_tile + 1, upgrade_text]
-		guard_label.text = "Trained guards: %d" % guards
+		keep_label.text = "Day %d   •   Keep level: %d   •   Selected tile: %d%s" % [day, keep_level, selected_tile + 1, upgrade_text]
+		guard_label.text = "Trained guards: %d   •   Victories: %d   •   Defeats: %d" % [guards, victories, defeats]
 		for i in range(tile_buttons.size()):
 			var prefix := "▶ " if i == selected_tile else ""
 			tile_buttons[i].text = "%s%s Lv.%d\nTile %d" % [prefix, tiles[i], tile_levels[i], i + 1]
@@ -312,6 +312,10 @@ func _refresh_ui() -> void:
 				production = "Food production: %d per tick" % (2 * keep_level * tile_levels[selected_tile])
 			elif tiles[selected_tile] == "Mine":
 				production = "Gold production: %d per tick" % (2 * keep_level * tile_levels[selected_tile])
+			elif tiles[selected_tile] == "Lumber Camp":
+				production = "Wood production: %d per tick" % (2 * keep_level * tile_levels[selected_tile])
+			elif tiles[selected_tile] == "Quarry":
+				production = "Stone production: %d per tick" % (2 * keep_level * tile_levels[selected_tile])
 			elif tiles[selected_tile] == "Keep":
 				production = "Keep produces %d gold and 1 wood per tick" % keep_level
 			var upgrade_note := ""
@@ -448,12 +452,18 @@ func _upgrade_keep() -> void:
 		return
 	var gold_cost := 100 * keep_level
 	var wood_cost := 50 * keep_level
-	if gold < gold_cost or wood < wood_cost:
-		status_message = "Keep upgrade needs %d gold and %d wood." % [gold_cost, wood_cost]
+	var stone_cost := 45 * keep_level
+	if keep_level >= 10:
+		status_message = "Keep has reached the maximum level 10."
+		_refresh_ui()
+		return
+	if gold < gold_cost or wood < wood_cost or stone < stone_cost:
+		status_message = "Keep upgrade needs %d gold, %d wood and %d stone." % [gold_cost, wood_cost, stone_cost]
 		_refresh_ui()
 		return
 	gold -= gold_cost
 	wood -= wood_cost
+	stone -= stone_cost
 	keep_upgrade_finish_unix = int(Time.get_unix_time_from_system()) + 15
 	upgrade_timer.start(15.0)
 	status_message = "Keep upgrade started. It will finish in 15 seconds."
@@ -464,7 +474,8 @@ func _finish_keep_upgrade() -> void:
 	if keep_upgrade_finish_unix <= 0:
 		return
 	keep_upgrade_finish_unix = 0
-	keep_level += 1
+	keep_level = mini(keep_level + 1, 10)
+	day = mini(day + 1, 1000000)
 	_award_achievement("keep_upgrade", "Keep Upgraded", 50)
 	status_message = "Keep upgrade complete! Keep level is now %d." % keep_level
 	_persist_game()
@@ -514,12 +525,18 @@ func _upgrade_selected_building() -> void:
 	var level := tile_levels[selected_tile]
 	var gold_cost := 40 * level
 	var wood_cost := 20 * level
-	if gold < gold_cost or wood < wood_cost:
-		status_message = "Upgrade needs %d gold and %d wood." % [gold_cost, wood_cost]
+	var stone_cost := 10 * level
+	if level >= 5:
+		status_message = "This building has reached the maximum level 5."
+		_refresh_ui()
+		return
+	if gold < gold_cost or wood < wood_cost or stone < stone_cost:
+		status_message = "Upgrade needs %d gold, %d wood and %d stone." % [gold_cost, wood_cost, stone_cost]
 		_refresh_ui()
 		return
 	gold -= gold_cost
 	wood -= wood_cost
+	stone -= stone_cost
 	building_upgrade_tile = selected_tile
 	building_upgrade_finish_unix = int(Time.get_unix_time_from_system()) + maxi(5, level * 5)
 	building_upgrade_timer.start(float(building_upgrade_finish_unix - int(Time.get_unix_time_from_system())))
@@ -532,8 +549,9 @@ func _finish_building_upgrade() -> void:
 		return
 	if building_upgrade_tile >= 0 and building_upgrade_tile < tiles.size():
 		var building := tiles[building_upgrade_tile]
-		if building == "Farm" or building == "Mine" or building == "Barracks":
-			tile_levels[building_upgrade_tile] = clampi(tile_levels[building_upgrade_tile] + 1, 1, 99)
+		if building == "Farm" or building == "Mine" or building == "Barracks" or building == "Lumber Camp" or building == "Quarry":
+			tile_levels[building_upgrade_tile] = clampi(tile_levels[building_upgrade_tile] + 1, 1, 5)
+			day = mini(day + 1, 1000000)
 			_award_achievement("building_upgrade", "Master Builder", 40)
 			status_message = "%s upgrade complete at level %d." % [building, tile_levels[building_upgrade_tile]]
 	building_upgrade_finish_unix = 0
@@ -725,7 +743,7 @@ func _load_game() -> void:
 	var loaded_levels = config.get_value("kingdom", "tile_levels", tile_levels)
 	if (loaded_levels is PackedInt32Array or loaded_levels is Array) and loaded_levels.size() == tile_levels.size():
 		for i in range(tile_levels.size()):
-			tile_levels[i] = clampi(int(loaded_levels[i]), 1, 99)
+			tile_levels[i] = clampi(int(loaded_levels[i]), 1, 5)
 	var loaded_outposts = config.get_value("kingdom", "outpost_defeated", outpost_defeated)
 	if (loaded_outposts is PackedInt32Array or loaded_outposts is Array) and loaded_outposts.size() == outpost_defeated.size():
 		for i in range(outpost_defeated.size()):
@@ -764,7 +782,7 @@ func _normalize_save_data() -> void:
 	scouting_research = clampi(scouting_research, 0, 5)
 	practice_drills = clampi(practice_drills, 0, 20)
 	guards = clampi(guards, 0, 100000)
-	keep_level = clampi(keep_level, 1, 99)
+	keep_level = clampi(keep_level, 1, 10)
 	selected_tile = clampi(selected_tile, 0, tiles.size() - 1)
 	selected_outpost = clampi(selected_outpost, 0, outpost_threat.size() - 1)
 	tutorial_step = clampi(tutorial_step, 0, 4)
@@ -774,7 +792,7 @@ func _normalize_save_data() -> void:
 	for i in range(tiles.size()):
 		if not valid_buildings.has(tiles[i]):
 			tiles[i] = "Empty"
-		tile_levels[i] = clampi(tile_levels[i], 1, 99)
+		tile_levels[i] = clampi(tile_levels[i], 1, 5)
 	tiles[4] = "Keep"
 	for i in range(outpost_defeated.size()):
 		outpost_defeated[i] = 1 if outpost_defeated[i] == 1 else 0
