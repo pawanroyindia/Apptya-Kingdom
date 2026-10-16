@@ -42,7 +42,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
 - Compile and test timed upgrade completion, save/reload countdown continuity, and edge cases in Unity.
 - Add distinct troop classes and a troop training queue, richer troop/combat animation and a visible practice/combat target in the world; current squad presentation uses simple markers.
-- Expand research into a dedicated research screen with clearer per-technology costs, research-specific icons, and visible prerequisite indicators; progression gates now exist in game logic, but the HUD does not yet explain them before a tap.
+- Expand research into a dedicated research screen with clearer per-technology costs, research-specific icons, and a more complete visual presentation; the HUD now shows next-level Keep/Barracks requirements, and game logic enforces them.
 - Test bounded camera pan/zoom gestures against HUD interactions in Unity Play Mode and on Android.
 - Improve authored art, animations, audio, lighting, terrain and mobile UI polish.
 - Test save/reload, screen scaling, performance and heat on real Android devices.
