@@ -128,8 +128,10 @@ func _rebuild_buildings() -> void:
 		var x := float(i % 3 - 1) * 3.7
 		var z := float(int(i / 3) - 1) * 3.7
 		var building := _make_building(current_tiles[i], current_levels[i], Vector3(x, 0.04, z), i == 4)
+		building.scale = Vector3(0.92, 0.92, 0.92)
 		add_child(building)
 		building_nodes.append(building)
+		create_tween().tween_property(building, "scale", Vector3.ONE, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _make_building(kind: String, level: int, position_value: Vector3, is_keep: bool) -> Node3D:
 	var root := Node3D.new()
