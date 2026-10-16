@@ -413,16 +413,33 @@ func _run_tests() -> void:
 	game.keep_level = 0
 	game.selected_tile = 99
 	game.tiles[0] = "UnknownBuilding"
+	game.tiles[3] = "Keep"
 	game.tiles[4] = "Farm"
 	game.tile_levels[0] = 1000
+	game.infantry = 20
+	game.archers = 20
+	game.cavalry = 20
+	game.queued_troop_type = "archer"
+	game.queued_troop_count = 5
+	game.troop_training_finish_unix = int(Time.get_unix_time_from_system()) + 60
 	game.outpost_defeated[0] = 9
 	game.region_scouted[0] = -2
 	game._normalize_save_data()
 	if game.gold != 0 or game.wood != 0 or game.food != 0 or game.guards != 0:
 		_fail("Save normalization did not clamp negative resource and guard values.")
 		return
-	if game.keep_level != 1 or game.selected_tile != 8 or game.tiles[0] != "Empty" or game.tiles[4] != "Keep" or game.tile_levels[0] != 5:
-		_fail("Save normalization did not restore valid kingdom limits.")
+	if game.keep_level != 1 or game.selected_tile != 8 or game.tiles[0] != "Empty" or game.tiles[3] != "Empty" or game.tiles[4] != "Keep" or game.tile_levels[0] != 5:
+		_fail("Save normalization did not restore valid kingdom limits or remove duplicate Keeps.")
+		return
+	var normalized_capacity := 0
+	for i in range(game.tiles.size()):
+		if game.tiles[i] == "Barracks":
+			normalized_capacity = maxi(normalized_capacity, game.tile_levels[i] * 5)
+	if game.guards != game.infantry + game.archers + game.cavalry or game.guards > normalized_capacity:
+		_fail("Save normalization did not enforce the Barracks troop capacity.")
+		return
+	if game.queued_troop_count > normalized_capacity - game.guards or (game.queued_troop_count == 0 and game.queued_troop_type != ""):
+		_fail("Save normalization did not safely trim the troop queue.")
 		return
 	if game.outpost_defeated[0] != 0 or game.region_scouted[0] != 0:
 		_fail("Save normalization did not sanitize outpost progress.")
