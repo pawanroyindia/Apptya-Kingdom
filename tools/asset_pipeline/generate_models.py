@@ -140,6 +140,29 @@ def animate_rig(arm):
         strip.blend_type="REPLACE"
     arm.animation_data.action=None
 
+def combine_meshes(objects,name,armature=None):
+    meshes=[o for o in objects if o and o.type=="MESH"]
+    if not meshes: return None
+    # Apply bevel/normal modifiers before joining; retain the single shared skin modifier.
+    for obj in meshes:
+        for mod in list(obj.modifiers):
+            if mod.type=="ARMATURE": continue
+            bpy.ops.object.select_all(action="DESELECT")
+            obj.select_set(True); bpy.context.view_layer.objects.active=obj
+            bpy.ops.object.modifier_apply(modifier=mod.name)
+    bpy.ops.object.select_all(action="DESELECT")
+    for obj in meshes: obj.select_set(True)
+    bpy.context.view_layer.objects.active=meshes[0]
+    bpy.ops.object.join()
+    combined=meshes[0]; combined.name=name
+    if armature:
+        combined.parent=armature
+        arm_mod=next((m for m in combined.modifiers if m.type=="ARMATURE"),None)
+        if arm_mod is None:
+            arm_mod=combined.modifiers.new("DeformationRig","ARMATURE")
+        arm_mod.object=armature
+    return combined
+
 def export_glb(path,objects):
     bpy.ops.object.select_all(action="DESELECT")
     for o in objects: o.select_set(True)
@@ -204,7 +227,9 @@ def character(path,royal):
         add(cylinder("SpearHead",(0.46,-0.02,1.36),0.055,0.16,"steel",12,"Forearm.R",arm))
         for i in range(4):
             add(cube("BeltPouch",(0.22+i*0.035,-0.19,0.82),(0.055,0.06,0.06),"leather",0.008,"Spine",arm))
-    animate_rig(arm); export_glb(path,[arm]+parts)
+    animate_rig(arm)
+    combined=combine_meshes(parts,"Character_Mesh",arm)
+    export_glb(path,[arm,combined])
 
 def building(path,kind):
     bpy.ops.object.select_all(action="SELECT"); objs=[]
@@ -238,7 +263,8 @@ def building(path,kind):
         for i in range(8):
             a=2*pi*i/8; add(cube("Crenel",(0.61*cos(a),0.61*sin(a),2.22),(0.19,0.19,0.22),"stone",0.02))
         add(cube("TowerDoor",(0,-0.54,0.58),(0.26,0.025,0.72),"wood",0.01))
-    export_glb(path,objs)
+    combined=combine_meshes(objs,kind.title()+"_Mesh")
+    export_glb(path,[combined])
 
 # Export every material's full albedo/normal/roughness map set, including reserve linen.
 for texture_key in PALETTES:
