@@ -6,10 +6,11 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 
 - Portrait, touch-friendly interface
 - Gold, wood and food resource counters
-- Procedural 3D valley scene with a river, bridge, paths, trees, buildings, outposts and visible guard markers
+- Procedural 3D valley with a river, bridge, roads, trees, a castle keep, farms, mines, barracks, three enemy outposts and visible guard markers
+- Touch drag to orbit the camera and two-finger pinch to zoom
 - Nine selectable kingdom tiles
 - Farm, mine and barracks construction
-- Timed Keep upgrades and levelled resource-building upgrades
+- Timed Keep and resource-building upgrades, with timers restored after app suspension
 - Guard training, scouting and raider battles
 - Timed production and bounded offline production
 - Local save/load on the device
