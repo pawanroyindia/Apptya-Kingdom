@@ -299,10 +299,21 @@ func _run_tests() -> void:
 	if game.outpost_defeated[1] != 0 or game.guards != guards_before_locked_attack or not game.status_message.contains("locked"):
 		_fail("Locked outpost attack changed the army or failed to explain the campaign gate.")
 		return
+	game._scout()
+	if game.region_scouted[1] != 0 or game.guards != guards_before_locked_attack or not game.status_message.contains("locked"):
+		_fail("Scouting bypassed sequential campaign unlocks or consumed troops at a locked outpost.")
+		return
 	game._select_outpost(0)
 	game._scout()
 	if game.region_scouted[0] != 1:
 		_fail("Scouting did not reveal the selected region.")
+		return
+	var guards_after_first_scout: int = game.guards
+	var gold_after_first_scout: int = game.gold
+	var wood_after_first_scout: int = game.wood
+	game._scout()
+	if game.guards != guards_after_first_scout or game.gold != gold_after_first_scout or game.wood != wood_after_first_scout or not game.status_message.contains("already scouted"):
+		_fail("Repeat scouting consumed troops or generated duplicate scouting rewards.")
 		return
 
 	var guards_before_attack: int = game.guards
