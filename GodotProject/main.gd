@@ -46,6 +46,7 @@ var tile_detail_label: Label
 var tutorial_label: Label
 var outpost_label: Label
 var achievements_label: Label
+var campaign_label: Label
 var tick_timer: Timer
 var autosave_timer: Timer
 var upgrade_timer: Timer
@@ -243,6 +244,30 @@ func _build_ui() -> void:
 		{"text": "Save Kingdom", "action": _save_game}
 	])
 
+	var campaign_title := Label.new()
+	campaign_title.text = "RESEARCH & CAMPAIGN"
+	campaign_title.add_theme_font_size_override("font_size", 18)
+	campaign_title.add_theme_color_override("font_color", Color("#f1d38a"))
+	column.add_child(campaign_title)
+	campaign_label = Label.new()
+	campaign_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	campaign_label.add_theme_color_override("font_color", Color("#c3d2c7"))
+	column.add_child(campaign_label)
+	_add_button_row(column, [
+		{"text": "Research Combat", "action": _research.bind("combat")},
+		{"text": "Research Economy", "action": _research.bind("economy")},
+		{"text": "Research Scouting", "action": _research.bind("scouting")}
+	])
+	_add_button_row(column, [
+		{"text": "Explore Region\n1 guard", "action": _explore_region},
+		{"text": "Practice Troops", "action": _practice_troops}
+	])
+	_add_button_row(column, [
+		{"text": "Claim Victory Reward", "action": _claim_reward.bind("first_victory")},
+		{"text": "Claim Explorer Reward", "action": _claim_reward.bind("explorer")},
+		{"text": "Claim Keep Reward", "action": _claim_reward.bind("keep_builder")}
+	])
+
 	tutorial_label = Label.new()
 	tutorial_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tutorial_label.add_theme_color_override("font_color", Color("#f1d38a"))
@@ -328,6 +353,7 @@ func _refresh_ui() -> void:
 		outpost_label.text = _get_outpost_description()
 		tutorial_label.text = _get_tutorial_text()
 		achievements_label.text = "Achievements: %d/8 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
+		campaign_label.text = "Explored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20" % [explored_regions, combat_research, economy_research, scouting_research, practice_drills]
 		if is_instance_valid(world_view):
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 		status_label.text = status_message
@@ -639,6 +665,110 @@ func _attack_outpost() -> void:
 		status_message = "Attack failed at Outpost %d. Your guards lost the battle." % (selected_outpost + 1)
 		if randi_range(0, 1) == 1:
 			guards = max(0, guards - 1)
+	_persist_game()
+	_refresh_ui()
+
+func _research(research_type: String) -> void:
+	var level := combat_research if research_type == "combat" else (economy_research if research_type == "economy" else scouting_research)
+	var research_name := "Combat Drills" if research_type == "combat" else ("Efficient Production" if research_type == "economy" else "Cartography")
+	if level >= 5:
+		status_message = "%s has reached maximum level 5." % research_name
+		_refresh_ui()
+		return
+	var required_level := level + 1
+	if keep_level < required_level:
+		status_message = "%s level %d requires Keep level %d." % [research_name, required_level, required_level]
+		_refresh_ui()
+		return
+	if research_type == "combat":
+		var barracks_level := 0
+		for i in range(tiles.size()):
+			if tiles[i] == "Barracks":
+				barracks_level = tile_levels[i]
+		if barracks_level < required_level:
+			status_message = "Combat research level %d requires Barracks level %d." % [required_level, required_level]
+			_refresh_ui()
+			return
+	var wood_cost := 60 * required_level
+	var stone_cost := 40 * required_level
+	var gold_cost := 25 * required_level
+	if wood < wood_cost or stone < stone_cost or gold < gold_cost:
+		status_message = "Research needs %d wood, %d stone and %d gold." % [wood_cost, stone_cost, gold_cost]
+		_refresh_ui()
+		return
+	wood -= wood_cost
+	stone -= stone_cost
+	gold -= gold_cost
+	match research_type:
+		"combat":
+			combat_research += 1
+		"economy":
+			economy_research += 1
+		"scouting":
+			scouting_research += 1
+	status_message = "%s researched to level %d." % [research_name, required_level]
+	_persist_game()
+	_refresh_ui()
+
+func _explore_region() -> void:
+	if guards < 1:
+		status_message = "Train at least one guard before exploring."
+		_refresh_ui()
+		return
+	guards -= 1
+	explored_regions = mini(explored_regions + 1, 1000000)
+	day = mini(day + 1, 1000000)
+	var wood_reward := 20 + explored_regions * 5 + scouting_research * 10
+	var stone_reward := 10 + explored_regions * 2 + scouting_research * 3
+	wood += wood_reward
+	stone += stone_reward
+	status_message = "Region explored! Found %d wood and %d stone. One guard was assigned to the expedition." % [wood_reward, stone_reward]
+	_persist_game()
+	_refresh_ui()
+
+func _practice_troops() -> void:
+	if guards < 1:
+		status_message = "Train at least one guard before practice."
+	elif practice_drills >= 20:
+		status_message = "Troops reached the practice limit (20/20)."
+	else:
+		practice_drills += 1
+		status_message = "Practice complete! Drill %d/20. Army power increased." % practice_drills
+		_persist_game()
+	_refresh_ui()
+
+func _claim_reward(reward_id: String) -> void:
+	match reward_id:
+		"first_victory":
+			if victories < 1:
+				status_message = "Win your first battle to unlock this reward."
+			elif reward_first_victory_claimed:
+				status_message = "First Victory reward already claimed."
+			else:
+				reward_first_victory_claimed = true
+				gold += 100
+				wood += 75
+				status_message = "First Victory claimed: +100 gold and +75 wood."
+		"explorer":
+			if explored_regions < 3:
+				status_message = "Explore 3 regions to unlock this reward (%d/3)." % explored_regions
+			elif reward_explorer_claimed:
+				status_message = "Explorer reward already claimed."
+			else:
+				reward_explorer_claimed = true
+				stone += 100
+				food += 100
+				status_message = "Explorer claimed: +100 stone and +100 food."
+		"keep_builder":
+			if keep_level < 3:
+				status_message = "Upgrade the Keep to level 3 to unlock this reward."
+			elif reward_keep_claimed:
+				status_message = "Keep Builder reward already claimed."
+			else:
+				reward_keep_claimed = true
+				wood += 150
+				gold += 75
+				status_message = "Keep Builder claimed: +150 wood and +75 gold."
 	_persist_game()
 	_refresh_ui()
 
