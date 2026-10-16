@@ -21,43 +21,47 @@ MATS={}
 def make_material(key):
     if key in MATS: return MATS[key]
     lo,hi=PALETTES[key]
-    size=512
-    img=bpy.data.images.new("Apptya_"+key+"_PBR",width=size,height=size,alpha=False)
-    pixels=[]
-    for y in range(size):
-        for x in range(size):
-            n=random.uniform(-0.045,0.045)
-            grain=0.0
-            if key=="stone":
-                edge=(x%64<3 or y%48<3)
-                grain=(-0.22 if edge else 0.035*sin(x*0.19)*cos(y*0.17))
-            elif key in ("wood","leather"):
-                grain=0.11*sin(y*0.19+sin(x*0.025)*2.0)+0.035*sin(y*0.71+x*0.015)
-                if key=="leather": grain+=0.035*sin(x*0.31)*sin(y*0.27)
-            elif key in ("cloth","red","linen"):
-                grain=0.055*sin(x*0.72)+0.045*sin(y*0.72)
-                if x%8==0 or y%8==0: grain-=0.055
-            elif key=="roof":
-                grain=0.10*sin((x%64)*0.12)+0.035*cos(y*0.24)
-                if x%64<3 or y%40<2: grain-=0.15
-            elif key in ("gold","steel"):
-                grain=0.035*sin(y*0.46)+0.012*sin(x*0.12+y*0.05)
-            else:
-                grain=0.045*sin(x*0.23)*cos(y*0.19)
-            f=max(0.0,min(1.0,0.48+0.19*sin(x*0.035)*cos(y*0.031)+n+grain))
-            pixels.extend([max(0,min(1,lo[i]*(1-f)+hi[i]*f)) for i in range(3)]+[1.0])
-    img.pixels.foreach_set(pixels); img.filepath_raw=os.path.join(TEX,key+".png"); img.file_format="PNG"; img.save()
+    def make_map(suffix,size,kind):
+        img=bpy.data.images.new("Apptya_"+key+"_"+suffix,width=size,height=size,alpha=False)
+        pixels=[]
+        for y in range(size):
+            for x in range(size):
+                noise=random.uniform(-0.045,0.045)
+                grain=sin(y*0.22+x*0.025)*0.035 if key in ("wood","leather") else 0.0
+                if kind=="base":
+                    f=max(0.0,min(1.0,0.47+0.25*sin(x*0.055)*cos(y*0.061)+noise+grain))
+                    rgb=[max(0,min(1,lo[i]*(1-f)+hi[i]*f)) for i in range(3)]
+                elif kind=="normal":
+                    nx=0.5+0.08*sin(x*0.18+sin(y*0.04))+noise*0.25
+                    ny=0.5+0.08*cos(y*0.17+sin(x*0.03))+noise*0.25
+                    rgb=[nx,ny,0.98]
+                else:
+                    rough=0.72+0.13*sin(x*0.07)*cos(y*0.05)+noise
+                    if key in ("gold","steel"): rough=0.29+0.08*sin(x*0.06)*cos(y*0.07)+noise*0.4
+                    rgb=[max(0.08,min(0.98,rough))]*3
+                pixels.extend(rgb+[1.0])
+        img.pixels.foreach_set(pixels)
+        img.filepath_raw=os.path.join(TEX,key+"_"+suffix+".png")
+        img.file_format="PNG"; img.save()
+        if kind!="base": img.colorspace_settings.name="Non-Color"
+        return img
+    base_img=make_map("albedo",512,"base")
+    normal_img=make_map("normal",256,"normal")
+    rough_img=make_map("roughness",256,"rough")
     mat=bpy.data.materials.new("PBR_"+key); mat.diffuse_color=(*hi,1); mat.use_nodes=True
-    bs=mat.node_tree.nodes.get("Principled BSDF"); tex=mat.node_tree.nodes.new("ShaderNodeTexImage"); tex.image=img
-    mat.node_tree.links.new(tex.outputs["Color"],bs.inputs["Base Color"])
-    bump=mat.node_tree.nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value=0.10 if key in ("stone","wood","leather","cloth","linen","roof") else 0.035
-    bump.inputs["Distance"].default_value=0.018
-    mat.node_tree.links.new(tex.outputs["Color"],bump.inputs["Height"])
-    mat.node_tree.links.new(bump.outputs["Normal"],bs.inputs["Normal"])
+    nodes=mat.node_tree.nodes; links=mat.node_tree.links; bs=nodes.get("Principled BSDF")
+    base_node=nodes.new("ShaderNodeTexImage"); base_node.image=base_img
+    links.new(base_node.outputs["Color"],bs.inputs["Base Color"])
+    rough_node=nodes.new("ShaderNodeTexImage"); rough_node.image=rough_img
+    links.new(rough_node.outputs["Color"],bs.inputs["Roughness"])
+    normal_tex=nodes.new("ShaderNodeTexImage"); normal_tex.image=normal_img
+    normal_node=nodes.new("ShaderNodeNormalMap")
+    links.new(normal_tex.outputs["Color"],normal_node.inputs["Color"])
+    links.new(normal_node.outputs["Normal"],bs.inputs["Normal"])
     bs.inputs["Metallic"].default_value=0.68 if key in ("gold","steel") else 0.0
-    bs.inputs["Roughness"].default_value=0.28 if key=="gold" else (0.36 if key=="steel" else 0.78)
-    MATS[key]=mat; return mat
+    bs.inputs["Roughness"].default_value=0.32 if key in ("gold","steel") else 0.78
+    MATS[key]=mat
+    return mat
 
 def finish_mesh(obj,mat,bone=None,arm=None):
     obj.name=obj.name.replace("Sphere","Part").replace("Cube","Part").replace("Cylinder","Part")
