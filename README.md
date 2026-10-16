@@ -22,6 +22,8 @@ A GitHub Actions workflow is defined at `.github/workflows/godot-android-apk.yml
 
 The workflow uses Godot 4.5.1, Godot's Android export templates, and Android build tools. It does not need Unity licence secrets. **The first workflow run must still pass before an APK can be claimed as built.** A debug APK is for testing, not a Play Store-ready release.
 
+See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for the detailed pre-APK checklist and current verification gates.
+
 ## Verification status
 
 The Godot project files and GitHub Actions workflows have been committed. A headless source-parse/runtime smoke check is configured; its current run must finish before code validation can be claimed. The APK workflow is manual-only and has not been run. APK export, installation, gameplay regression, and physical-device tests are not yet verified. The original Unity project remains in the repository as a fallback until the Godot port is validated.
