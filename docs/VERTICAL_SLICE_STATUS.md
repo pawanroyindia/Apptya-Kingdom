@@ -42,7 +42,7 @@ This is a source-level status report. It is not evidence of a successful Unity c
 ## Still needed before calling the vertical slice complete
 - Compile and run in the pinned Unity editor; resolve any compiler/runtime issues.
 - Compile and test timed upgrade completion, save/reload countdown continuity, and edge cases in Unity.
-- Replace capsule blockout markers with authored class-specific troop models and attack/march animations; wire the visible practice target into selectable interaction and a practice/combat mechanic. Current motion is a subtle procedural idle sway, not a full animation system.
+- Replace capsule blockout markers with authored class-specific troop models and attack/march animations; replace the capsule dummy with an authored target model and implement actual practice progression plus class-specific marching/attack animations. Current motion is a subtle procedural idle sway, not a full animation system.
 - Expand research into a dedicated research screen with clearer per-technology costs, research-specific icons, and a more complete visual presentation; the HUD now shows next-level Keep/Barracks requirements, and game logic enforces them.
 - Test bounded camera pan/zoom gestures against HUD interactions in Unity Play Mode and on Android.
 - Improve authored art, animations, audio, lighting, terrain and mobile UI polish.
