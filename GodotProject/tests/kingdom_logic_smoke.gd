@@ -84,7 +84,7 @@ func _run_tests() -> void:
 	if game.gold != 300 or game.tiles.size() != 9:
 		_fail("Initial kingdom state is incorrect.")
 		return
-	if game.outpost_threat.size() != 5 or game.world_view.current_outposts.size() != 5:
+	if game.outpost_threat.size() != 10 or game.world_view.current_outposts.size() != 10:
 		_fail("Five-outpost campaign map was not initialized.")
 		return
 	var initial_mesh_count: int = game.world_view.find_children("*", "MeshInstance3D", true, false).size()
@@ -473,8 +473,8 @@ func _run_tests() -> void:
 
 	var absolute_save := ProjectSettings.globalize_path("user://apptya_kingdom_save.cfg")
 	# Old Unity/Godot prototype saves had only three outposts; migrate those entries forward.
-	game.outpost_defeated = PackedInt32Array([0, 0, 0, 0, 0])
-	game.region_scouted = PackedInt32Array([0, 0, 0, 0, 0])
+	game.outpost_defeated = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+	game.region_scouted = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 	var legacy_config := ConfigFile.new()
 	legacy_config.set_value("kingdom", "outpost_defeated", PackedInt32Array([1, 0, 1]))
 	legacy_config.set_value("kingdom", "region_scouted", PackedInt32Array([0, 1, 0]))
@@ -482,8 +482,8 @@ func _run_tests() -> void:
 		_fail("Could not create a legacy three-outpost save fixture.")
 		return
 	game._load_game()
-	if game.outpost_defeated.size() != 5 or game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 1 or game.outpost_defeated[3] != 0 or game.region_scouted[1] != 1:
-		_fail("Legacy three-outpost save did not migrate to the five-outpost campaign.")
+	if game.outpost_defeated.size() != 10 or game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 1 or game.outpost_defeated[3] != 0 or game.region_scouted[1] != 1:
+		_fail("Legacy three-outpost save did not migrate to the ten-outpost campaign.")
 		return
 	var corrupt_file := FileAccess.open(absolute_save, FileAccess.WRITE)
 	if corrupt_file == null:
