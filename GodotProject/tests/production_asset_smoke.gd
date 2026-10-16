@@ -38,10 +38,11 @@ func _run() -> void:
 					return
 		instance.queue_free()
 	for texture_name in ["gold", "steel", "cloth", "red", "skin", "leather", "stone", "wood", "roof", "linen"]:
-		var texture_path := "res://assets/production/textures/%s.png" % texture_name
-		if not ResourceLoader.exists(texture_path) or load(texture_path) == null:
-			_fail("Missing imported PBR texture: " + texture_path)
-			return
+		for map_name in ["albedo", "normal", "roughness"]:
+			var texture_path := "res://assets/production/textures/%s_%s.png" % [texture_name, map_name]
+			if not ResourceLoader.exists(texture_path) or load(texture_path) == null:
+				_fail("Missing imported PBR texture map: " + texture_path)
+				return
 	for sound_name in ["kingdom_theme", "gather", "build", "train", "victory", "defeat", "scout"]:
 		var audio_path := "res://assets/production/audio/%s.wav" % sound_name
 		if not ResourceLoader.exists(audio_path):
