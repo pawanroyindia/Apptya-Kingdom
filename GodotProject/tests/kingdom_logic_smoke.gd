@@ -39,6 +39,24 @@ func _run_tests() -> void:
 	if game.world_view.camera_distance >= before_two_finger_zoom:
 		_fail("Two-finger touch pinch did not zoom the 3D camera.")
 		return
+	game.graphics_quality = "Balanced"
+	game._apply_graphics_quality()
+	game._cycle_graphics_quality()
+	if game.graphics_quality != "High" or game.world_viewport.size != Vector2i(800, 450) or not game.world_view.sun_light.shadow_enabled:
+		_fail("High graphics preset did not enable the expected render quality.")
+		return
+	game._cycle_graphics_quality()
+	if game.graphics_quality != "Low" or game.world_viewport.size != Vector2i(480, 270) or game.world_view.sun_light.shadow_enabled:
+		_fail("Low graphics preset did not reduce resolution and disable shadows.")
+		return
+	game._cycle_graphics_quality()
+	if game.graphics_quality != "Balanced" or game.world_viewport.size != Vector2i(640, 360) or not game.world_view.sun_light.shadow_enabled:
+		_fail("Balanced graphics preset did not restore its render settings.")
+		return
+	game.world_view.reset_camera()
+	if not is_equal_approx(game.world_view.camera_distance, 24.0) or not is_equal_approx(game.world_view.camera_yaw, 0.0):
+		_fail("Reset Camera did not restore the default camera view.")
+		return
 	game.world_view.active_touches.clear()
 	game.world_view.touch_moved.clear()
 	game.world_view.previous_pinch_distance = 0.0
@@ -323,6 +341,7 @@ func _run_tests() -> void:
 	var saved_tiles: Array = game.tiles.duplicate()
 	var saved_levels: PackedInt32Array = game.tile_levels.duplicate()
 	var saved_keep_level: int = game.keep_level
+	var saved_graphics_quality: String = game.graphics_quality
 	var saved_day: int = game.day
 	var saved_enemy_level: int = game.enemy_level
 	var saved_explored_regions: int = game.explored_regions
@@ -344,6 +363,7 @@ func _run_tests() -> void:
 	game.tiles[0] = "Empty"
 	game.tile_levels[0] = 1
 	game.keep_level = 1
+	game.graphics_quality = "Low" if saved_graphics_quality != "Low" else "High"
 	game.outpost_defeated[0] = 0
 	game.achievements.clear()
 	game._load_game()
@@ -358,6 +378,9 @@ func _run_tests() -> void:
 		return
 	if game.tiles != saved_tiles or game.tile_levels != saved_levels or game.keep_level != saved_keep_level:
 		_fail("Kingdom save/load did not restore building levels.")
+		return
+	if game.graphics_quality != saved_graphics_quality:
+		_fail("Kingdom save/load did not restore the graphics preset.")
 		return
 	if game.outpost_defeated != saved_defeated or game.achievements != saved_achievements:
 		_fail("Kingdom save/load did not restore campaign and achievement progress.")
