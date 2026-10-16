@@ -335,6 +335,12 @@ func _run_tests() -> void:
 	if game.building_upgrade_finish_unix != pending_building_upgrade or game.building_upgrade_tile != 0:
 		_fail("Kingdom save/load did not restore the pending building upgrade timer.")
 		return
+	var guards_before_resumed_training: int = game.guards
+	game.troop_training_finish_unix = int(Time.get_unix_time_from_system()) - 1
+	game._resume_timed_upgrades()
+	if game.queued_troop_count != 0 or game.guards != guards_before_resumed_training + 1:
+		_fail("An expired troop training queue did not complete when timers resumed.")
+		return
 
 	var absolute_save := ProjectSettings.globalize_path("user://apptya_kingdom_save.cfg")
 	var corrupt_file := FileAccess.open(absolute_save, FileAccess.WRITE)
