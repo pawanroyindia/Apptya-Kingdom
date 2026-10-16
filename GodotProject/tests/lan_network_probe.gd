@@ -78,8 +78,13 @@ func _run_probe() -> void:
 			printerr("LAN_CLIENT_FAIL: timed out connecting to local host.")
 			quit(1)
 			return
-		session.request_host_action("gather", {"resource": "gold", "amount": 20})
-		session.request_host_action("set_stance", {"stance": "Defensive"})
+		# Malformed client requests must be rejected without changing host state.
+		session.request_host_action("gather", {"resource": "gold", "amount": 999, "tile": 4, "outpost": 0})
+		session.request_host_action("gather", {"resource": "gold", "amount": 20, "tile": 99, "outpost": 0})
+		session.request_host_action("unknown_action", {"tile": 4, "outpost": 0})
+		# Valid actions still succeed after rejected requests.
+		session.request_host_action("gather", {"resource": "gold", "amount": 20, "tile": 4, "outpost": 0})
+		session.request_host_action("set_stance", {"stance": "Defensive", "tile": 4, "outpost": 0})
 		for attempt in range(60):
 			if kingdom.gold == 320 and kingdom.battle_stance == "Defensive":
 				print("LAN_CLIENT_PASS: received authoritative host snapshot; gold=%d stance=%s" % [kingdom.gold, kingdom.battle_stance])
