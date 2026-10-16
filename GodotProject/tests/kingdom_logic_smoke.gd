@@ -388,11 +388,26 @@ func _run_tests() -> void:
 	if game.world_view.building_nodes.size() != 9 or game.world_view.building_nodes[2].get_child_count() < 6:
 		_fail("Academy construction did not create its 3D building model.")
 		return
-	game.tile_levels[2] = 2
-	game._refresh_ui()
-	if not game.tile_detail_label.text.contains("Research discount: 10%"):
-		_fail("Academy inspection did not show its level-based research discount.")
+	var academy_gold_before_upgrade: int = game.gold
+	var academy_wood_before_upgrade: int = game.wood
+	var academy_stone_before_upgrade: int = game.stone
+	game._upgrade_selected_building()
+	if game.building_upgrade_tile != 2 or game.tile_levels[2] != 1 or game.gold != academy_gold_before_upgrade - 40 or game.wood != academy_wood_before_upgrade - 20 or game.stone != academy_stone_before_upgrade - 10:
+		_fail("Academy upgrade did not start through the normal timed upgrade path or charge its exact costs.")
 		return
+	game.building_upgrade_finish_unix = int(Time.get_unix_time_from_system()) - 1
+	game._finish_building_upgrade()
+	if game.tile_levels[2] != 2 or not game.tile_detail_label.text.contains("Research discount: 10%"):
+		_fail("Academy upgrade did not complete or apply its level-2 research discount.")
+		return
+	game.tiles[1] = "Empty"
+	game._refresh_ui()
+	game._select_tile(1)
+	game._build_academy()
+	if game.tiles[1] != "Empty" or not game.status_message.contains("one Academy"):
+		_fail("A second Academy was allowed instead of directing the player to upgrade the existing one.")
+		return
+	game._select_tile(2)
 	var research_gold_before: int = game.gold
 	var research_wood_before: int = game.wood
 	var research_stone_before: int = game.stone
@@ -615,6 +630,8 @@ func _run_tests() -> void:
 	game.keep_level = 0
 	game.selected_tile = 99
 	game.tiles[0] = "UnknownBuilding"
+	game.tiles[1] = "Academy"
+	game.tiles[2] = "Academy"
 	game.tiles[3] = "Keep"
 	game.tiles[4] = "Farm"
 	game.tile_levels[0] = 1000
@@ -636,6 +653,13 @@ func _run_tests() -> void:
 		return
 	if game.queued_troop_count > normalized_capacity - game.guards or (game.queued_troop_count == 0 and game.queued_troop_type != ""):
 		_fail("Save normalization did not safely trim the troop queue.")
+		return
+	var academy_count := 0
+	for building in game.tiles:
+		if building == "Academy":
+			academy_count += 1
+	if academy_count != 1 or game.tiles[1] != "Academy" or game.tiles[2] != "Empty":
+		_fail("Save normalization did not enforce the single-Academy invariant.")
 		return
 	if game.outpost_defeated[0] != 0 or game.region_scouted[0] != 0:
 		_fail("Save normalization did not sanitize outpost progress.")
