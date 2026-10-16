@@ -226,7 +226,9 @@ def gameplay_invariants() -> list[str]:
                          "wood +", "food +", "stone +", "ClaimAchievement(string id)",
                          "ClaimAchievement(\"first_victory\")", "ClaimAchievement(\"explorer\")",
                          "ClaimAchievement(\"keep_builder\")",
-                         "ApptyaGameState.Instance == null || ApptyaGameState.Instance.Data == null"):
+                         "ApptyaGameState.Instance == null || ApptyaGameState.Instance.Data == null",
+                         "Queue infantry", "Queue archers", "Queue cavalry", "TroopTrainingStatus()",
+                         "d.infantry", "d.archers", "d.cavalry", "state.QueueTroop(type)"):
             if required not in hud:
                 errors.append(f"ApptyaRuntimeHud.cs: required HUD safety/interaction feature missing: {required}")
         if "ApptyaGameState.Instance.Changed -= Refresh;" not in hud:
