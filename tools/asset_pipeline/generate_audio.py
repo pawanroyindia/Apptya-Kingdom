@@ -55,21 +55,58 @@ def music():
         out.append((math.tanh(l*1.8)*fade,math.tanh(r*1.8)*fade))
     write_wav("kingdom_theme.wav",out)
 def effect(name,kind):
+    # Layered original sound design: transients, low-frequency impacts, harmonics, and stereo placement.
     d={"gather":0.62,"build":0.9,"train":1.05,"victory":1.8,"defeat":1.6,"scout":0.75}[kind]
+    seq={"gather":[880,1320,1760],"build":[220,330,440],"train":[196,293.66,392],
+         "victory":[392,493.88,587.33,783.99],"defeat":[392,311.13,233.08,174.61],
+         "scout":[523.25,659.25,880]}[kind]
     samples=[]
-    seq={"gather":[880,1320],"build":[220,330,440],"train":[196,293.66,392],"victory":[392,493.88,587.33,783.99],"defeat":[392,311.13,233.08],"scout":[523.25,659.25]}[kind]
     for i in range(int(SR*d)):
-        t=i/SR; s=0.0
+        t=i/SR; left=right=0.0
+        # Musical layer: decaying partials with a short attack and slight pitch motion.
         for j,f in enumerate(seq):
             start=j*(d/(len(seq)+0.25)); u=t-start
             if u>=0:
-                e=min(1,u/0.008)*math.exp(-u*(4.0 if kind in ("victory","defeat") else 8.5))
-                vibr=1+0.004*math.sin(2*math.pi*5*t)
-                s+=(math.sin(2*math.pi*f*vibr*u)+0.23*math.sin(2*math.pi*f*2.01*u))*e*0.18
-        noise=(random.random()*2-1)*math.exp(-t*30)*0.06 if kind in ("build","gather") else 0
-        s+=noise
-        v=math.tanh(s*1.7)
-        samples.append((v,v*0.94))
+                decay=math.exp(-u*(3.2 if kind in ("victory","defeat") else 7.5))
+                attack=min(1.0,u/0.006)
+                vibr=1.0+0.0035*math.sin(2*math.pi*5.1*t)
+                tone=(math.sin(2*math.pi*f*vibr*u)+0.28*math.sin(2*math.pi*f*2.01*u)
+                      +0.10*math.sin(2*math.pi*f*3.97*u))*decay*attack
+                level=0.12 if kind in ("victory","defeat") else 0.095
+                pan=0.28 if (j%2)==0 else 0.72
+                left+=tone*level*(1.0-pan*0.42)
+                right+=tone*level*(0.58+pan*0.42)
+        # Short broadband transients make gather/build impacts less like UI beeps.
+        if kind in ("gather","build","train","victory","defeat"):
+            centers={"gather":[0.0,0.22],"build":[0.0,0.28,0.56],
+                     "train":[0.0,0.36],"victory":[0.0,0.48,0.92],
+                     "defeat":[0.0,0.55]}[kind]
+            for j,center in enumerate(centers):
+                u=t-center
+                if 0.0<=u<0.18:
+                    noise=(random.random()*2.0-1.0)
+                    click=math.sin(2*math.pi*(1750.0-6200.0*u)*u)
+                    low=math.sin(2*math.pi*(96.0-42.0*min(1.0,u*7.0))*u)
+                    decay=math.exp(-u*(72.0 if kind in ("gather","build") else 28.0))
+                    amount=0.16 if kind in ("build","defeat") else 0.10
+                    hit=(noise*0.40+click*0.35+low*0.55)*decay*amount
+                    left+=hit*(0.92 if j%2 else 1.0)
+                    right+=hit*(1.0 if j%2 else 0.88)
+        if kind=="scout":
+            # Soft rising air/whoosh with a bell-like cue for expedition launch.
+            fade=min(1.0,t/0.05)*max(0.0,min(1.0,(d-t)/0.14))
+            air=(random.random()*2.0-1.0)*math.exp(-((t-0.22)/0.16)**2)*0.075
+            whoosh=math.sin(2*math.pi*(180.0+460.0*t)*t)*fade*0.06
+            left+=air+whoosh*0.72; right+=air*0.72+whoosh
+        if kind=="build":
+            # A short rasp underneath the hammer sequence suggests wood and stone work.
+            rasp=(random.random()*2.0-1.0)*math.exp(-max(0.0,t-0.08)*5.0)*0.035 if t>0.08 else 0.0
+            left+=rasp; right-=rasp*0.7
+        # Fade boundaries and soft limiting prevent clicks or clipping in the exported master.
+        fade=min(1.0,t/0.012,(d-t)/0.06)
+        left=math.tanh(left*1.65)*max(0.0,fade)
+        right=math.tanh(right*1.65)*max(0.0,fade)
+        samples.append((left,right))
     write_wav(name+".wav",samples)
 music()
 for k in ("gather","build","train","victory","defeat","scout"): effect(k,k)
