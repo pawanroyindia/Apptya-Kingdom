@@ -64,6 +64,9 @@ func _build_hero_model() -> void:
 	hero_level_label.modulate = Color("#ffe3a0")
 	hero_model.add_child(hero_level_label)
 	add_child(hero_model)
+	var hero_idle := create_tween().set_loops()
+	hero_idle.tween_property(hero_model, "position:y", 0.16, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	hero_idle.tween_property(hero_model, "position:y", 0.08, 0.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_level: int, guards: int, infantry: int, archers: int, cavalry: int, defeated: PackedInt32Array, scouted: PackedInt32Array, target: int, selected_tile: int) -> void:
 	var next_tiles: Array[String] = []
@@ -309,7 +312,7 @@ func _build_landmarks() -> void:
 	for i in range(4):
 		var ripple_z := -12.0 + float(i) * 7.0
 		var ripple := _add_box(self, Vector3(0.75, 0.018, 0.07), Vector3(7.25, 0.005, ripple_z), "#8bd1d7")
-		var ripple_tween := create_tween().set_loops(3)
+		var ripple_tween := create_tween().set_loops()
 		ripple_tween.tween_property(ripple, "position", Vector3(7.75, 0.005, ripple_z), 1.1).set_trans(Tween.TRANS_SINE)
 		ripple_tween.tween_property(ripple, "position", Vector3(6.75, 0.005, ripple_z), 1.1).set_trans(Tween.TRANS_SINE)
 
@@ -535,6 +538,10 @@ func _rebuild_guards() -> void:
 				_add_box(guard, Vector3(0.12, 0.45, 0.12), Vector3(-0.18, 0.58, 0), "#648d55")
 		add_child(guard)
 		guard_nodes.append(guard)
+		var idle_delay := float(i % 3) * 0.12
+		var guard_idle := create_tween().set_loops()
+		guard_idle.tween_property(guard, "position:y", 0.13, 0.65).set_delay(idle_delay).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		guard_idle.tween_property(guard, "position:y", 0.08, 0.65).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 func _add_textured_level_marker(parent: Node3D, level: int, pos: Vector3, color_value: String) -> void:
 	for i in range(mini(level, 4)):
