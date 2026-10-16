@@ -14,45 +14,69 @@ def write_wav(name, samples):
             b.extend(struct.pack("<hh",int(max(-1,min(1,l))*32767),int(max(-1,min(1,r))*32767)))
         w.writeframes(b)
 def music():
-    dur=36.0; total=int(SR*dur); out=[]
-    # Original modal fantasy theme: strings, bell-like plucks, bass, frame drum and layered harmony.
+    # Original generated fantasy-orchestra cue: layered string-like ensemble, brass-like
+    # harmonic swells, harp ostinato, bell melody, low percussion, and a light room tail.
+    dur=36.0; total=int(SR*dur); dry=[]
     chords=[(110.0,164.81,220.0),(98.0,146.83,196.0),(130.81,164.81,196.0),(87.31,130.81,174.61),
             (110.0,164.81,220.0),(130.81,196.0,261.63),(98.0,146.83,196.0),(82.41,123.47,164.81)]
     melody=[440,392,329.63,293.66,329.63,392,440,523.25,493.88,440,392,329.63,293.66,329.63,392,440]
     for i in range(total):
         t=i/SR; bar=int(t/4.5)%len(chords); local=t%4.5
         l=r=0.0
+        # Ensemble strings: slightly detuned voices with attack/release and slow vibrato.
         for j,f in enumerate(chords[bar]):
             phase=2*math.pi*f*t
-            # Warm sustained bowed tone with slow vibrato and upper harmonics.
-            tone=(math.sin(phase+0.12*math.sin(2*math.pi*4.3*t))+
-                  0.38*math.sin(2*phase)+0.13*math.sin(3*phase))
-            pad=tone*(0.042 if j else 0.055)*(0.82+0.18*math.sin(2*math.pi*0.11*t))
-            l+=pad*(0.8 if j==1 else 1.0); r+=pad*(0.8 if j==0 else 1.0)
-        # Arpeggiated plucked strings, stereo alternation and natural decay.
-        step=int(t/0.375); beat=t%0.375
+            vib=0.0018*math.sin(2*math.pi*(4.2+0.15*j)*t)
+            voice=0.0
+            for detune,weight in [(-0.0022,0.34),(0.0,0.52),(0.0017,0.29)]:
+                p=2*math.pi*f*(1.0+detune+vib)*t
+                voice+=weight*(math.sin(p)+0.26*math.sin(2*p)+0.08*math.sin(3*p))
+            swell=min(1.0,t/1.0,(dur-t)/1.4)
+            pad=voice*(0.028 if j else 0.036)*(0.80+0.20*math.sin(2*math.pi*0.085*t))*max(0,swell)
+            l+=pad*(0.88 if j==1 else 1.0); r+=pad*(0.88 if j==0 else 1.0)
+        # Warm brass-like harmonic layer enters during the second half of each phrase.
+        brass_env=max(0.0,min(1.0,(local-1.0)/0.8))*max(0.0,min(1.0,(4.45-local)/0.8))
+        for j,f in enumerate(chords[bar][:2]):
+            p=2*math.pi*(f*2.0)*t
+            brass=(math.sin(p)+0.45*math.sin(2*p)+0.22*math.sin(3*p))*brass_env*0.014
+            l+=brass*(0.75 if j else 1.0); r+=brass*(1.0 if j else 0.75)
+        # Harp-like arpeggio with stereo placement and a multi-partial pluck.
+        step=int(t/0.28125); beat=t%0.28125
         f=chords[bar][(step+bar)%3]*2
-        pluck=(math.sin(2*math.pi*f*beat)+0.42*math.sin(2*math.pi*f*2.01*beat))*math.exp(-beat*8.5)*0.095
-        if step%2: l+=pluck; r+=pluck*0.55
-        else: r+=pluck; l+=pluck*0.55
-        # Lead phrase every half bar, with a soft bell attack and decaying partials.
+        pluck=(math.sin(2*math.pi*f*beat)+0.32*math.sin(2*math.pi*f*2.01*beat)
+               +0.10*math.sin(2*math.pi*f*3.98*beat))*math.exp(-beat*9.5)*0.060
+        if step%2: l+=pluck; r+=pluck*0.42
+        else: r+=pluck; l+=pluck*0.42
+        # Lead bell/woodwind-like melody, with gentle breath envelope and harmonics.
         mstep=int(local/0.5625); mt=local%0.5625
         mf=melody[(bar*2+mstep)%len(melody)]
-        bell=(math.sin(2*math.pi*mf*mt)+0.35*math.sin(2*math.pi*mf*2.76*mt)+0.14*math.sin(2*math.pi*mf*4.1*mt))*math.exp(-mt*4.2)*0.052
-        if mstep%2: r+=bell; l+=bell*0.68
-        else: l+=bell; r+=bell*0.68
-        # Low cinematic pulse and quiet frame-drum transients on the beat.
+        attack=min(1.0,mt/0.035)
+        bell=(math.sin(2*math.pi*mf*mt)+0.29*math.sin(2*math.pi*mf*2.76*mt)
+              +0.11*math.sin(2*math.pi*mf*4.1*mt))*math.exp(-mt*3.5)*attack*0.043
+        if mstep%2: r+=bell; l+=bell*0.62
+        else: l+=bell; r+=bell*0.62
+        # Low cinematic timpani pulse and soft frame-drum accents.
         beatpos=t%1.125
-        kick=math.sin(2*math.pi*(72-28*min(1,beatpos*5))*beatpos)*math.exp(-beatpos*11)*0.075
-        if beatpos<0.25: l+=kick; r+=kick
-        # Soft cymbal/shaker texture only at phrase accents.
+        freq=72-25*min(1.0,beatpos*4.0)
+        kick=(math.sin(2*math.pi*freq*beatpos)+0.22*math.sin(2*math.pi*freq*2.1*beatpos))*math.exp(-beatpos*8.5)*0.052
+        if beatpos<0.28: l+=kick; r+=kick
+        # Quiet cymbal/shaker swell at each bar, panned for width.
         phrase=t%4.5
-        if phrase<0.045:
-            n=(random.random()*2-1)*math.exp(-phrase*70)*0.022
-            l+=n; r-=n*0.7
-        # Smooth fade-in/out and conservative peak level.
-        fade=min(1,t/1.4,(dur-t)/1.2)
-        out.append((math.tanh(l*1.8)*fade,math.tanh(r*1.8)*fade))
+        if phrase<0.22:
+            n=(random.random()*2-1)*math.exp(-phrase*13)*0.012
+            l+=n; r-=n*0.72
+        fade=min(1.0,t/1.25,(dur-t)/1.35)
+        dry.append((math.tanh(l*1.75)*max(0.0,fade),math.tanh(r*1.75)*max(0.0,fade)))
+    # Short stereo room tail, mixed from a few deterministic delayed taps.
+    out=[]
+    for i,(left,right) in enumerate(dry):
+        tail_l=tail_r=0.0
+        for delay,gain,swap in [(int(0.037*SR),0.11,False),(int(0.061*SR),0.075,True),(int(0.089*SR),0.045,False)]:
+            j=i-delay
+            if j>=0:
+                tail_l+=dry[j][1 if swap else 0]*gain
+                tail_r+=dry[j][0 if swap else 1]*gain
+        out.append((math.tanh(left+tail_l),math.tanh(right+tail_r)))
     write_wav("kingdom_theme.wav",out)
 def effect(name,kind):
     # Layered original sound design: transients, low-frequency impacts, harmonics, and stereo placement.
@@ -107,6 +131,36 @@ def effect(name,kind):
         left=math.tanh(left*1.65)*max(0.0,fade)
         right=math.tanh(right*1.65)*max(0.0,fade)
         samples.append((left,right))
+    # Extra cue-specific Foley-like layers are synthesized deterministically so each action
+    # has a material identity even offline; these are sound-design effects, not field recordings.
+    if kind=="gather":
+        # Coin/ore clinks: inharmonic metallic partials with fast decay.
+        for center,freq in [(0.035,1740),(0.19,2310),(0.37,1460)]:
+            u=t-center
+            if 0<=u<0.24:
+                clink=(math.sin(2*math.pi*freq*u)+0.45*math.sin(2*math.pi*freq*2.73*u))*math.exp(-u*24)*0.055
+                left+=clink; right+=clink*(0.65 if center==0.19 else 0.9)
+    elif kind=="build":
+        # Wood/stone hammer knocks: short filtered-noise burst and a low resonant body.
+        for center in [0.12,0.34,0.58]:
+            u=t-center
+            if 0<=u<0.11:
+                knock=((random.random()*2-1)*0.45+math.sin(2*math.pi*118*u))*math.exp(-u*42)*0.095
+                left+=knock*(0.9 if center==0.34 else 1.0); right+=knock*0.88
+    elif kind=="train":
+        # Buckle/armor movement: several bright, quiet metal ticks under the training chime.
+        for center,freq in [(0.09,2080),(0.22,1650),(0.43,2480)]:
+            u=t-center
+            if 0<=u<0.075:
+                tick=(math.sin(2*math.pi*freq*u)+0.25*math.sin(2*math.pi*freq*1.6*u))*math.exp(-u*52)*0.045
+                left+=tick; right+=tick*0.72
+    elif kind in ("victory","defeat"):
+        # Short shield/weapon impact with low thump and a metallic rattle.
+        u=t-(0.18 if kind=="victory" else 0.32)
+        if 0<=u<0.22:
+            thump=math.sin(2*math.pi*(86-90*u)*u)*math.exp(-u*18)*0.08
+            rattle=(random.random()*2-1)*math.exp(-u*38)*0.025
+            left+=thump+rattle; right+=thump*0.92-rattle*0.55
     write_wav(name+".wav",samples)
 music()
 for k in ("gather","build","train","victory","defeat","scout"): effect(k,k)
