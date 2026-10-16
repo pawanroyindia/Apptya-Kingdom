@@ -1252,7 +1252,7 @@ func _attack_enemy_army() -> void:
 	var army := int(battle["kingdom_power"])
 	var enemy := int(battle["enemy_power"])
 	var chance := int(battle["chance"])
-	var won_battle := randi_range(1, 100) <= chance
+	var won_battle := chance >= 100 or randi_range(1, 100) <= chance
 	var lost := int(battle["win_losses"] if won_battle else battle["loss_losses"])
 	_remove_troops(lost)
 	day = mini(day + 1, 1000000)
@@ -1811,7 +1811,6 @@ func _normalize_save_data() -> void:
 			outpost_defeated[i] = 0
 			region_scouted[i] = 0
 	# Keep all persisted timers tied to a valid operation and supported building.
-	var now := int(Time.get_unix_time_from_system())
 	if keep_upgrade_finish_unix <= 0 or keep_level >= 10:
 		keep_upgrade_finish_unix = 0
 	if building_upgrade_finish_unix <= 0 or building_upgrade_tile < 0 or building_upgrade_tile >= tiles.size():
