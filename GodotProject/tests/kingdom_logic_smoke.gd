@@ -89,11 +89,11 @@ func _run_tests() -> void:
 		return
 
 	# Barracks construction and guard training resource costs must be applied exactly.
-	game._select_tile(6)
+	game._select_tile(5)
 	var barracks_gold_before: int = game.gold
 	var barracks_wood_before: int = game.wood
 	game._build_barracks()
-	if game.tiles[6] != "Barracks" or game.gold != barracks_gold_before - 80 or game.wood != barracks_wood_before - 30:
+	if game.tiles[5] != "Barracks" or game.gold != barracks_gold_before - 80 or game.wood != barracks_wood_before - 30:
 		_fail("Barracks construction or resource costs failed.")
 		return
 	var guards_before_training: int = game.guards
