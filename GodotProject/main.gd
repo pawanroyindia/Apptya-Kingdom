@@ -44,9 +44,9 @@ var building_upgrade_tile := -1
 var tutorial_step := 0
 var tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
 var tile_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
-var outpost_threat := PackedInt32Array([1, 2, 3, 4, 5])
-var outpost_defeated := PackedInt32Array([0, 0, 0, 0, 0])
-var region_scouted := PackedInt32Array([0, 0, 0, 0, 0])
+var outpost_threat := PackedInt32Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+var outpost_defeated := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+var region_scouted := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 var achievements := PackedStringArray()
 var status_message := "Your kingdom awaits your command."
 var resource_labels: Dictionary = {}
@@ -260,15 +260,11 @@ func _build_ui() -> void:
 	outpost_label = Label.new()
 	outpost_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(outpost_label)
-	_add_button_row(column, [
-		{"text": "Outpost 1\nThreat 1", "action": _select_outpost.bind(0)},
-		{"text": "Outpost 2\nThreat 2", "action": _select_outpost.bind(1)},
-		{"text": "Outpost 3\nThreat 3", "action": _select_outpost.bind(2)}
-	], outpost_buttons)
-	_add_button_row(column, [
-		{"text": "Outpost 4\nThreat 4", "action": _select_outpost.bind(3)},
-		{"text": "Outpost 5\nThreat 5", "action": _select_outpost.bind(4)}
-	], outpost_buttons)
+	for row_start in range(0, outpost_threat.size(), 3):
+		var outpost_definitions: Array = []
+		for i in range(row_start, mini(row_start + 3, outpost_threat.size())):
+			outpost_definitions.append({"text": "Outpost %d\nThreat %d" % [i + 1, outpost_threat[i]], "action": _select_outpost.bind(i)})
+		_add_button_row(column, outpost_definitions, outpost_buttons)
 
 	var army_title := Label.new()
 	army_title.text = "ARMY & EXPLORATION"
