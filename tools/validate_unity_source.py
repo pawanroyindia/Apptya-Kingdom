@@ -102,17 +102,23 @@ def gameplay_invariants() -> list[str]:
         gather = source[gather_start:upgrade_start]
         if "amount<=0" not in gather or "AddResourceSafely" not in gather:
             errors.append("ApptyaGameState.cs: gathering must reject non-positive amounts and use overflow-safe resource additions")
-    # Guard troop training against free recruits and capacity overflows.
-    train_start = source.find("public bool TrainGuard()")
-    army_start = source.find("public int ArmyPower()", train_start)
-    if train_start < 0 or army_start < 0:
-        errors.append("ApptyaGameState.cs: guard training API is missing")
-    else:
-        train = source[train_start:army_start]
-        for required_rule in ("Data.guards>=Data.barracksLevel*5", "Data.food<25", "Data.gold<10",
-                              "Data.food-=25", "Data.gold-=10", "Data.guards++"):
-            if required_rule not in train:
-                errors.append(f"ApptyaGameState.cs: guard training is missing rule: {required_rule}")
+    # Troop classes must use a persisted single-slot queue with class-specific costs and power.
+    for required_rule in (
+        'public bool TrainGuard(){return QueueTroop("infantry",1);}',
+        'public bool QueueTroop(string type,int count=1)',
+        'case "infantry":foodCost=25;goldCost=10;duration=8f',
+        'case "archer":foodCost=35;goldCost=15;duration=12f',
+        'case "cavalry":foodCost=45;goldCost=25;duration=16f',
+        'Data.queuedTroopCount>0',
+        'Data.guards+count>Data.barracksLevel*5',
+        'void TickTroopTraining()',
+        'Data.infantry*(10+Data.combatResearch*2)',
+        'Data.archers*(14+Data.combatResearch*2)',
+        'Data.cavalry*(18+Data.combatResearch*2)',
+        'Data.saveVersion=5;',
+    ):
+        if required_rule not in source:
+            errors.append(f"ApptyaGameState.cs: troop queue/class rule missing: {required_rule}")
 
     # Scout must consume a guard and refuse when no guard is available.
     scout_start = source.find("public bool Scout()")
@@ -120,7 +126,7 @@ def gameplay_invariants() -> list[str]:
         errors.append("ApptyaGameState.cs: scouting API is missing")
     else:
         scout = source[scout_start:]
-        if "Data.guards<1" not in scout or "Data.guards--" not in scout or "Save()" not in scout:
+        if "Data.guards<1" not in scout or "RemoveTroops(1)" not in scout or "Save()" not in scout:
             errors.append("ApptyaGameState.cs: scouting must require and consume a guard, then save")
 
     # Claimed achievements must not be claimable repeatedly.
