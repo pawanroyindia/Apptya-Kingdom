@@ -1,7 +1,11 @@
 name: Godot Android APK
 
 on:
-  # Manual only: do not consume build minutes or create an APK until the user approves.
+  # One-time approved build trigger; remove the push trigger after this run completes.
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/godot-android-apk.yml"
   workflow_dispatch:
 
 permissions:
