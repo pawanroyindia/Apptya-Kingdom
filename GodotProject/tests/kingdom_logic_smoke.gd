@@ -67,6 +67,15 @@ func _run_tests() -> void:
 		_fail("Fifth outpost could not be selected in the campaign UI/world.")
 		return
 	game._select_outpost(0)
+	await create_timer(0.1).timeout
+	var stable_mesh_count := game.world_view.find_children("*", "MeshInstance3D", true, false).size()
+	for refresh_index in range(3):
+		game._refresh_ui()
+	await create_timer(0.1).timeout
+	var refreshed_mesh_count := game.world_view.find_children("*", "MeshInstance3D", true, false).size()
+	if refreshed_mesh_count > stable_mesh_count + 10:
+		_fail("Repeated UI refreshes caused procedural world node growth.")
+		return
 	var wood_before_gather: int = game.wood
 	game._gather_resource("wood", 25)
 	if game.wood != wood_before_gather + 25:
