@@ -311,7 +311,7 @@ func _save_game() -> void:
 	status_message = "Kingdom saved on this device." if error == OK else "Save failed: %s" % error
 	_refresh_ui()
 
-func _persist_game() -> Error:
+func _persist_game() -> int:
 	last_saved_unix = int(Time.get_unix_time_from_system())
 	var config := ConfigFile.new()
 	config.set_value("kingdom", "gold", gold)
