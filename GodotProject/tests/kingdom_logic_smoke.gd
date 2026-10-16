@@ -42,15 +42,15 @@ func _run_tests() -> void:
 	game.graphics_quality = "Balanced"
 	game._apply_graphics_quality()
 	game._cycle_graphics_quality()
-	if game.graphics_quality != "High" or game.world_viewport.size != Vector2i(800, 450) or not game.world_view.sun_light.shadow_enabled:
+	if game.graphics_quality != "High" or !is_equal_approx(game.world_viewport.scaling_3d_scale, 1.25) or not game.world_view.sun_light.shadow_enabled:
 		_fail("High graphics preset did not enable the expected render quality.")
 		return
 	game._cycle_graphics_quality()
-	if game.graphics_quality != "Low" or game.world_viewport.size != Vector2i(480, 270) or game.world_view.sun_light.shadow_enabled:
+	if game.graphics_quality != "Low" or !is_equal_approx(game.world_viewport.scaling_3d_scale, 0.75) or game.world_view.sun_light.shadow_enabled:
 		_fail("Low graphics preset did not reduce resolution and disable shadows.")
 		return
 	game._cycle_graphics_quality()
-	if game.graphics_quality != "Balanced" or game.world_viewport.size != Vector2i(640, 360) or not game.world_view.sun_light.shadow_enabled:
+	if game.graphics_quality != "Balanced" or !is_equal_approx(game.world_viewport.scaling_3d_scale, 1.0) or not game.world_view.sun_light.shadow_enabled:
 		_fail("Balanced graphics preset did not restore its render settings.")
 		return
 	game.world_view.reset_camera()
