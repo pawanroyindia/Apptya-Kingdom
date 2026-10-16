@@ -115,7 +115,7 @@ def gameplay_invariants() -> list[str]:
         'Data.infantry*(10+Data.combatResearch*2)',
         'Data.archers*(14+Data.combatResearch*2)',
         'Data.cavalry*(18+Data.combatResearch*2)',
-        'Data.saveVersion=5;',
+        'Data.saveVersion=6;',
     ):
         if required_rule not in source:
             errors.append(f"ApptyaGameState.cs: troop queue/class rule missing: {required_rule}")
