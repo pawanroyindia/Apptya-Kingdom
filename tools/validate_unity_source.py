@@ -162,6 +162,11 @@ def gameplay_invariants() -> list[str]:
             errors.append("ApptyaBuildingVisuals.cs: enemy roof scaling must use the capped visual tier")
         if "guardMarkers = new GameObject[25]" not in visuals:
             errors.append("ApptyaBuildingVisuals.cs: visible guard markers must cover the 25-guard barracks capacity")
+        for troop_visual_rule in ("state.Data.infantry", "state.Data.archers", "state.Data.cavalry",
+                                  "troopRenderer.sharedMaterial = i < state.Data.infantry",
+                                  "i < state.Data.infantry + state.Data.archers"):
+            if troop_visual_rule not in visuals:
+                errors.append(f"ApptyaBuildingVisuals.cs: class-specific world troop presentation missing: {troop_visual_rule}")
     else:
         errors.append("ApptyaBuildingVisuals.cs: building visuals source is missing")
 
