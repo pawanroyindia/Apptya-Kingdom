@@ -499,6 +499,11 @@ func _run_tests() -> void:
 	# Old Unity/Godot prototype saves had only three outposts; migrate those entries forward.
 	game.outpost_defeated = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 	game.region_scouted = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+	# A short legacy save must clear progress from later campaign slots in memory.
+	game.outpost_defeated[8] = 1
+	game.outpost_defeated[9] = 1
+	game.region_scouted[8] = 1
+	game.region_scouted[9] = 1
 	var legacy_config := ConfigFile.new()
 	legacy_config.set_value("kingdom", "outpost_defeated", PackedInt32Array([1, 0, 1]))
 	legacy_config.set_value("kingdom", "region_scouted", PackedInt32Array([0, 1, 0]))
@@ -506,8 +511,8 @@ func _run_tests() -> void:
 		_fail("Could not create a legacy three-outpost save fixture.")
 		return
 	game._load_game()
-	if game.outpost_defeated.size() != 10 or game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 1 or game.outpost_defeated[3] != 0 or game.region_scouted[1] != 1:
-		_fail("Legacy three-outpost save did not migrate to the ten-outpost campaign.")
+	if game.outpost_defeated.size() != 10 or game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 1 or game.outpost_defeated[3] != 0 or game.outpost_defeated[8] != 0 or game.outpost_defeated[9] != 0 or game.region_scouted[1] != 1 or game.region_scouted[8] != 0 or game.region_scouted[9] != 0:
+		_fail("Legacy three-outpost save did not migrate cleanly or clear stale later-campaign progress.")
 		return
 	var corrupt_file := FileAccess.open(absolute_save, FileAccess.WRITE)
 	if corrupt_file == null:
