@@ -162,6 +162,15 @@ func _build_ui() -> void:
 		resource_box.add_child(label)
 		resource_labels[key] = label
 
+	_add_button_row(column, [
+		{"text": "Gather Wood +25", "action": _gather_resource.bind("wood", 25)},
+		{"text": "Harvest Food +30", "action": _gather_resource.bind("food", 30)}
+	])
+	_add_button_row(column, [
+		{"text": "Mine Stone +15", "action": _gather_resource.bind("stone", 15)},
+		{"text": "Collect Gold +20", "action": _gather_resource.bind("gold", 20)}
+	])
+
 	var realm_header := Label.new()
 	realm_header.text = "YOUR REALM"
 	realm_header.add_theme_font_size_override("font_size", 20)
@@ -373,6 +382,31 @@ func _refresh_ui() -> void:
 		if is_instance_valid(world_view):
 			world_view.set_kingdom_state(tiles, tile_levels, keep_level, guards, outpost_defeated, region_scouted, selected_outpost, selected_tile)
 		status_label.text = status_message
+
+func _gather_resource(resource_type: String, amount: int) -> void:
+	if amount <= 0:
+		status_message = "Gathering amount must be positive."
+		_refresh_ui()
+		return
+	match resource_type:
+		"wood":
+			wood += amount
+			status_message = "Lumber crew gathered %d wood." % amount
+		"food":
+			food += amount
+			status_message = "Harvest crew gathered %d food." % amount
+		"stone":
+			stone += amount
+			status_message = "Quarry crew gathered %d stone." % amount
+		"gold":
+			gold += amount
+			status_message = "Treasury collected %d gold." % amount
+		_:
+			status_message = "Unknown resource type."
+			_refresh_ui()
+			return
+	_persist_game()
+	_refresh_ui()
 
 func _select_tile(index: int) -> void:
 	selected_tile = index
