@@ -50,6 +50,6 @@ This checklist tracks development before the first APK export. **Do not run the 
 ## Remaining non-blocking prototype scope
 - The world still uses procedural low-poly meshes and a custom SVG app icon, not final production art assets. Sound effects and ambient music are synthesized prototypes, not authored production audio.
 - LAN co-op is implemented at source level, but live two-phone networking has not been verified. Internet matchmaking, dedicated servers, account identity, reconnect/session recovery, and anti-cheat are not implemented. Authored music/audio, production art/animation, and physical Android device profiling remain outstanding.
-- Campaign depth is currently limited to ten outposts, escalating enemy army encounters and the implemented prototype economy; there is no multiplayer, authored soundtrack, or production-quality sound design.
+- Campaign depth is currently limited to ten outposts, escalating enemy army encounters and the implemented prototype economy; internet matchmaking/dedicated servers, authored soundtrack, and production-quality sound design are not implemented.
 - A successful headless check does not prove Android export, APK installation, LAN connectivity between physical phones, or device compatibility.
 - The APK workflow has not been run and no APK has been generated. This is intentional. Do not run the manual APK workflow unless the user explicitly asks after reviewing this checklist.
