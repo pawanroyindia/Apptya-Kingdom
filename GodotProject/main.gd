@@ -8,8 +8,20 @@ const TICK_SECONDS := 10.0
 var gold := 300
 var wood := 150
 var food := 120
+var stone := 80
 var guards := 10
 var keep_level := 1
+var day := 1
+var explored_regions := 0
+var victories := 0
+var defeats := 0
+var combat_research := 0
+var economy_research := 0
+var scouting_research := 0
+var practice_drills := 0
+var reward_first_victory_claimed := false
+var reward_explorer_claimed := false
+var reward_keep_claimed := false
 var selected_tile := 4
 var selected_outpost := 0
 var last_saved_unix := 0
@@ -17,7 +29,7 @@ var keep_upgrade_finish_unix := 0
 var building_upgrade_finish_unix := 0
 var building_upgrade_tile := -1
 var tutorial_step := 0
-var tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
+var tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
 var tile_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 var outpost_threat := PackedInt32Array([1, 2, 3])
 var outpost_defeated := PackedInt32Array([0, 0, 0])
@@ -131,7 +143,7 @@ func _build_ui() -> void:
 	var resource_box := VBoxContainer.new()
 	resource_box.add_theme_constant_override("separation", 5)
 	resource_panel.add_child(resource_box)
-	for key in ["gold", "wood", "food"]:
+	for key in ["gold", "wood", "food", "stone"]:
 		var label := Label.new()
 		label.add_theme_font_size_override("font_size", 17)
 		label.add_theme_color_override("font_color", Color("#fff2d2"))
@@ -196,7 +208,11 @@ func _build_ui() -> void:
 	])
 	_add_button_row(column, [
 		{"text": "Build Barracks\n80 gold, 30 wood", "action": _build_barracks},
-		{"text": "Upgrade Keep\n100 gold, 50 wood", "action": _upgrade_keep}
+		{"text": "Upgrade Keep\n100 gold, 50 wood, 45 stone", "action": _upgrade_keep}
+	])
+	_add_button_row(column, [
+		{"text": "Build Lumber Camp\n60 gold, 15 wood", "action": _build_lumber_camp},
+		{"text": "Build Quarry\n70 gold, 25 wood", "action": _build_quarry}
 	])
 
 	var outpost_title := Label.new()
@@ -278,6 +294,7 @@ func _refresh_ui() -> void:
 		resource_labels["gold"].text = "🪙 Gold: %d" % gold
 		resource_labels["wood"].text = "🪵 Wood: %d" % wood
 		resource_labels["food"].text = "🌾 Food: %d" % food
+		resource_labels["stone"].text = "🪨 Stone: %d" % stone
 		var upgrade_text := ""
 		if keep_upgrade_finish_unix > int(Time.get_unix_time_from_system()):
 			upgrade_text = "   •   Keep upgrade: %ds" % (keep_upgrade_finish_unix - int(Time.get_unix_time_from_system()))
@@ -383,6 +400,26 @@ func _build_mine() -> void:
 	_persist_game()
 	_refresh_ui()
 
+func _build_lumber_camp() -> void:
+	if not _can_build("Lumber Camp", 60, 15):
+		return
+	tiles[selected_tile] = "Lumber Camp"
+	gold -= 60
+	wood -= 15
+	status_message = "Lumber Camp built. It produces wood over time."
+	_persist_game()
+	_refresh_ui()
+
+func _build_quarry() -> void:
+	if not _can_build("Quarry", 70, 25):
+		return
+	tiles[selected_tile] = "Quarry"
+	gold -= 70
+	wood -= 25
+	status_message = "Quarry built. It produces stone over time."
+	_persist_game()
+	_refresh_ui()
+
 func _build_barracks() -> void:
 	if not _can_build("Barracks", 80, 30):
 		return
@@ -451,6 +488,14 @@ func _collect_selected_building() -> void:
 		"Barracks":
 			food += 5 * tile_levels[selected_tile]
 			status_message = "Collected army supplies from the Barracks."
+		"Lumber Camp":
+			var wood_gain := 10 * tile_levels[selected_tile] * keep_level
+			wood += wood_gain
+			status_message = "Collected %d wood from the Lumber Camp." % wood_gain
+		"Quarry":
+			var stone_gain := 10 * tile_levels[selected_tile] * keep_level
+			stone += stone_gain
+			status_message = "Collected %d stone from the Quarry." % stone_gain
 		_:
 			status_message = "Select a working building before collecting."
 	_persist_game()
@@ -462,7 +507,7 @@ func _upgrade_selected_building() -> void:
 		_refresh_ui()
 		return
 	var building := tiles[selected_tile]
-	if building != "Farm" and building != "Mine" and building != "Barracks":
+	if building != "Farm" and building != "Mine" and building != "Barracks" and building != "Lumber Camp" and building != "Quarry":
 		status_message = "Select a Farm, Mine, or Barracks to upgrade it."
 		_refresh_ui()
 		return
@@ -615,6 +660,18 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "gold", gold)
 	config.set_value("kingdom", "wood", wood)
 	config.set_value("kingdom", "food", food)
+	config.set_value("kingdom", "stone", stone)
+	config.set_value("kingdom", "day", day)
+	config.set_value("kingdom", "explored_regions", explored_regions)
+	config.set_value("kingdom", "victories", victories)
+	config.set_value("kingdom", "defeats", defeats)
+	config.set_value("kingdom", "combat_research", combat_research)
+	config.set_value("kingdom", "economy_research", economy_research)
+	config.set_value("kingdom", "scouting_research", scouting_research)
+	config.set_value("kingdom", "practice_drills", practice_drills)
+	config.set_value("kingdom", "reward_first_victory_claimed", reward_first_victory_claimed)
+	config.set_value("kingdom", "reward_explorer_claimed", reward_explorer_claimed)
+	config.set_value("kingdom", "reward_keep_claimed", reward_keep_claimed)
 	config.set_value("kingdom", "guards", guards)
 	config.set_value("kingdom", "keep_level", keep_level)
 	config.set_value("kingdom", "selected_tile", selected_tile)
@@ -644,6 +701,18 @@ func _load_game() -> void:
 	gold = int(config.get_value("kingdom", "gold", gold))
 	wood = int(config.get_value("kingdom", "wood", wood))
 	food = int(config.get_value("kingdom", "food", food))
+	stone = int(config.get_value("kingdom", "stone", stone))
+	day = int(config.get_value("kingdom", "day", day))
+	explored_regions = int(config.get_value("kingdom", "explored_regions", explored_regions))
+	victories = int(config.get_value("kingdom", "victories", victories))
+	defeats = int(config.get_value("kingdom", "defeats", defeats))
+	combat_research = int(config.get_value("kingdom", "combat_research", combat_research))
+	economy_research = int(config.get_value("kingdom", "economy_research", economy_research))
+	scouting_research = int(config.get_value("kingdom", "scouting_research", scouting_research))
+	practice_drills = int(config.get_value("kingdom", "practice_drills", practice_drills))
+	reward_first_victory_claimed = bool(config.get_value("kingdom", "reward_first_victory_claimed", reward_first_victory_claimed))
+	reward_explorer_claimed = bool(config.get_value("kingdom", "reward_explorer_claimed", reward_explorer_claimed))
+	reward_keep_claimed = bool(config.get_value("kingdom", "reward_keep_claimed", reward_keep_claimed))
 	guards = int(config.get_value("kingdom", "guards", guards))
 	keep_level = int(config.get_value("kingdom", "keep_level", keep_level))
 	selected_tile = clampi(int(config.get_value("kingdom", "selected_tile", selected_tile)), 0, tiles.size() - 1)
@@ -685,6 +754,15 @@ func _normalize_save_data() -> void:
 	gold = maxi(gold, 0)
 	wood = maxi(wood, 0)
 	food = maxi(food, 0)
+	stone = maxi(stone, 0)
+	day = clampi(day, 1, 1000000)
+	explored_regions = clampi(explored_regions, 0, 1000000)
+	victories = clampi(victories, 0, 1000000)
+	defeats = clampi(defeats, 0, 1000000)
+	combat_research = clampi(combat_research, 0, 5)
+	economy_research = clampi(economy_research, 0, 5)
+	scouting_research = clampi(scouting_research, 0, 5)
+	practice_drills = clampi(practice_drills, 0, 20)
 	guards = clampi(guards, 0, 100000)
 	keep_level = clampi(keep_level, 1, 99)
 	selected_tile = clampi(selected_tile, 0, tiles.size() - 1)
@@ -692,7 +770,7 @@ func _normalize_save_data() -> void:
 	tutorial_step = clampi(tutorial_step, 0, 4)
 	if tiles.size() != 9:
 		tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
-	var valid_buildings := ["Empty", "Farm", "Mine", "Keep", "Barracks"]
+	var valid_buildings := ["Empty", "Farm", "Mine", "Keep", "Barracks", "Lumber Camp", "Quarry"]
 	for i in range(tiles.size()):
 		if not valid_buildings.has(tiles[i]):
 			tiles[i] = "Empty"
