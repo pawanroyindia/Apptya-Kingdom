@@ -20,9 +20,9 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Distinct procedural 3D silhouettes for fortified, archer and cavalry outposts to communicate enemy doctrine visually
 - Timed production and bounded eight-hour offline production with research bonuses
 - Periodic autosave, backup recovery, save-data normalization, persisted upgrade/training timers, and explicit error reporting when backup or primary save writes fail
-- Procedural WAV sound effects for gathering, upgrades, training and battle outcomes using layered harmonics and transient envelopes, with a persistent mute toggle
-- A 24-second layered procedural ambient music bed with sustained harmony, plucked arpeggios, bass pulse and melody, with its own on/off control and saved preference
-- Continuous tree sway, guard and hero idle motion, animated banners, building reveal/upgrade feedback, hero level-up feedback, marching/exploration squads and battle impact rings
+- Distinct layered procedural sound effects for gathering, construction, training, victory and defeat, with separate envelopes, pitch sweeps and harmonic layers plus a persistent mute toggle
+- An original 32-second procedural kingdom score arranged across an eight-chord progression with sustained harmony, harp-like arpeggios, bass, lead melody and percussion, with its own on/off control and saved preference
+- Articulated node-based hero/troop rigs with animated arms and legs, marching, attack swings and exploration movement; continuous tree sway, guard/hero idle motion, animated banners, building reveal/upgrade feedback and battle impact rings
 - LAN co-op for one host and one guest on the same Wi-Fi: host-authoritative resource/build/training/research/scouting/attack/claim/tactical-stance actions, shared kingdom snapshots and validation of client requests
 - Seven-day daily reward streak, resource payouts, day-seven bonus, duplicate-claim protection, live reset countdown and saved progress
 - Upgradeable single Academy with timed upgrades, research discounts up to 25%, and save-data duplicate cleanup
@@ -30,7 +30,7 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Persistent Low / Balanced / High graphics presets and camera reset
 - Local save/load on the device, including graphics preferences; save recovery enforces a unique Keep and Barracks troop capacity
 
-This is a reimplementation of the prototype mechanics, not an automatic conversion of Unity scenes or C# scripts. Four custom SVG textures and richer material details are integrated, but characters and buildings are still procedural low-poly models without rigged character animation; the music and effects remain generated prototypes rather than professionally authored production audio. These changes improve the prototype but do not yet satisfy premium production-art/audio quality. LAN co-op is intentionally Wi-Fi/LAN-only: one host and one guest on the same local Wi-Fi network, UDP port 24567, no public-internet matchmaking, no remote servers, and no internet-based accounts. Physical-phone connectivity remains unverified.
+This is a reimplementation of the prototype mechanics, not an automatic conversion of Unity scenes or C# scripts. Four custom SVG textures and richer material details are integrated. The hero, guards, archers and mounted riders now use articulated node-based rigs with walking and attack motion, but their meshes remain procedural/stylized rather than professionally authored, skinned production assets. The original 32-second score and differentiated effects are composed procedurally at runtime; they are not recorded or mixed by a professional audio team. These changes improve the prototype but do not yet satisfy premium production-art/audio quality. LAN co-op is intentionally Wi-Fi/LAN-only: one host and one guest on the same local Wi-Fi network, UDP port 24567, no public-internet matchmaking, no remote servers, and no internet-based accounts. Physical-phone connectivity remains unverified.
 
 ## LAN co-op quick start
 
