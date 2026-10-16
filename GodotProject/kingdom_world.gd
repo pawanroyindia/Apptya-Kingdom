@@ -500,6 +500,9 @@ func _build_terrain() -> void:
 	_update_tile_highlight()
 
 	# A river and crossing make the valley readable as a place, not only a menu.
+	# Narrow banks break the hard rectangle edge and visually separate water from grass.
+	_add_box(self, Vector3(0.22, 0.055, 29), Vector3(6.39, -0.005, -1), "#b6a77a")
+	_add_box(self, Vector3(0.22, 0.055, 29), Vector3(8.11, -0.005, -1), "#b6a77a")
 	_add_box(self, Vector3(1.45, 0.035, 29), Vector3(7.25, -0.04, -1), "#4c9eb5")
 	_add_box(self, Vector3(2.5, 0.22, 1.2), Vector3(7.25, 0.12, 2.1), "#8a6547")
 	for i in range(9):
@@ -999,6 +1002,15 @@ func _material(color_value: String) -> StandardMaterial3D:
 	material.albedo_texture = material_textures.get(texture_key, surface_noise) as Texture2D
 	material.uv1_scale = Vector3(2.0, 2.0, 2.0)
 	material.roughness = 0.78
+	# Water reads smoother than stone and earth even in the mobile Compatibility renderer.
+	if color_value == "#4c9eb5":
+		material.roughness = 0.24
+		material.metallic = 0.12
+		material.albedo_color = Color("#75b9c8")
+	elif color_value == "#8bd1d7":
+		material.roughness = 0.28
+		material.emission_enabled = true
+		material.emission = Color("#8bd1d7") * 0.12
 	# Reflective accents are polished; stone, earth and cloth remain matte.
 	if base_color.r > 0.68 and base_color.g > 0.42 and base_color.b < 0.72:
 		material.metallic = 0.22
