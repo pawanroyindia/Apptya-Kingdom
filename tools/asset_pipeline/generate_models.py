@@ -20,20 +20,43 @@ PALETTES = {
 MATS={}
 def make_material(key):
     if key in MATS: return MATS[key]
-    lo,hi=PALETTES[key]; img=bpy.data.images.new("Apptya_"+key+"_PBR",width=128,height=128,alpha=False)
+    lo,hi=PALETTES[key]
+    size=512
+    img=bpy.data.images.new("Apptya_"+key+"_PBR",width=size,height=size,alpha=False)
     pixels=[]
-    for y in range(128):
-        for x in range(128):
-            n=random.uniform(-0.055,0.055)
-            grain=sin(y*0.35+x*0.04)*0.025 if key in ("wood","leather") else 0.0
-            f=max(0.0,min(1.0,0.46+0.28*sin(x*0.11)*cos(y*0.09)+n+grain))
+    for y in range(size):
+        for x in range(size):
+            n=random.uniform(-0.045,0.045)
+            grain=0.0
+            if key=="stone":
+                edge=(x%64<3 or y%48<3)
+                grain=(-0.22 if edge else 0.035*sin(x*0.19)*cos(y*0.17))
+            elif key in ("wood","leather"):
+                grain=0.11*sin(y*0.19+sin(x*0.025)*2.0)+0.035*sin(y*0.71+x*0.015)
+                if key=="leather": grain+=0.035*sin(x*0.31)*sin(y*0.27)
+            elif key in ("cloth","red","linen"):
+                grain=0.055*sin(x*0.72)+0.045*sin(y*0.72)
+                if x%8==0 or y%8==0: grain-=0.055
+            elif key=="roof":
+                grain=0.10*sin((x%64)*0.12)+0.035*cos(y*0.24)
+                if x%64<3 or y%40<2: grain-=0.15
+            elif key in ("gold","steel"):
+                grain=0.035*sin(y*0.46)+0.012*sin(x*0.12+y*0.05)
+            else:
+                grain=0.045*sin(x*0.23)*cos(y*0.19)
+            f=max(0.0,min(1.0,0.48+0.19*sin(x*0.035)*cos(y*0.031)+n+grain))
             pixels.extend([max(0,min(1,lo[i]*(1-f)+hi[i]*f)) for i in range(3)]+[1.0])
     img.pixels.foreach_set(pixels); img.filepath_raw=os.path.join(TEX,key+".png"); img.file_format="PNG"; img.save()
     mat=bpy.data.materials.new("PBR_"+key); mat.diffuse_color=(*hi,1); mat.use_nodes=True
     bs=mat.node_tree.nodes.get("Principled BSDF"); tex=mat.node_tree.nodes.new("ShaderNodeTexImage"); tex.image=img
     mat.node_tree.links.new(tex.outputs["Color"],bs.inputs["Base Color"])
-    bs.inputs["Metallic"].default_value=0.62 if key in ("gold","steel") else 0.0
-    bs.inputs["Roughness"].default_value=0.32 if key in ("gold","steel") else 0.78
+    bump=mat.node_tree.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value=0.10 if key in ("stone","wood","leather","cloth","linen","roof") else 0.035
+    bump.inputs["Distance"].default_value=0.018
+    mat.node_tree.links.new(tex.outputs["Color"],bump.inputs["Height"])
+    mat.node_tree.links.new(bump.outputs["Normal"],bs.inputs["Normal"])
+    bs.inputs["Metallic"].default_value=0.68 if key in ("gold","steel") else 0.0
+    bs.inputs["Roughness"].default_value=0.28 if key=="gold" else (0.36 if key=="steel" else 0.78)
     MATS[key]=mat; return mat
 
 def finish_mesh(obj,mat,bone=None,arm=None):
@@ -145,11 +168,34 @@ def character(path,royal):
         add(cylinder("Thigh"+label,(side*0.13,0,0.61),0.095,0.27,tunic,12,"Leg."+label,arm))
         add(cylinder("Greave"+label,(side*0.14,0,0.30),0.07,0.25,armor,12,"Shin."+label,arm))
         add(cube("Boot"+label,(side*0.14,-0.055,0.09),(0.14,0.25,0.12),"leather",0.025,"Shin."+label,arm))
+    # Layered armor trim, rivets and engraved accents improve readability at mobile gameplay zoom.
+    for side,label in [(-1,"L"),(1,"R")]:
+        add(sphere("ShoulderRivet"+label,(side*0.27,-0.135,1.27),(0.035,0.025,0.035),"gold","Arm."+label,arm))
+        add(cube("GauntletTrim"+label,(side*0.405,-0.055,0.84),(0.13,0.018,0.035),"gold",0.006,"Forearm."+label,arm))
+        add(cube("KneeGuard"+label,(side*0.14,-0.082,0.52),(0.13,0.025,0.10),armor,0.012,"Leg."+label,arm))
+        add(cube("BootStrap"+label,(side*0.14,-0.18,0.12),(0.12,0.025,0.025),"gold",0.006,"Shin."+label,arm))
+    for z in [0.96,1.08,1.20]:
+        add(cube("ChestEmboss",(0,-0.181,z),(0.11,0.012,0.012),"gold",0.004,"Spine",arm))
+    add(cube("EyeSlit",(0,-0.135,1.55),(0.10,0.012,0.018),"leather",0.003,"Head",arm))
     if royal:
         add(cylinder("SwordGrip",(0.46,-0.02,0.67),0.025,0.16,"leather",10,"Forearm.R",arm))
         add(cube("SwordGuard",(0.46,-0.02,0.77),(0.17,0.035,0.035),"gold",0.01,"Forearm.R",arm))
         add(cube("SwordBlade",(0.46,-0.02,0.94),(0.055,0.025,0.30),"steel",0.01,"Forearm.R",arm))
+        add(cube("BladeFuller",(0.46,-0.035,0.94),(0.012,0.009,0.25),"gold",0.003,"Forearm.R",arm))
         add(cube("RoyalMantle",(0,0.13,1.08),(0.30,0.045,0.39),"red",0.02,"Spine",arm))
+        add(cylinder("CrownBand",(0,0,1.76),0.16,0.035,"gold",24,"Head",arm))
+        for i in range(5):
+            a=2*pi*i/5
+            add(sphere("CrownGem",(0.16*cos(a),-0.16,1.76+0.025*sin(a)),(0.022,0.014,0.022),"red","Head",arm))
+    else:
+        add(cylinder("ShieldBoss",(-0.48,-0.035,0.91),0.045,0.06,"gold",16,"Forearm.L",arm))
+        add(cube("GuardShield",(-0.48,-0.045,0.92),(0.28,0.07,0.36),"red",0.035,"Forearm.L",arm))
+        add(cube("ShieldCrossH",(-0.48,-0.085,0.92),(0.20,0.018,0.035),"gold",0.005,"Forearm.L",arm))
+        add(cube("ShieldCrossV",(-0.48,-0.085,0.92),(0.035,0.018,0.27),"gold",0.005,"Forearm.L",arm))
+        add(cylinder("SpearShaft",(0.46,-0.02,0.99),0.018,0.68,"wood",12,"Forearm.R",arm))
+        add(cylinder("SpearHead",(0.46,-0.02,1.36),0.055,0.16,"steel",12,"Forearm.R",arm))
+        for i in range(4):
+            add(cube("BeltPouch",(0.22+i*0.035,-0.19,0.82),(0.055,0.06,0.06),"leather",0.008,"Spine",arm))
     animate_rig(arm); export_glb(path,[arm]+parts)
 
 def building(path,kind):
@@ -162,8 +208,15 @@ def building(path,kind):
         for x in [-0.68,0.68]:
             add(cube("KeepTower",(x,0.52,1.72),(0.42,0.42,1.9),"stone",0.035))
             add(cube("TowerCrenel",(x,0.52,2.72),(0.55,0.5,0.18),"roof",0.02))
+            add(cube("ArrowSlit",(x,-0.706,1.65),(0.055,0.02,0.24),"leather",0.006))
         add(cube("Gate",(0,-0.79,0.65),(0.52,0.05,0.85),"wood",0.015))
+        add(cube("GateArch",(0,-0.815,1.08),(0.68,0.06,0.10),"gold",0.015))
         for z in [0.75,1.25,1.75]: add(cube("GoldTrim",(0,-0.79,z),(1.8,0.035,0.035),"gold",0.008))
+        for x in [-0.9,-0.45,0.0,0.45,0.9]:
+            add(cube("FrontBattlement",(x,-0.92,2.48),(0.18,0.18,0.22),"stone",0.018))
+        for x in [-0.72,0.72]:
+            add(cube("FrontWindow",(x,-0.785,1.45),(0.15,0.025,0.22),"leather",0.008))
+            add(cube("WindowLintel",(x,-0.80,1.58),(0.22,0.035,0.04),"gold",0.006))
     elif kind=="barracks":
         add(cube("BarracksBase",(0,0,0.18),(2.1,1.8,0.35),"stone",0.05))
         add(cube("BarracksBody",(0,0,0.82),(1.8,1.5,1.1),"wood",0.04))
