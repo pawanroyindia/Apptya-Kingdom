@@ -157,9 +157,12 @@ def character(path,royal):
     tunic="red" if royal else "cloth"; armor="gold" if royal else "steel"
     add(sphere("Chest",(0,0,1.05),(0.24,0.15,0.32),tunic,"Spine",arm))
     add(cube("Chestplate",(0,-0.145,1.09),(0.38,0.055,0.28),armor,0.035,"Spine",arm))
+    add(cube("ChestStrap",(0,-0.185,1.08),(0.045,0.025,0.31),"leather",0.008,"Spine",arm))
     add(cube("Belt",(0,-0.16,0.82),(0.40,0.06,0.07),"leather",0.015,"Spine",arm))
     add(cube("Buckle",(0,-0.196,0.82),(0.07,0.018,0.05),"gold",0.008,"Spine",arm))
     add(sphere("Head",(0,0,1.52),(0.16,0.14,0.20),"skin","Head",arm))
+    add(sphere("EyeL",(-0.06,-0.128,1.54),(0.018,0.012,0.018),"leather","Head",arm))
+    add(sphere("EyeR",(0.06,-0.128,1.54),(0.018,0.012,0.018),"leather","Head",arm))
     add(sphere("Helmet",(0,0,1.67),(0.19,0.17,0.12),armor,"Head",arm))
     add(cube("HelmetNasal",(0,-0.17,1.59),(0.035,0.025,0.15),"gold",0.008,"Head",arm))
     add(sphere("ShoulderL",(-0.27,0,1.26),(0.13,0.15,0.12),armor,"Arm.L",arm))
@@ -187,6 +190,7 @@ def character(path,royal):
         add(cube("SwordBlade",(0.46,-0.02,0.94),(0.055,0.025,0.30),"steel",0.01,"Forearm.R",arm))
         add(cube("BladeFuller",(0.46,-0.035,0.94),(0.012,0.009,0.25),"gold",0.003,"Forearm.R",arm))
         add(cube("RoyalMantle",(0,0.13,1.08),(0.30,0.045,0.39),"red",0.02,"Spine",arm))
+        add(cube("RoyalTabard",(0,-0.205,0.99),(0.13,0.025,0.24),"linen",0.008,"Spine",arm))
         add(cylinder("CrownBand",(0,0,1.76),0.16,0.035,"gold",24,"Head",arm))
         for i in range(5):
             a=2*pi*i/5
