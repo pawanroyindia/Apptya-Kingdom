@@ -218,12 +218,33 @@ func _build_terrain() -> void:
 		_add_cylinder(self, 0.16, 1.1, Vector3(-11.5, 0.42, z), "#6b4b35")
 		_add_sphere(self, Vector3(-11.5, 1.55, z), Vector3(1.05, 1.25, 1.05), "#3e7547")
 		_add_sphere(self, Vector3(-10.95, 1.85, z + 0.18), Vector3(0.72, 0.8, 0.72), "#4f8a50")
+	# Layered hills and boulders give the valley a deeper horizon and more readable edges.
+	for i in range(7):
+		var hill_x := -16.0 + float(i) * 5.3
+		var hill_z := -16.0 + float(i % 2) * 2.8
+		_add_sphere(self, Vector3(hill_x, -0.25, hill_z), Vector3(3.8, 1.65, 2.8), "#56794f")
+	for i in range(10):
+		var rock_x := 8.8 + float(i % 3) * 0.65
+		var rock_z := -10.0 + float(i) * 1.9
+		var rock := _add_sphere(self, Vector3(rock_x, 0.05, rock_z), Vector3(0.42, 0.32, 0.38), "#7b8880")
+		rock.rotation_degrees = Vector3(float(i * 9), float(i * 17), float(i * 5))
 
 func _build_landmarks() -> void:
 	# Roads connect the central keep to the river crossing and outer regions.
 	_add_box(self, Vector3(0.6, 0.035, 11.5), Vector3(0, 0.03, 0), "#c2ae7b")
 	_add_box(self, Vector3(7.8, 0.035, 0.6), Vector3(3.5, 0.035, 2.1), "#c2ae7b")
 	_add_box(self, Vector3(0.55, 0.035, 8.0), Vector3(7.25, 0.035, -4.0), "#c2ae7b")
+	# Warm lantern posts mark the central road and make the Keep entrance stand out.
+	for side in [-1.0, 1.0]:
+		_add_cylinder(self, 0.07, 1.25, Vector3(side * 2.0, 0.62, 2.8), "#5c3f2d")
+		_add_box(self, Vector3(0.22, 0.28, 0.22), Vector3(side * 2.0, 1.34, 2.8), "#e7ad52")
+	# Pale water streaks animate briefly when the scene starts.
+	for i in range(4):
+		var ripple_z := -12.0 + float(i) * 7.0
+		var ripple := _add_box(self, Vector3(0.75, 0.018, 0.07), Vector3(7.25, 0.005, ripple_z), "#8bd1d7")
+		var ripple_tween := create_tween().set_loops(3)
+		ripple_tween.tween_property(ripple, "position", Vector3(7.75, 0.005, ripple_z), 1.1).set_trans(Tween.TRANS_SINE)
+		ripple_tween.tween_property(ripple, "position", Vector3(6.75, 0.005, ripple_z), 1.1).set_trans(Tween.TRANS_SINE)
 
 func _update_tile_highlight() -> void:
 	if is_instance_valid(tile_highlight):
