@@ -374,6 +374,10 @@ func _run_tests() -> void:
 	game.gold += 500
 	game.wood += 300
 	game.stone += 300
+	# Reuse a test-only plot so the Academy construction path starts from a legal empty tile.
+	game.tiles[2] = "Empty"
+	game.tile_levels[2] = 1
+	game._refresh_ui()
 	game._select_tile(2)
 	var academy_gold_before: int = game.gold
 	var academy_wood_before: int = game.wood
