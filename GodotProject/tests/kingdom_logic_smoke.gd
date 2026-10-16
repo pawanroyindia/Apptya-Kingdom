@@ -702,7 +702,7 @@ func _run_tests() -> void:
 		_fail("Could not create a legacy three-outpost save fixture.")
 		return
 	game._load_game()
-	if game.outpost_defeated.size() != 10 or game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 0 or game.outpost_defeated[3] != 0 or game.region_scouted[1] != 0:
+	if game.outpost_defeated.size() != 10 or game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 0 or game.outpost_defeated[3] != 0 or game.region_scouted[1] != 1:
 		_fail("Legacy save migration did not repair impossible sequential campaign states.")
 		return
 	var corrupt_file := FileAccess.open(absolute_save, FileAccess.WRITE)
