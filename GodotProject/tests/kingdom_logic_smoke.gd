@@ -21,6 +21,9 @@ func _run_tests() -> void:
 	if game.graphics_quality != "Low" or not is_equal_approx(game.world_viewport.scaling_3d_scale, 0.75) or game.world_view.sun_light.shadow_enabled:
 		_fail("Saved graphics quality was not applied when the kingdom scene started.")
 		return
+	if not is_instance_valid(game.world_view.hero_model) or not game.world_view.hero_level_label.text.contains("LV 1"):
+		_fail("The 3D Royal Captain model or level label was not created.")
+		return
 
 	var initial_yaw: float = game.world_view.camera_yaw
 	var drag_event := InputEventScreenDrag.new()
@@ -233,8 +236,12 @@ func _run_tests() -> void:
 		return
 	var hero_power_before_xp: int = game._army_power()
 	game._award_hero_xp(100)
+	game._refresh_ui()
 	if game.hero_level != 2 or game.hero_xp != 0 or game._army_power() <= hero_power_before_xp:
 		_fail("Royal Captain did not level up or increase army power after earning XP.")
+		return
+	if not game.world_view.hero_level_label.text.contains("LV 2"):
+		_fail("The 3D Royal Captain label did not update after leveling up.")
 		return
 	var hero_xp_before_training: int = game.hero_xp
 	game._train_hero()
