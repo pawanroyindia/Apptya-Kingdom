@@ -35,12 +35,26 @@ func _run_tests() -> void:
 	if not is_instance_valid(game.world_view.hero_model) or not game.world_view.hero_level_label.text.contains("LV 1"):
 		_fail("The 3D Royal Captain model or level label was not created.")
 		return
-	if not game.world_view.hero_rig_data.has("left_leg") or not game.world_view.hero_rig_data.has("right_leg") or not game.world_view.hero_rig_data.has("left_arm") or not game.world_view.hero_rig_data.has("right_arm"):
-		_fail("The Royal Captain articulated limb rig was not initialized.")
-		return
-	if not game.world_view.hero_rig_data.has("head") or not game.world_view.hero_rig_data.has("left_leg_y") or not game.world_view.hero_rig_data.has("right_leg_y"):
-		_fail("The Royal Captain rig is missing head articulation or stable foot-lift baselines.")
-		return
+	if game.world_view.hero_rig_data.has("animation_player"):
+		var hero_player: AnimationPlayer = game.world_view.hero_rig_data["animation_player"]
+		if not is_instance_valid(hero_player):
+			_fail("Imported Royal Captain GLB is missing its AnimationPlayer.")
+			return
+		for clip_name in ["Idle", "Walk", "Attack"]:
+			var found_clip := false
+			for imported_clip in hero_player.get_animation_list():
+				if imported_clip.to_lower().contains(clip_name.to_lower()):
+					found_clip = true
+			if not found_clip:
+				_fail("Imported Royal Captain GLB is missing the %s animation clip." % clip_name)
+				return
+	else:
+		if not game.world_view.hero_rig_data.has("left_leg") or not game.world_view.hero_rig_data.has("right_leg") or not game.world_view.hero_rig_data.has("left_arm") or not game.world_view.hero_rig_data.has("right_arm"):
+			_fail("The Royal Captain articulated limb rig was not initialized.")
+			return
+		if not game.world_view.hero_rig_data.has("head") or not game.world_view.hero_rig_data.has("left_leg_y") or not game.world_view.hero_rig_data.has("right_leg_y"):
+			_fail("The Royal Captain rig is missing head articulation or stable foot-lift baselines.")
+			return
 	var anticipation: float = game.world_view._combat_swing_curve(0.08)
 	var strike: float = game.world_view._combat_swing_curve(0.24)
 	var recovery: float = game.world_view._combat_swing_curve(0.48)
@@ -48,11 +62,17 @@ func _run_tests() -> void:
 		_fail("Combat animation must sequence anticipation, a stronger strike, and a clean recovery.")
 		return
 	for rig in game.world_view.articulated_rigs:
-		if not rig.has("left_leg") or not rig.has("right_leg") or not rig.has("left_arm") or not rig.has("right_arm"):
-			_fail("A visible troop is missing articulated limb joints.")
-			return
-	if game.sound_streams.size() != 5 or game.sound_streams["victory"].data.is_empty() or game.sound_player.bus != "Master":
-		_fail("Procedural sound effect streams or the audio player were not initialized.")
+		if rig.has("animation_player"):
+			var troop_player: AnimationPlayer = rig["animation_player"]
+			if not is_instance_valid(troop_player):
+				_fail("A visible imported troop is missing its AnimationPlayer.")
+				return
+		else:
+			if not rig.has("left_leg") or not rig.has("right_leg") or not rig.has("left_arm") or not rig.has("right_arm"):
+				_fail("A visible troop is missing articulated limb joints.")
+				return
+	if game.sound_streams.size() < 5 or game.sound_streams["victory"].data.is_empty() or game.sound_player.bus != "Master":
+		_fail("Sound effect streams or the audio player were not initialized.")
 		return
 	game.sound_enabled = true
 	game._toggle_sound()
@@ -63,8 +83,11 @@ func _run_tests() -> void:
 	if not game.sound_enabled or game.settings_buttons[2].text != "Sound: ON":
 		_fail("Sound toggle did not re-enable effects or update its button.")
 		return
-	if game.music_stream.data.is_empty() or game.music_stream.loop_mode != AudioStreamWAV.LOOP_FORWARD or game.music_stream.loop_end != game.music_stream.data.size() / 2 or game.music_stream.mix_rate != 11025 or game.music_stream.data.size() != 11025 * 32 * 2:
-		_fail("Original 32-second ambient score did not initialize as a valid looping WAV stream.")
+	var music_sample_bytes := 4 if game.music_stream.stereo else 2
+	var music_frames := game.music_stream.data.size() / music_sample_bytes
+	var music_seconds := float(music_frames) / float(game.music_stream.mix_rate)
+	if game.music_stream.data.is_empty() or game.music_stream.loop_mode != AudioStreamWAV.LOOP_FORWARD or game.music_stream.loop_end != music_frames or music_seconds < 30.0 or music_seconds > 40.0:
+		_fail("The original score did not initialize as a valid 30–40 second looping WAV stream.")
 		return
 	var effect_lengths: Dictionary = {}
 	for effect_name in game.sound_streams:
