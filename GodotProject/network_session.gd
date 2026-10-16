@@ -91,7 +91,7 @@ func _is_allowed_action(action: String, payload: Dictionary) -> bool:
 	match action:
 		"gather":
 			return str(payload.get("resource", "")) in ["wood", "food", "stone", "gold"] and int(payload.get("amount", 0)) in [15, 20, 25, 30]
-		"build_farm", "build_mine", "build_lumber_camp", "build_quarry", "build_academy", "build_barracks", "train_infantry", "train_archers", "train_cavalry", "scout", "attack", "explore", "practice":
+		"build_farm", "build_mine", "build_lumber_camp", "build_quarry", "build_academy", "build_barracks", "upgrade_keep", "collect", "upgrade_building", "train_infantry", "train_archers", "train_cavalry", "scout", "attack", "explore", "practice", "train_hero", "upgrade_hero_skill", "claim_daily":
 			return true
 		"research":
 			return str(payload.get("type", "")) in ["combat", "economy", "scouting"]
