@@ -9,7 +9,13 @@ var gold := 300
 var wood := 150
 var food := 120
 var stone := 80
-var guards := 10
+var guards := 4
+var infantry := 4
+var archers := 0
+var cavalry := 0
+var queued_troop_type := ""
+var queued_troop_count := 0
+var troop_training_finish_unix := 0
 var keep_level := 1
 var day := 1
 var explored_regions := 0
@@ -51,6 +57,7 @@ var tick_timer: Timer
 var autosave_timer: Timer
 var upgrade_timer: Timer
 var building_upgrade_timer: Timer
+var troop_training_timer: Timer
 var world_view: Node3D
 
 func _ready() -> void:
@@ -77,6 +84,10 @@ func _ready() -> void:
 	building_upgrade_timer.one_shot = true
 	building_upgrade_timer.timeout.connect(_finish_building_upgrade)
 	add_child(building_upgrade_timer)
+	troop_training_timer = Timer.new()
+	troop_training_timer.one_shot = true
+	troop_training_timer.timeout.connect(_finish_troop_training)
+	add_child(troop_training_timer)
 	_resume_timed_upgrades()
 
 func _notification(what: int) -> void:
@@ -236,8 +247,12 @@ func _build_ui() -> void:
 	army_title.add_theme_color_override("font_color", Color("#f1d38a"))
 	column.add_child(army_title)
 	_add_button_row(column, [
-		{"text": "Train Guard\n20 gold, 10 food", "action": _train_guard},
-		{"text": "Scout Region\n5 guards", "action": _scout}
+		{"text": "Queue Infantry\n10 gold, 25 food", "action": _train_guard},
+		{"text": "Queue Archers\n15 gold, 35 food", "action": _queue_archers}
+	])
+	_add_button_row(column, [
+		{"text": "Queue Cavalry\n25 gold, 45 food", "action": _queue_cavalry},
+		{"text": "Scout Region\n1 guard", "action": _scout}
 	])
 	_add_button_row(column, [
 		{"text": "Attack Selected Outpost\n3+ guards", "action": _attack_outpost},
@@ -324,7 +339,8 @@ func _refresh_ui() -> void:
 		if keep_upgrade_finish_unix > int(Time.get_unix_time_from_system()):
 			upgrade_text = "   •   Keep upgrade: %ds" % (keep_upgrade_finish_unix - int(Time.get_unix_time_from_system()))
 		keep_label.text = "Day %d   •   Keep level: %d   •   Selected tile: %d%s" % [day, keep_level, selected_tile + 1, upgrade_text]
-		guard_label.text = "Trained guards: %d   •   Victories: %d   •   Defeats: %d" % [guards, victories, defeats]
+		var training_status := "Training queue idle" if queued_troop_count <= 0 else "%d %s in training • %ds" % [queued_troop_count, queued_troop_type, maxi(0, troop_training_finish_unix - int(Time.get_unix_time_from_system()))]
+		guard_label.text = "Guards: %d (I:%d A:%d C:%d) • %s • Wins: %d / Losses: %d" % [guards, infantry, archers, cavalry, training_status, victories, defeats]
 		for i in range(tile_buttons.size()):
 			var prefix := "▶ " if i == selected_tile else ""
 			tile_buttons[i].text = "%s%s Lv.%d\nTile %d" % [prefix, tiles[i], tile_levels[i], i + 1]
@@ -599,29 +615,100 @@ func _resume_timed_upgrades() -> void:
 			building_upgrade_timer.start(float(building_remaining))
 		else:
 			_finish_building_upgrade()
+	if queued_troop_count > 0:
+		var training_remaining := troop_training_finish_unix - now
+		if training_remaining > 0:
+			troop_training_timer.start(float(training_remaining))
+		else:
+			_finish_troop_training()
 
 func _train_guard() -> void:
-	if gold < 20 or food < 10:
-		status_message = "Training needs 20 gold and 10 food."
+	_queue_troop("infantry", 1)
+
+func _queue_archers() -> void:
+	_queue_troop("archer", 1)
+
+func _queue_cavalry() -> void:
+	_queue_troop("cavalry", 1)
+
+func _get_barracks_level() -> int:
+	var level := 0
+	for i in range(tiles.size()):
+		if tiles[i] == "Barracks":
+			level = maxi(level, tile_levels[i])
+	return level
+
+func _queue_troop(troop_type: String, count: int = 1) -> void:
+	var food_cost := 0
+	var gold_cost := 0
+	var duration := 0
+	match troop_type:
+		"infantry":
+			food_cost = 25
+			gold_cost = 10
+			duration = 8
+		"archer":
+			food_cost = 35
+			gold_cost = 15
+			duration = 12
+		"cavalry":
+			food_cost = 45
+			gold_cost = 25
+			duration = 16
+		_:
+			status_message = "Unknown troop type."
+			_refresh_ui()
+			return
+	if queued_troop_count > 0:
+		status_message = "Finish the current troop training queue first."
+	elif count < 1 or count > 5:
+		status_message = "Queue between 1 and 5 troops at a time."
+	elif _get_barracks_level() <= 0:
+		status_message = "Build a Barracks before training troops."
+	elif guards + count > _get_barracks_level() * 5:
+		status_message = "Barracks capacity is %d guards. Upgrade the Barracks to train more." % (_get_barracks_level() * 5)
+	elif gold < gold_cost * count or food < food_cost * count:
+		status_message = "Training needs %d gold and %d food." % [gold_cost * count, food_cost * count]
 	else:
-		gold -= 20
-		food -= 10
-		guards += 1
-		status_message = "A new guard joined your army."
-		if guards >= 5:
-			_award_achievement("five_guards", "Five Guards", 35)
-		if tutorial_step == 2:
-			_advance_tutorial(3)
+		gold -= gold_cost * count
+		food -= food_cost * count
+		queued_troop_type = troop_type
+		queued_troop_count = count
+		troop_training_finish_unix = int(Time.get_unix_time_from_system()) + duration * count
+		troop_training_timer.start(float(duration * count))
+		status_message = "Training %d %s. Completion in %d seconds." % [count, troop_type, duration * count]
 		_persist_game()
 	_refresh_ui()
 
+func _finish_troop_training() -> void:
+	if queued_troop_count <= 0:
+		return
+	match queued_troop_type:
+		"infantry":
+			infantry += queued_troop_count
+		"archer":
+			archers += queued_troop_count
+		"cavalry":
+			cavalry += queued_troop_count
+	guards = infantry + archers + cavalry
+	queued_troop_type = ""
+	queued_troop_count = 0
+	troop_training_finish_unix = 0
+	if guards >= 5:
+		_award_achievement("five_guards", "Five Guards", 35)
+	if tutorial_step == 2:
+		_advance_tutorial(3)
+	status_message = "Troop training complete. Army strength increased."
+	_persist_game()
+	_refresh_ui()
+
 func _scout() -> void:
-	if guards < 5:
-		status_message = "You need at least 5 guards to scout safely."
+	if guards < 1:
+		status_message = "You need at least 1 guard to scout safely."
 	elif outpost_defeated[selected_outpost] == 1:
 		status_message = "This outpost is already captured. Select another region to explore."
 	else:
-		guards -= 1
+		_remove_troops(1)
 		var reward := randi_range(35, 90) * keep_level + scouting_research * 10
 		gold += reward
 		wood += randi_range(5, 18) + scouting_research * 3
@@ -646,8 +733,8 @@ func _attack_outpost() -> void:
 		status_message = "Outpost %d requires at least %d guards." % [selected_outpost + 1, required_guards]
 		_refresh_ui()
 		return
-	guards -= required_guards
-	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 + combat_research * 5 + practice_drills - (0 if region_scouted[selected_outpost] == 1 else 15), 10, 90)
+	_remove_troops(required_guards)
+	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 + combat_research * 5 + practice_drills + archers * 2 + cavalry * 3 - (0 if region_scouted[selected_outpost] == 1 else 15), 10, 90)
 	var won_attack := randi_range(1, 100) <= chance
 	if is_instance_valid(world_view):
 		world_view.play_attack(selected_outpost, won_attack)
@@ -668,7 +755,7 @@ func _attack_outpost() -> void:
 		defeats = mini(defeats + 1, 1000000)
 		status_message = "Attack failed at Outpost %d. Your guards lost the battle." % (selected_outpost + 1)
 		if randi_range(0, 1) == 1:
-			guards = max(0, guards - 1)
+			_remove_troops(1)
 	_persist_game()
 	_refresh_ui()
 
@@ -719,7 +806,7 @@ func _explore_region() -> void:
 		status_message = "Train at least one guard before exploring."
 		_refresh_ui()
 		return
-	guards -= 1
+	_remove_troops(1)
 	explored_regions = mini(explored_regions + 1, 1000000)
 	day = mini(day + 1, 1000000)
 	var wood_reward := 20 + explored_regions * 5 + scouting_research * 10
@@ -729,6 +816,17 @@ func _explore_region() -> void:
 	status_message = "Region explored! Found %d wood and %d stone. One guard was assigned to the expedition." % [wood_reward, stone_reward]
 	_persist_game()
 	_refresh_ui()
+
+func _remove_troops(count: int) -> void:
+	var remaining := clampi(count, 0, guards)
+	var take := mini(remaining, cavalry)
+	cavalry -= take
+	remaining -= take
+	take = mini(remaining, archers)
+	archers -= take
+	remaining -= take
+	infantry = maxi(0, infantry - remaining)
+	guards = infantry + archers + cavalry
 
 func _practice_troops() -> void:
 	if guards < 1:
@@ -833,6 +931,12 @@ func _persist_game() -> int:
 	config.set_value("kingdom", "reward_explorer_claimed", reward_explorer_claimed)
 	config.set_value("kingdom", "reward_keep_claimed", reward_keep_claimed)
 	config.set_value("kingdom", "guards", guards)
+	config.set_value("kingdom", "infantry", infantry)
+	config.set_value("kingdom", "archers", archers)
+	config.set_value("kingdom", "cavalry", cavalry)
+	config.set_value("kingdom", "queued_troop_type", queued_troop_type)
+	config.set_value("kingdom", "queued_troop_count", queued_troop_count)
+	config.set_value("kingdom", "troop_training_finish_unix", troop_training_finish_unix)
 	config.set_value("kingdom", "keep_level", keep_level)
 	config.set_value("kingdom", "selected_tile", selected_tile)
 	config.set_value("kingdom", "tiles", tiles)
@@ -874,6 +978,12 @@ func _load_game() -> void:
 	reward_explorer_claimed = bool(config.get_value("kingdom", "reward_explorer_claimed", reward_explorer_claimed))
 	reward_keep_claimed = bool(config.get_value("kingdom", "reward_keep_claimed", reward_keep_claimed))
 	guards = int(config.get_value("kingdom", "guards", guards))
+	infantry = int(config.get_value("kingdom", "infantry", guards))
+	archers = int(config.get_value("kingdom", "archers", archers))
+	cavalry = int(config.get_value("kingdom", "cavalry", cavalry))
+	queued_troop_type = str(config.get_value("kingdom", "queued_troop_type", queued_troop_type))
+	queued_troop_count = int(config.get_value("kingdom", "queued_troop_count", queued_troop_count))
+	troop_training_finish_unix = int(config.get_value("kingdom", "troop_training_finish_unix", troop_training_finish_unix))
 	keep_level = int(config.get_value("kingdom", "keep_level", keep_level))
 	selected_tile = clampi(int(config.get_value("kingdom", "selected_tile", selected_tile)), 0, tiles.size() - 1)
 	var loaded_tiles = config.get_value("kingdom", "tiles", tiles.duplicate())
@@ -923,7 +1033,15 @@ func _normalize_save_data() -> void:
 	economy_research = clampi(economy_research, 0, 5)
 	scouting_research = clampi(scouting_research, 0, 5)
 	practice_drills = clampi(practice_drills, 0, 20)
-	guards = clampi(guards, 0, 100000)
+	infantry = clampi(infantry, 0, 100000)
+	archers = clampi(archers, 0, 100000)
+	cavalry = clampi(cavalry, 0, 100000)
+	queued_troop_count = clampi(queued_troop_count, 0, 5)
+	if queued_troop_type not in ["", "infantry", "archer", "cavalry"] or queued_troop_count == 0:
+		queued_troop_type = ""
+		queued_troop_count = 0
+		troop_training_finish_unix = 0
+	guards = infantry + archers + cavalry
 	keep_level = clampi(keep_level, 1, 10)
 	selected_tile = clampi(selected_tile, 0, tiles.size() - 1)
 	selected_outpost = clampi(selected_outpost, 0, outpost_threat.size() - 1)
@@ -943,6 +1061,8 @@ func _normalize_save_data() -> void:
 		keep_upgrade_finish_unix = 0
 	if building_upgrade_finish_unix < 0:
 		building_upgrade_finish_unix = 0
+	if troop_training_finish_unix < 0:
+		troop_training_finish_unix = 0
 	if building_upgrade_tile < -1 or building_upgrade_tile >= tiles.size():
 		building_upgrade_tile = -1
 
