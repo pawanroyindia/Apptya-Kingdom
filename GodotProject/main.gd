@@ -154,7 +154,7 @@ func _build_ui() -> void:
 	tile_detail_label.add_theme_color_override("font_color", Color("#d8e6d9"))
 	column.add_child(tile_detail_label)
 	_add_button_row(column, [
-		{"text": "Upgrade Selected\n40 gold, 20 wood × level", "action": _upgrade_selected_building},
+		{"text": "Upgrade Selected\nCost scales by level", "action": _upgrade_selected_building},
 		{"text": "Refresh / Save", "action": _save_game}
 	])
 
@@ -275,7 +275,7 @@ func _refresh_ui() -> void:
 			outpost_buttons[i].text = "%sOutpost %d\nThreat %d%s" % ["▶ " if i == selected_outpost else "", i + 1, outpost_threat[i], " • Defeated" if outpost_defeated[i] == 1 else ""]
 		outpost_label.text = _get_outpost_description()
 		tutorial_label.text = _get_tutorial_text()
-		achievements_label.text = "Achievements: %d/6 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
+		achievements_label.text = "Achievements: %d/7 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
 		status_label.text = status_message
 
 func _select_tile(index: int) -> void:
@@ -525,19 +525,46 @@ func _load_game() -> void:
 		for building in loaded_tiles:
 			tiles.append(str(building))
 	var loaded_levels = config.get_value("kingdom", "tile_levels", tile_levels)
-	if loaded_levels is PackedInt32Array and loaded_levels.size() == tile_levels.size():
-		tile_levels = loaded_levels
+	if (loaded_levels is PackedInt32Array or loaded_levels is Array) and loaded_levels.size() == tile_levels.size():
+		for i in range(tile_levels.size()):
+			tile_levels[i] = clampi(int(loaded_levels[i]), 1, 99)
 	var loaded_outposts = config.get_value("kingdom", "outpost_defeated", outpost_defeated)
-	if loaded_outposts is PackedInt32Array and loaded_outposts.size() == outpost_defeated.size():
-		outpost_defeated = loaded_outposts
+	if (loaded_outposts is PackedInt32Array or loaded_outposts is Array) and loaded_outposts.size() == outpost_defeated.size():
+		for i in range(outpost_defeated.size()):
+			outpost_defeated[i] = 1 if int(loaded_outposts[i]) == 1 else 0
 	selected_outpost = clampi(int(config.get_value("kingdom", "selected_outpost", selected_outpost)), 0, outpost_threat.size() - 1)
 	tutorial_step = clampi(int(config.get_value("kingdom", "tutorial_step", tutorial_step)), 0, 4)
 	var loaded_achievements = config.get_value("kingdom", "achievements", achievements)
-	if loaded_achievements is PackedStringArray:
-		achievements = loaded_achievements
+	if loaded_achievements is PackedStringArray or loaded_achievements is Array:
+		achievements.clear()
+		for achievement in loaded_achievements:
+			var achievement_id := str(achievement)
+			if achievement_id in ["farm", "mine", "keep_upgrade", "five_guards", "scout", "outpost", "all_outposts"] and not achievements.has(achievement_id):
+				achievements.append(achievement_id)
 	keep_upgrade_finish_unix = int(config.get_value("kingdom", "keep_upgrade_finish_unix", 0))
 	last_saved_unix = int(config.get_value("kingdom", "saved_at", Time.get_unix_time_from_system()))
+	_normalize_save_data()
 	_apply_offline_production(false)
+
+func _normalize_save_data() -> void:
+	gold = maxi(gold, 0)
+	wood = maxi(wood, 0)
+	food = maxi(food, 0)
+	guards = clampi(guards, 0, 100000)
+	keep_level = clampi(keep_level, 1, 99)
+	selected_tile = clampi(selected_tile, 0, tiles.size() - 1)
+	selected_outpost = clampi(selected_outpost, 0, outpost_threat.size() - 1)
+	tutorial_step = clampi(tutorial_step, 0, 4)
+	var valid_buildings := ["Empty", "Farm", "Mine", "Keep", "Barracks"]
+	for i in range(tiles.size()):
+		if not valid_buildings.has(tiles[i]):
+			tiles[i] = "Empty"
+		tile_levels[i] = clampi(tile_levels[i], 1, 99)
+	tiles[4] = "Keep"
+	for i in range(outpost_defeated.size()):
+		outpost_defeated[i] = 1 if outpost_defeated[i] == 1 else 0
+	if keep_upgrade_finish_unix < 0:
+		keep_upgrade_finish_unix = 0
 
 func _apply_offline_production(refresh_after: bool) -> void:
 	var now := int(Time.get_unix_time_from_system())
