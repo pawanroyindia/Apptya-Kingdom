@@ -19,6 +19,8 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Periodic autosave, backup recovery, save-data normalization and persisted upgrade/training timers
 - Procedural WAV sound effects for gathering, upgrades, training and battle outcomes, with a persistent mute toggle
 - Seven-day daily reward streak, resource payouts, day-seven bonus, duplicate-claim protection, live reset countdown and saved progress
+- Upgradeable single Academy with timed upgrades, research discounts up to 25%, and save-data duplicate cleanup
+- Sequential outpost scouting/attack unlocks; scouting a region repeatedly cannot generate duplicate rewards
 - Persistent Low / Balanced / High graphics presets and camera reset
 - Local save/load on the device, including graphics preferences; save recovery enforces a unique Keep and Barracks troop capacity
 
@@ -33,7 +35,7 @@ The workflow `.github/workflows/godot-android-apk.yml` builds a debug APK using 
 3. Run **Run workflow** only after explicit approval to build an APK. Source changes do not trigger APK builds.
 4. Open the completed run and download the `apptya-kingdom-godot-apk` artifact.
 
-The latest headless Godot integration run passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853475729)), including project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, generated sound effects, daily rewards, Academy construction/3D model/research discount, sequential campaign unlocks, and the 256-mesh budget/stable-refresh checks. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
+The latest headless Godot integration run passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38854283305)), including project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, generated sound effects, daily rewards, Academy timed upgrades and duplicate-save recovery, sequential campaign scouting/attack gates, duplicate-scout prevention, and the 256-mesh budget/stable-refresh checks. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
 
 ## Validation
 
