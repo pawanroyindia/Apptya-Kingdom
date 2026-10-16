@@ -96,7 +96,9 @@ func _run_probe() -> void:
 		session.request_host_action("set_stance", {"stance": "Defensive", "tile": 4, "outpost": 0})
 		var received_guest_action_snapshot := false
 		for attempt in range(60):
-			if kingdom.gold == 320 and kingdom.battle_stance == "Defensive":
+			# The guest may receive the two reliable snapshots in one frame; 325
+			# still proves both the +20 guest action and +5 host-local update arrived.
+			if kingdom.gold >= 320 and kingdom.gold <= 325 and kingdom.battle_stance == "Defensive":
 				received_guest_action_snapshot = true
 				break
 			await create_timer(0.1).timeout
