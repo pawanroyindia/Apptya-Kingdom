@@ -1,5 +1,7 @@
 extends Node3D
 
+signal tile_selected(index: int)
+
 var building_nodes: Array[Node3D] = []
 var outpost_nodes: Array[Node3D] = []
 var guard_nodes: Array[Node3D] = []
@@ -11,8 +13,11 @@ var camera_distance := 24.0
 var camera_yaw := 0.0
 var camera_elevation := 0.65
 var active_touches: Dictionary = {}
+var touch_can_pick: Dictionary = {}
+var touch_moved: Dictionary = {}
 var previous_pinch_distance := 0.0
 var mouse_orbiting := false
+var mouse_moved := false
 var current_tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
 var current_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 var current_keep_level := 1
@@ -97,6 +102,8 @@ func _update_camera() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		if event.pressed:
+			touch_can_pick[event.index] = active_touches.is_empty()
+			touch_moved[event.index] = false
 			active_touches[event.index] = event.position
 			if active_touches.size() == 2:
 				var points := active_touches.values()
@@ -104,10 +111,16 @@ func _input(event: InputEvent) -> void:
 				var second_point: Vector2 = points[1]
 				previous_pinch_distance = first_point.distance_to(second_point)
 		else:
+			var can_pick := bool(touch_can_pick.get(event.index, false)) and not bool(touch_moved.get(event.index, false))
 			active_touches.erase(event.index)
+			touch_can_pick.erase(event.index)
+			touch_moved.erase(event.index)
 			if active_touches.size() < 2:
 				previous_pinch_distance = 0.0
+			if can_pick:
+				_pick_tile(event.position)
 	elif event is InputEventScreenDrag:
+		touch_moved[event.index] = true
 		if active_touches.size() >= 2:
 			active_touches[event.index] = event.position
 			var points := active_touches.values()
@@ -130,7 +143,13 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			mouse_orbiting = event.pressed
+			if event.pressed:
+				mouse_orbiting = true
+				mouse_moved = false
+			else:
+				if mouse_orbiting and not mouse_moved:
+					_pick_tile(event.position)
+				mouse_orbiting = false
 		elif event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			camera_distance = maxf(15.0, camera_distance - 1.5)
 			_update_camera()
@@ -138,9 +157,24 @@ func _input(event: InputEvent) -> void:
 			camera_distance = minf(34.0, camera_distance + 1.5)
 			_update_camera()
 	elif event is InputEventMouseMotion and mouse_orbiting:
+		if event.relative.length() > 2.0:
+			mouse_moved = true
 		camera_yaw -= event.relative.x * 0.005
 		camera_elevation = clampf(camera_elevation + event.relative.y * 0.003, 0.32, 1.05)
 		_update_camera()
+
+func _pick_tile(screen_position: Vector2) -> void:
+	if not is_instance_valid(world_camera):
+		return
+	var ray_origin := world_camera.project_ray_origin(screen_position)
+	var ray_direction := world_camera.project_ray_normal(screen_position)
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_origin + ray_direction * 100.0)
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.has("collider"):
+		var collider = hit["collider"]
+		if collider is Node and collider.has_meta("tile_index"):
+			tile_selected.emit(int(collider.get_meta("tile_index")))
+			get_viewport().set_input_as_handled()
 
 func _build_terrain() -> void:
 	_add_box(self, Vector3(30, 0.35, 30), Vector3(0, -0.28, -1), "#668b52")
@@ -151,6 +185,15 @@ func _build_terrain() -> void:
 		_add_box(self, Vector3(3.45, 0.08, 3.45), Vector3(x, -0.055, z), tile_colors[i])
 		_add_box(self, Vector3(0.055, 0.025, 3.45), Vector3(x + 1.72, 0.01, z), "#b6a77a")
 		_add_box(self, Vector3(3.45, 0.025, 0.055), Vector3(x, 0.01, z + 1.72), "#b6a77a")
+		var tile_body := StaticBody3D.new()
+		tile_body.position = Vector3(x, 1.55, z)
+		tile_body.set_meta("tile_index", i)
+		var tile_shape := CollisionShape3D.new()
+		var box_shape := BoxShape3D.new()
+		box_shape.size = Vector3(3.35, 3.1, 3.35)
+		tile_shape.shape = box_shape
+		tile_body.add_child(tile_shape)
+		add_child(tile_body)
 	tile_highlight = Node3D.new()
 	add_child(tile_highlight)
 	_add_box(tile_highlight, Vector3(3.45, 0.035, 0.07), Vector3(0, 0.03, -1.69), "#f1d38a")
