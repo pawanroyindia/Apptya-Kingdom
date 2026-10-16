@@ -28,6 +28,14 @@ func _run() -> void:
 				_fail("Rigged character has no AnimationPlayer: " + model_name)
 				return
 			var player := players[0] as AnimationPlayer
+			var skeletons := instance.find_children("*", "Skeleton3D", true, false)
+			if skeletons.is_empty():
+				_fail("Rigged character has no Skeleton3D: " + model_name)
+				return
+			var skeleton := skeletons[0] as Skeleton3D
+			if skeleton.get_bone_count() < 8:
+				_fail("Character skeleton has too few bones for articulated motion: " + model_name)
+				return
 			var required_clips := {
 				"Idle": ["idle", "stand", "breath"],
 				"Walk": ["walk", "run", "jog", "move"],
@@ -39,9 +47,11 @@ func _run() -> void:
 					var normalized := clip_name.to_lower()
 					for alias in required_clips[clip]:
 						if normalized.contains(alias):
-							found = true
+							var animation := player.get_animation(clip_name)
+							if animation != null and animation.track_count > 0 and animation.length >= 0.25:
+								found = true
 				if not found:
-					_fail("Character GLB is missing " + clip + " motion clip: " + model_name)
+					_fail("Character GLB is missing a usable " + clip + " motion clip: " + model_name)
 					return
 		instance.queue_free()
 	for texture_name in ["gold", "steel", "cloth", "red", "skin", "leather", "stone", "wood", "roof", "linen"]:
