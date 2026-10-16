@@ -182,7 +182,7 @@ func _run_tests() -> void:
 	if game.keep_level != 1 or game.selected_tile != 8 or game.tiles[0] != "Empty" or game.tiles[4] != "Keep" or game.tile_levels[0] != 99:
 		_fail("Save normalization did not restore valid kingdom limits.")
 		return
-	if game.outpost_defeated[0] != 1 or game.region_scouted[0] != 0:
+	if game.outpost_defeated[0] != 0 or game.region_scouted[0] != 0:
 		_fail("Save normalization did not sanitize outpost progress.")
 		return
 
