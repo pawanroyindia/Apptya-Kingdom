@@ -100,7 +100,9 @@ func _input(event: InputEvent) -> void:
 			active_touches[event.index] = event.position
 			if active_touches.size() == 2:
 				var points := active_touches.values()
-				previous_pinch_distance = points[0].distance_to(points[1])
+				var first_point: Vector2 = points[0]
+				var second_point: Vector2 = points[1]
+				previous_pinch_distance = first_point.distance_to(second_point)
 		else:
 			active_touches.erase(event.index)
 			if active_touches.size() < 2:
@@ -109,7 +111,9 @@ func _input(event: InputEvent) -> void:
 		if active_touches.size() >= 2:
 			active_touches[event.index] = event.position
 			var points := active_touches.values()
-			var pinch_distance := points[0].distance_to(points[1])
+			var first_point: Vector2 = points[0]
+			var second_point: Vector2 = points[1]
+			var pinch_distance: float = first_point.distance_to(second_point)
 			if previous_pinch_distance > 0.0:
 				camera_distance = clampf(camera_distance + (previous_pinch_distance - pinch_distance) * 0.035, 15.0, 34.0)
 				_update_camera()
