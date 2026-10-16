@@ -220,6 +220,9 @@ func _run_tests() -> void:
 	if not game.network_session._is_allowed_action("claim_reward", {"reward_id": "first_victory", "tile": 4, "outpost": 0}) or game.network_session._is_allowed_action("claim_reward", {"reward_id": "admin", "tile": 4, "outpost": 0}) or not game.network_session._is_allowed_action("claim_quest", {"quest_id": "stronghold", "tile": 4, "outpost": 0}):
 		_fail("LAN co-op did not enforce the campaign reward/quest action allowlist.")
 		return
+	if not game.network_session._is_lan_ipv4("192.168.1.10") or not game.network_session._is_lan_ipv4("10.0.0.2") or not game.network_session._is_lan_ipv4("172.16.0.5") or game.network_session._is_lan_ipv4("8.8.8.8") or game.network_session._is_lan_ipv4("example.com"):
+		_fail("LAN co-op did not restrict joining addresses to private IPv4 networks.")
+		return
 	var altered_snapshot := coop_snapshot.duplicate(true)
 	altered_snapshot["gold"] = 311
 	game._apply_multiplayer_snapshot(altered_snapshot)
