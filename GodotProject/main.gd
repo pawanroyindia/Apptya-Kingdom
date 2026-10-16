@@ -430,14 +430,14 @@ func _collect_selected_building() -> void:
 			food += food_gain
 			status_message = "Collected %d food from the Farm." % food_gain
 		"Mine":
-			var gold_gain := 10 * tile_levels[selected_tile] * keep_level
-			gold += gold_gain
-			status_message = "Collected %d gold from the Mine." % gold_gain
+			var mine_gold_gain := 10 * tile_levels[selected_tile] * keep_level
+			gold += mine_gold_gain
+			status_message = "Collected %d gold from the Mine." % mine_gold_gain
 		"Keep":
-			var gold_gain := 5 * keep_level
-			gold += gold_gain
+			var keep_gold_gain := 5 * keep_level
+			gold += keep_gold_gain
 			wood += keep_level
-			status_message = "Collected %d gold and %d wood from the Keep." % [gold_gain, keep_level]
+			status_message = "Collected %d gold and %d wood from the Keep." % [keep_gold_gain, keep_level]
 		"Barracks":
 			food += 5 * tile_levels[selected_tile]
 			status_message = "Collected army supplies from the Barracks."
