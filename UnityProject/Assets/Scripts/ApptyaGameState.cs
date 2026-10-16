@@ -167,6 +167,8 @@ namespace ApptyaKingdom {
    Data.combatResearch=Mathf.Clamp(Data.combatResearch,0,5);Data.economyResearch=Mathf.Clamp(Data.economyResearch,0,5);Data.scoutingResearch=Mathf.Clamp(Data.scoutingResearch,0,5);
    Data.keepUpgradeRemaining=SanitizeTimer(Data.keepUpgradeRemaining);
    Data.lumberUpgradeRemaining=SanitizeTimer(Data.lumberUpgradeRemaining);Data.farmUpgradeRemaining=SanitizeTimer(Data.farmUpgradeRemaining);Data.barracksUpgradeRemaining=SanitizeTimer(Data.barracksUpgradeRemaining);Data.quarryUpgradeRemaining=SanitizeTimer(Data.quarryUpgradeRemaining);
+   // Complete queued troop training that finished while the app was suspended.
+   if(Data.queuedTroopCount>0&&Data.troopTrainingRemaining<=0f){switch(Data.queuedTroopType){case "infantry":Data.infantry+=Data.queuedTroopCount;break;case "archer":Data.archers+=Data.queuedTroopCount;break;case "cavalry":Data.cavalry+=Data.queuedTroopCount;break;}Data.guards=Data.infantry+Data.archers+Data.cavalry;Data.queuedTroopType="";Data.queuedTroopCount=0;Data.troopTrainingRemaining=0f;Data.tutorialTrained=true;AppendOfflineSummary("Troop training completed while away.");}
    // Finish upgrades that expired while the app was suspended instead of silently cancelling them.
    if(Data.keepUpgradeActive && Data.keepUpgradeRemaining<=0f){Data.keepLevel=Mathf.Clamp(Data.keepUpgradeTargetLevel>Data.keepLevel?Data.keepUpgradeTargetLevel:Data.keepLevel+1,Data.keepLevel,10);Data.keepUpgradeActive=false;Data.keepUpgradeTargetLevel=0;Data.day=Mathf.Min(1000000,Data.day+1);Data.tutorialUpgraded=true;AppendOfflineSummary("Keep upgrade completed (level "+Data.keepLevel+").");}
    if(Data.lumberUpgradeActive && Data.lumberUpgradeRemaining<=0f){Data.lumberLevel=Mathf.Min(5,Data.lumberLevel+1);Data.lumberUpgradeActive=false;Data.day=Mathf.Min(1000000,Data.day+1);Data.tutorialUpgraded=true;AppendOfflineSummary("Lumber Camp upgrade completed (level "+Data.lumberLevel+").");}
@@ -219,6 +221,7 @@ namespace ApptyaKingdom {
    if(Data.farmUpgradeActive)Data.farmUpgradeRemaining-=elapsed;
    if(Data.barracksUpgradeActive)Data.barracksUpgradeRemaining-=elapsed;
    if(Data.quarryUpgradeActive)Data.quarryUpgradeRemaining-=elapsed;
+   if(Data.queuedTroopCount>0)Data.troopTrainingRemaining-=elapsed;
   }
   public bool Gather(string type,int amount){if(Data==null||amount<=0)return false;switch(type){case "wood":Data.wood=AddResourceSafely(Data.wood,amount);Data.tutorialGathered=true;break;case "food":Data.food=AddResourceSafely(Data.food,amount);Data.tutorialGathered=true;break;case "stone":Data.stone=AddResourceSafely(Data.stone,amount);Data.tutorialGathered=true;break;case "gold":Data.gold=AddResourceSafely(Data.gold,amount);Data.tutorialGathered=true;break;default:return false;}Save();return true;}
   public bool UpgradeKeep(){return StartKeepUpgrade();}
