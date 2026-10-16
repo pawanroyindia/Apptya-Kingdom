@@ -438,7 +438,9 @@ func _refresh_ui() -> void:
 		for defeated in outpost_defeated:
 			captured_outposts += 1 if defeated == 1 else 0
 		var campaign_progress := "CAMPAIGN COMPLETE" if captured_outposts >= outpost_defeated.size() else "Outposts captured: %d/%d" % [captured_outposts, outpost_defeated.size()]
-		campaign_label.text = "%s\nArmy power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s" % [campaign_progress, _army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality]
+		campaign_label.text = "%s\nArmy power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s • Sound: %s" % [campaign_progress, _army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality, "ON" if sound_enabled else "OFF"]
+		if not settings_buttons.is_empty():
+			settings_buttons[2].text = "Sound: ON" if sound_enabled else "Sound: OFF"
 		var highest_building_level := 1
 		for i in range(tiles.size()):
 			if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks"]:
