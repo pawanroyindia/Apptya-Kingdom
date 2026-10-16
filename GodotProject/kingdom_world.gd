@@ -63,6 +63,10 @@ func set_hero_level(level: int) -> void:
 	current_hero_level = clampi(level, 1, 20)
 	if is_instance_valid(hero_level_label):
 		hero_level_label.text = "ROYAL CAPTAIN • LV %d" % current_hero_level
+	if is_instance_valid(hero_model) and current_hero_level != level:
+		var level_flash := create_tween()
+		level_flash.tween_property(hero_model, "scale", Vector3(1.16, 1.16, 1.16), 0.12).set_trans(Tween.TRANS_BACK)
+		level_flash.tween_property(hero_model, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BOUNCE)
 
 func _build_hero_model() -> void:
 	hero_model = Node3D.new()
@@ -74,6 +78,9 @@ func _build_hero_model() -> void:
 	_add_cone(hero_model, 0.28, 0.35, Vector3(0, 1.56, 0), "#e3bd59")
 	_add_box(hero_model, Vector3(0.1, 0.62, 0.1), Vector3(0.31, 0.82, 0), "#cbd2d5")
 	_add_box(hero_model, Vector3(0.36, 0.4, 0.08), Vector3(-0.28, 0.78, 0.06), "#8f3936")
+	_add_box(hero_model, Vector3(0.34, 0.16, 0.08), Vector3(0, 0.56, 0.16), "#8f3936")
+	_add_box(hero_model, Vector3(0.16, 0.08, 0.08), Vector3(0, 0.83, 0.16), "#f1d38a")
+	_add_box(hero_model, Vector3(0.12, 0.16, 0.05), Vector3(-0.08, 1.3, 0.21), "#f1d38a")
 	hero_level_label = Label3D.new()
 	hero_level_label.text = "ROYAL CAPTAIN • LV %d" % current_hero_level
 	hero_level_label.position = Vector3(0, 1.95, 0)
@@ -367,6 +374,8 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 		_add_cone(root, 0.34, 0.6, Vector3(-0.62, 2.23, -0.42), "#8d4d3e")
 		_add_cone(root, 0.34, 0.6, Vector3(0.62, 2.23, -0.42), "#8d4d3e")
 		_add_box(root, Vector3(0.3, 0.62, 0.07), Vector3(0, 0.35, 0.65), "#5d4432")
+		_add_box(root, Vector3(0.13, 0.22, 0.045), Vector3(-0.28, 0.78, 0.64), "#e4c77f")
+		_add_box(root, Vector3(0.13, 0.22, 0.045), Vector3(0.28, 0.78, 0.64), "#e4c77f")
 		_add_box(root, Vector3(0.08, 0.95, 0.08), Vector3(0.2, 2.6, 0), "#634a35")
 		_add_box(root, Vector3(0.65, 0.42, 0.06), Vector3(0.48, 2.8, 0), "#f1d38a")
 		_add_textured_level_marker(root, level, Vector3(0, 3.55, 0), "#f1d38a")
@@ -376,7 +385,9 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 			for col in range(4):
 				_add_box(root, Vector3(0.13, 0.24 + 0.025 * level, 0.2), Vector3(-0.48 + col * 0.32, 0.28, -0.38 + row * 0.34), "#4b8d45")
 		_add_box(root, Vector3(0.55, 0.55, 0.5), Vector3(-0.3, 0.46, 0.2), "#d6c08b")
+		_add_box(root, Vector3(0.08, 0.4, 0.06), Vector3(-0.3, 0.45, 0.47), "#513b2d")
 		_add_cone(root, 0.42, 0.42, Vector3(-0.3, 0.93, 0.2), "#9a5540")
+		_add_box(root, Vector3(0.14, 0.38, 0.06), Vector3(0.45, 0.28, 0.5), "#e0c77f")
 		_add_textured_level_marker(root, level, Vector3(0.5, 0.75, -0.45), "#f5d779")
 	elif kind == "Mine":
 		_add_box(root, Vector3(1.15, 0.22, 1.0), Vector3(0, 0.12, 0), "#625f58")
@@ -390,6 +401,8 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 		_add_box(root, Vector3(1.15, 0.78, 1.0), Vector3(0, 0.42, 0), "#8a6242")
 		_add_cone(root, 0.82, 0.72, Vector3(0, 1.12, 0), "#9b4d3d")
 		_add_box(root, Vector3(0.23, 0.5, 0.08), Vector3(0, 0.34, 0.54), "#e2c88a")
+		_add_box(root, Vector3(0.12, 0.28, 0.045), Vector3(-0.36, 0.48, 0.52), "#e5c37a")
+		_add_box(root, Vector3(0.12, 0.28, 0.045), Vector3(0.36, 0.48, 0.52), "#e5c37a")
 		_add_textured_level_marker(root, level, Vector3(0.42, 1.25, -0.3), "#f5d779")
 	elif kind == "Lumber Camp":
 		_add_box(root, Vector3(1.2, 0.8, 1.0), Vector3(0, 0.42, 0), "#8a6242")
@@ -412,6 +425,8 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 		_add_box(root, Vector3(0.3, 0.48, 0.07), Vector3(0, 0.37, 0.56), "#4c3527")
 		_add_box(root, Vector3(0.12, 0.5, 0.06), Vector3(-0.42, 0.56, 0.54), "#d6a84f")
 		_add_box(root, Vector3(0.12, 0.5, 0.06), Vector3(0.42, 0.56, 0.54), "#d6a84f")
+		_add_box(root, Vector3(0.16, 0.2, 0.045), Vector3(0, 1.12, 0.44), "#77a6a0")
+		_add_box(root, Vector3(0.055, 0.22, 0.035), Vector3(0, 1.12, 0.41), "#e5d8b7")
 		_add_textured_level_marker(root, level, Vector3(0.48, 1.35, -0.34), "#f5d779")
 	else:
 		_add_box(root, Vector3(0.8, 0.55, 0.8), Vector3(0, 0.32, 0), "#8a6242")
@@ -444,9 +459,13 @@ func play_attack(target_index: int, victory: bool) -> void:
 			_add_capsule(soldier, Vector3(0, 0.55, 0), uniform_color)
 			_add_sphere(soldier, Vector3(0, 1.2, 0), Vector3(0.22, 0.22, 0.22), "#d9b18c")
 			if troop_type == "infantry":
-				_add_box(soldier, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
+					_add_box(soldier, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
+				_add_box(soldier, Vector3(0.34, 0.4, 0.12), Vector3(-0.22, 0.58, 0.08), "#8c6845")
+				_add_box(soldier, Vector3(0.08, 0.08, 0.15), Vector3(-0.22, 0.58, 0.15), "#d8bd76")
 			else:
 				_add_cylinder(soldier, 0.035, 0.7, Vector3(0.28, 0.78, 0), "#8a6748")
+				_add_box(soldier, Vector3(0.32, 0.26, 0.12), Vector3(-0.22, 0.65, 0.08), "#b7a16a")
+			_add_cone(soldier, 0.22, 0.18, Vector3(0, 1.39, 0), "#b8bfc4")
 		add_child(soldier)
 		var destination := target_position + Vector3(lane * 0.55, 0.0, 1.1 + float(int(i / 3)) * 0.4)
 		var march := create_tween()
@@ -475,9 +494,14 @@ func play_exploration() -> void:
 func _show_battle_flash(position_value: Vector3, victory: bool) -> void:
 	var flash_color := "#e4d17e" if victory else "#b53d36"
 	var flash := _add_sphere(self, position_value, Vector3(0.2, 0.2, 0.2), flash_color)
+	var impact_ring := _add_cylinder(self, 0.65, 0.035, position_value - Vector3(0, 0.75, 0), flash_color)
 	var tween := create_tween()
+	tween.set_parallel(true)
 	tween.tween_property(flash, "scale", Vector3(1.8, 1.8, 1.8), 0.28)
-	tween.tween_callback(flash.queue_free)
+	tween.tween_property(impact_ring, "scale", Vector3(1.8, 1.0, 1.8), 0.28)
+	tween.tween_property(impact_ring, "transparency", 1.0, 0.28)
+	tween.chain().tween_callback(flash.queue_free)
+	tween.tween_callback(impact_ring.queue_free)
 
 func _rebuild_outposts() -> void:
 	for node in outpost_nodes:
@@ -546,10 +570,14 @@ func _rebuild_guards() -> void:
 			_add_capsule(guard, Vector3(0, 0.55, 0), uniform_color)
 			_add_sphere(guard, Vector3(0, 1.2, 0), Vector3(0.24, 0.24, 0.24), "#d9b18c")
 			if troop_type == "infantry":
-				_add_box(guard, Vector3(0.12, 0.58, 0.12), Vector3(0.18, 0.58, 0), "#bca46e")
+					_add_box(guard, Vector3(0.12, 0.58, 0.12), Vector3(0.18, 0.58, 0), "#bca46e")
+			_add_box(guard, Vector3(0.34, 0.4, 0.12), Vector3(-0.22, 0.58, 0.08), "#8c6845")
+			_add_box(guard, Vector3(0.08, 0.08, 0.15), Vector3(-0.22, 0.58, 0.15), "#d8bd76")
 			else:
 				_add_cylinder(guard, 0.035, 0.7, Vector3(0.28, 0.78, 0), "#8a6748")
 				_add_box(guard, Vector3(0.12, 0.45, 0.12), Vector3(-0.18, 0.58, 0), "#648d55")
+				_add_box(guard, Vector3(0.32, 0.26, 0.12), Vector3(-0.22, 0.65, 0.08), "#b7a16a")
+			_add_cone(guard, 0.22, 0.18, Vector3(0, 1.39, 0), "#b8bfc4")
 		add_child(guard)
 		guard_nodes.append(guard)
 
