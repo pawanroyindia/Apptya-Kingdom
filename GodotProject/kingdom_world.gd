@@ -67,6 +67,11 @@ func _process(delta: float) -> void:
 	all_rigs.append_array(articulated_rigs)
 	for rig_index in range(all_rigs.size()):
 		var rig: Dictionary = all_rigs[rig_index]
+		var imported_player := rig.get("animation_player") as AnimationPlayer
+		if is_instance_valid(imported_player):
+			var desired_clip := "Idle" if bool(rig.get("royal", false)) else ("Attack" if bool(rig.get("combat", false)) else "Walk")
+			_play_animation_clip(imported_player, desired_clip)
+			continue
 		var offset: float = float(rig.get("offset", 0.0))
 		var phase: float = animation_clock * float(rig.get("speed", 5.2)) + offset
 		var gait: float = sin(phase) * float(rig.get("walk", 0.0))
@@ -132,6 +137,24 @@ func set_hero_level(level: int) -> void:
 		level_flash.tween_property(hero_model, "scale", Vector3.ONE, 0.2).set_trans(Tween.TRANS_BOUNCE)
 
 func _build_hero_model() -> void:
+	var production_path := "res://assets/production/royal_captain.glb"
+	if ResourceLoader.exists(production_path):
+		var packed_model := load(production_path) as PackedScene
+		if packed_model:
+			hero_model = packed_model.instantiate() as Node3D
+			hero_model.name = "RoyalCaptain"
+			hero_model.position = Vector3(-1.55, 0.08, 1.8)
+			var imported_player := _find_animation_player(hero_model)
+			hero_rig_data = {"animation_player": imported_player, "royal": true, "combat": false, "offset": 0.0, "speed": 3.2}
+			hero_level_label = Label3D.new()
+			hero_level_label.text = "ROYAL CAPTAIN • LV %d" % current_hero_level
+			hero_level_label.position = Vector3(0, 2.05, 0)
+			hero_level_label.font_size = 24
+			hero_level_label.modulate = Color("#ffe3a0")
+			hero_model.add_child(hero_level_label)
+			add_child(hero_model)
+			_play_animation_clip(imported_player, "Idle")
+			return
 	hero_model = Node3D.new()
 	hero_model.name = "RoyalCaptain"
 	hero_model.position = Vector3(-1.55, 0.08, 1.8)
@@ -149,7 +172,36 @@ func _build_hero_model() -> void:
 	hero_model.add_child(hero_level_label)
 	add_child(hero_model)
 
+func _find_animation_player(root: Node) -> AnimationPlayer:
+	if not is_instance_valid(root):
+		return null
+	var found := root.find_children("*", "AnimationPlayer", true, false)
+	return found[0] as AnimationPlayer if not found.is_empty() else null
+
+func _play_animation_clip(player: AnimationPlayer, desired: String) -> void:
+	if not is_instance_valid(player):
+		return
+	var chosen := ""
+	for clip in player.get_animation_list():
+		if clip == desired:
+			chosen = clip
+			break
+		if chosen.is_empty() and clip.to_lower().contains(desired.to_lower()):
+			chosen = clip
+	if not chosen.is_empty() and player.current_animation != chosen:
+		player.play(chosen)
+
 func _create_articulated_character(uniform_color: String, armor_color: String, cloth_color: String, royal: bool, size_scale: float = 1.0) -> Node3D:
+	var production_path := "res://assets/production/royal_captain.glb" if royal else "res://assets/production/kingdom_guard.glb"
+	if ResourceLoader.exists(production_path):
+		var packed_model := load(production_path) as PackedScene
+		if packed_model:
+			var imported_model := packed_model.instantiate() as Node3D
+			imported_model.scale = Vector3.ONE * size_scale
+			var imported_player := _find_animation_player(imported_model)
+			imported_model.set_meta("rig_data", {"animation_player": imported_player, "royal": royal, "combat": false, "walk": 0.42, "speed": 5.2, "offset": randf_range(0.0, TAU), "combat_elapsed": 0.0})
+			_play_animation_clip(imported_player, "Idle" if royal else "Walk")
+			return imported_model
 	var character := Node3D.new()
 	character.scale = Vector3.ONE * size_scale
 	var torso := Node3D.new()
@@ -495,6 +547,23 @@ func _rebuild_buildings() -> void:
 		create_tween().tween_property(building, "scale", Vector3.ONE, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _make_building(kind: String, level: int, position_value: Vector3, is_keep: bool) -> Node3D:
+	var imported_path := ""
+	if kind == "Keep" or is_keep:
+		imported_path = "res://assets/production/keep.glb"
+	elif kind == "Barracks":
+		imported_path = "res://assets/production/barracks.glb"
+	if not imported_path.is_empty() and ResourceLoader.exists(imported_path):
+		var packed_building := load(imported_path) as PackedScene
+		if packed_building:
+			var imported_root := packed_building.instantiate() as Node3D
+			imported_root.position = position_value
+			var marker := Label3D.new()
+			marker.text = "LV %d" % level
+			marker.position = Vector3(0, 3.0 if kind == "Keep" or is_keep else 1.9, 0)
+			marker.font_size = 18
+			marker.modulate = Color("#f1d38a")
+			imported_root.add_child(marker)
+			return imported_root
 	var root := Node3D.new()
 	root.position = position_value
 	if kind == "Empty":
