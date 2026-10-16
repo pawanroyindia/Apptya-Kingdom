@@ -127,6 +127,22 @@ func _run_tests() -> void:
 		_fail("Keep upgrade completion or achievement failed.")
 		return
 
+	# Research levels consume the correct resources and persist their bonuses.
+	game.gold += 500
+	game.wood += 500
+	game.stone += 500
+	game._research("combat")
+	game._research("economy")
+	game._research("scouting")
+	if game.combat_research != 1 or game.economy_research != 1 or game.scouting_research != 1:
+		_fail("Combat, economy, or scouting research did not advance.")
+		return
+	var drill_level_before: int = game.practice_drills
+	game._practice_troops()
+	if game.practice_drills != drill_level_before + 1:
+		_fail("Troop practice did not increase army drills.")
+		return
+
 	game._select_outpost(0)
 	game._scout()
 	if game.region_scouted[0] != 1:
@@ -139,6 +155,27 @@ func _run_tests() -> void:
 		_fail("Targeted outpost attack did not consume the required guards.")
 		return
 	await create_timer(0.9).timeout
+	game.victories = maxi(game.victories, 1)
+	game._claim_reward("first_victory")
+	if not game.reward_first_victory_claimed:
+		_fail("First Victory reward could not be claimed after a victory.")
+		return
+	var guards_before_exploration: int = game.guards
+	game._explore_region()
+	game._explore_region()
+	game._explore_region()
+	if game.explored_regions != 3 or game.guards != guards_before_exploration - 3:
+		_fail("Region exploration did not consume guards or advance campaign progress.")
+		return
+	game._claim_reward("explorer")
+	if not game.reward_explorer_claimed:
+		_fail("Explorer reward did not unlock after exploring three regions.")
+		return
+	game.keep_level = 3
+	game._claim_reward("keep_builder")
+	if not game.reward_keep_claimed:
+		_fail("Keep Builder reward did not unlock at Keep level 3.")
+		return
 
 	# Production must award resources and preserve the capped-offline economy.
 	var gold_before_tick: int = game.gold
