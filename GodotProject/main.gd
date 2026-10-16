@@ -261,6 +261,9 @@ func _build_ui() -> void:
 		{"text": "Build Lumber Camp\n60 gold, 15 wood", "action": _build_lumber_camp},
 		{"text": "Build Quarry\n70 gold, 25 wood", "action": _build_quarry}
 	])
+	_add_button_row(column, [
+		{"text": "Build Academy\n120 gold, 45 wood", "action": _build_academy}
+	])
 
 	var outpost_title := Label.new()
 	outpost_title.text = "ENEMY OUTPOSTS"
@@ -444,6 +447,8 @@ func _refresh_ui() -> void:
 				production = "Stone production: %d per tick" % (2 * keep_level * tile_levels[selected_tile])
 			elif tiles[selected_tile] == "Keep":
 				production = "Keep produces %d gold and 1 wood per tick" % keep_level
+			elif tiles[selected_tile] == "Academy":
+				production = "Research discount: %d%% on all research costs" % int(minf(0.35, float(tile_levels[selected_tile]) * 0.05) * 100.0)
 			var upgrade_note := ""
 			if building_upgrade_finish_unix > int(Time.get_unix_time_from_system()) and building_upgrade_tile == selected_tile:
 				upgrade_note = " Building upgrade completes in %ds." % (building_upgrade_finish_unix - int(Time.get_unix_time_from_system()))
@@ -676,6 +681,24 @@ func _build_quarry() -> void:
 	status_message = "Quarry built. It produces stone over time."
 	_persist_game()
 	_refresh_ui()
+
+func _build_academy() -> void:
+	if not _can_build("Academy", 120, 45):
+		return
+	tiles[selected_tile] = "Academy"
+	gold -= 120
+	wood -= 45
+	status_message = "Academy built. Each Academy level reduces research costs by 5%, up to 35%."
+	_play_sound("build")
+	_persist_game()
+	_refresh_ui()
+
+func _get_academy_level() -> int:
+	var level := 0
+	for i in range(tiles.size()):
+		if tiles[i] == "Academy":
+			level = maxi(level, tile_levels[i])
+	return level
 
 func _build_barracks() -> void:
 	if not _can_build("Barracks", 80, 30):
@@ -1093,9 +1116,10 @@ func _research(research_type: String) -> void:
 			status_message = "Combat research level %d requires Barracks level %d." % [required_level, required_level]
 			_refresh_ui()
 			return
-	var wood_cost := 60 * required_level
-	var stone_cost := 40 * required_level
-	var gold_cost := 25 * required_level
+	var academy_discount := minf(0.35, float(_get_academy_level()) * 0.05)
+	var wood_cost := ceili(60 * required_level * (1.0 - academy_discount))
+	var stone_cost := ceili(40 * required_level * (1.0 - academy_discount))
+	var gold_cost := ceili(25 * required_level * (1.0 - academy_discount))
 	if wood < wood_cost or stone < stone_cost or gold < gold_cost:
 		status_message = "Research needs %d wood, %d stone and %d gold." % [wood_cost, stone_cost, gold_cost]
 		_refresh_ui()
@@ -1110,7 +1134,7 @@ func _research(research_type: String) -> void:
 			economy_research += 1
 		"scouting":
 			scouting_research += 1
-	status_message = "%s researched to level %d." % [research_name, required_level]
+	status_message = "%s researched to level %d with %d%% Academy discount." % [research_name, required_level, int(academy_discount * 100.0)]
 	_persist_game()
 	_refresh_ui()
 
@@ -1471,7 +1495,7 @@ func _normalize_save_data() -> void:
 	tutorial_step = clampi(tutorial_step, 0, 4)
 	if tiles.size() != 9:
 		tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
-	var valid_buildings := ["Empty", "Farm", "Mine", "Keep", "Barracks", "Lumber Camp", "Quarry"]
+	var valid_buildings := ["Empty", "Farm", "Mine", "Keep", "Barracks", "Lumber Camp", "Quarry", "Academy"]
 	for i in range(tiles.size()):
 		if not valid_buildings.has(tiles[i]):
 			tiles[i] = "Empty"
