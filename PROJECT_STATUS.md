@@ -20,6 +20,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Touch camera orbit, two-finger pinch zoom, tile selection, and camera reset.
 - [x] Persistent Low / Balanced / High 3D render-quality presets; Low disables shadows and lowers 3D render scale for weaker phones.
 - [x] Procedurally generated WAV sound effects for gathering, building upgrades, troop training, and battle wins/losses, with a persistent on/off control.
+- [x] A 16-second looping procedural ambient soundtrack with an independent music toggle and persisted preference (prototype audio, not a professionally authored soundtrack).
 - [x] Daily reward system with real-world daily reset, a seven-day streak, resource rewards, a seventh-day bonus, duplicate-claim protection, visible reset countdown, and save/load persistence.
 - [x] Sequential campaign progression: each outpost unlocks only after the previous outpost is captured; locked attacks do not consume troops, and the HUD reports progress through the final campaign-complete state.
 - [x] Save normalization removes duplicate Keeps and enforces Barracks troop capacity, including queued-training capacity.
