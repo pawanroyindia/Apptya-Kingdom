@@ -18,7 +18,7 @@ var touch_moved: Dictionary = {}
 var previous_pinch_distance := 0.0
 var mouse_orbiting := false
 var mouse_moved := false
-var current_tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
+var current_tiles: Array[String] = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
 var current_levels := PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 var current_keep_level := 1
 var current_guards := 4
@@ -41,7 +41,7 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 	for tile in tile_data:
 		next_tiles.append(str(tile))
 	if next_tiles.size() != 9:
-		next_tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Empty", "Barracks", "Empty"]
+		next_tiles = ["Empty", "Farm", "Empty", "Mine", "Keep", "Empty", "Lumber Camp", "Barracks", "Quarry"]
 	var next_levels := level_data.duplicate()
 	if next_levels.size() != 9:
 		next_levels = PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
@@ -51,7 +51,7 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 	var next_scouted := scouted.duplicate()
 	if next_scouted.size() != 3:
 		next_scouted = PackedInt32Array([0, 0, 0])
-	var next_keep_level := clampi(keep_level, 1, 99)
+	var next_keep_level := clampi(keep_level, 1, 10)
 	var next_guards := maxi(guards, 0)
 	var next_infantry := maxi(infantry, 0)
 	var next_archers := maxi(archers, 0)
