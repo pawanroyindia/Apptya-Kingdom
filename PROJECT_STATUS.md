@@ -16,7 +16,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Four-step tutorial, combat/economy/scouting research, troop practice, three claimable campaign rewards and a persistent three-objective quest board.
 - [x] Royal Captain hero progression: XP from battle/scouting/exploration, level cap 20, skill upgrades to level 5, army-power bonus, save/load persistence, and a distinct gold-armored 3D model with a live level label.
 - [x] Local save/load, backup recovery, save-data normalization, timed upgrade restoration, and periodic autosave.
-- [x] Procedural 3D valley, castle, buildings, stone perimeter wall with four watchtowers and a southern gate, river/bridge, hills, boulders, lanterns, five enemy outposts, and distinct infantry/archer/cavalry silhouettes.
+- [x] Procedural 3D valley, castle, buildings, stone perimeter wall with four watchtowers and a southern gate, river/bridge, hills, boulders, lanterns, ten enemy outposts, and distinct infantry/archer/cavalry silhouettes.
 - [x] Touch camera orbit, two-finger pinch zoom, tile selection, and camera reset.
 - [x] Persistent Low / Balanced / High 3D render-quality presets; Low disables shadows and lowers 3D render scale for weaker phones.
 - [x] Sequential campaign progression: each outpost unlocks only after the previous outpost is captured; locked attacks do not consume troops.
