@@ -135,6 +135,7 @@ namespace ApptyaKingdom
             GridButton(contentObject.transform, "Upgrade selected", UpgradeSelectedBuilding);
             GridButton(contentObject.transform, "Collect selected", CollectFromSelectedBuilding);
             GridButton(contentObject.transform, "Attack selected", AttackSelectedTarget);
+            GridButton(contentObject.transform, "Practice troops", PracticeSelectedTarget);
 
             ApptyaGameState.Instance.Changed += Refresh;
             ApptyaGameState.Instance.OfflineProgressApplied += Say;
@@ -209,6 +210,11 @@ namespace ApptyaKingdom
             }
 
             var d = state.Data;
+            if (selectedBuildingKey == "practice")
+            {
+                selectionInfo.text = selectedBuildingName + " • Select Practice troops to review army readiness.";
+                return;
+            }
             if (selectedBuildingKey == "enemy")
             {
                 selectionInfo.text = selectedBuildingName + " • Level " + d.enemyLevel + " • Power " + state.EnemyPower() +
@@ -341,6 +347,29 @@ namespace ApptyaKingdom
             if (selectedBuildingKey == "keep") { UpgradeKeep(); return; }
             if (selectedBuildingKey == "enemy") { Say("The enemy outpost cannot be upgraded. Use Attack selected."); return; }
             Upgrade(selectedBuildingKey, selectedBuildingName);
+        }
+
+        void PracticeSelectedTarget()
+        {
+            if (selectedBuildingKey != "practice")
+            {
+                Say("Tap the visible Practice Target in the valley first.");
+                return;
+            }
+            var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null)
+            {
+                Say("Game state is unavailable. Reopen the starter scene.");
+                return;
+            }
+            var d = state.Data;
+            if (d.guards < 1)
+            {
+                Say("No troops are available to practice. Queue infantry, archers or cavalry first.");
+                return;
+            }
+            Say("Practice drill complete. Army power " + state.ArmyPower() + " • Infantry " + d.infantry +
+                " • Archers " + d.archers + " • Cavalry " + d.cavalry + ". No troops or resources were spent.");
         }
 
         void AttackSelectedTarget()
