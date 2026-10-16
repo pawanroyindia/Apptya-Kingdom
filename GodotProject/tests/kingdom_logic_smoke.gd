@@ -144,9 +144,10 @@ func _run_tests() -> void:
 	var gold_before_tick: int = game.gold
 	var wood_before_tick: int = game.wood
 	var food_before_tick: int = game.food
+	var stone_before_tick: int = game.stone
 	game._on_production_tick()
-	if game.gold <= gold_before_tick or game.wood <= wood_before_tick or game.food <= food_before_tick:
-		_fail("Active production tick did not generate resources from built economy.")
+	if game.gold <= gold_before_tick or game.wood <= wood_before_tick or game.food <= food_before_tick or game.stone <= stone_before_tick:
+		_fail("Active production tick did not generate all four resources.")
 		return
 	var expected_offline_gold := 0
 	var expected_offline_wood := 0
@@ -165,6 +166,9 @@ func _run_tests() -> void:
 			"Keep":
 				expected_offline_gold += game.keep_level * 2880
 				expected_offline_wood += 2880
+	expected_offline_wood += game.economy_research * 2880
+	expected_offline_food += game.economy_research * 2880
+	expected_offline_stone += game.economy_research * 2880
 	var gold_before_offline: int = game.gold
 	var wood_before_offline: int = game.wood
 	var food_before_offline: int = game.food
