@@ -1397,7 +1397,7 @@ func _claim_daily_reward() -> void:
 	_refresh_ui()
 
 func _claim_quest(quest_id: String) -> void:
-	if _route_network_action("claim_quest" {"quest_id": quest_id}):
+	if _route_network_action("claim_quest", {"quest_id": quest_id}):
 		return
 	var captured_outposts := 0
 	for defeated in outpost_defeated:
@@ -1443,7 +1443,7 @@ func _claim_quest(quest_id: String) -> void:
 	_refresh_ui()
 
 func _claim_reward(reward_id: String) -> void:
-	if _route_network_action("claim_reward" {"reward_id": reward_id}):
+	if _route_network_action("claim_reward", {"reward_id": reward_id}):
 		return
 	match reward_id:
 		"first_victory":
