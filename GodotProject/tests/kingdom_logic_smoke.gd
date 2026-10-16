@@ -151,21 +151,27 @@ func _run_tests() -> void:
 	var expected_offline_gold := 0
 	var expected_offline_wood := 0
 	var expected_offline_food := 0
+	var expected_offline_stone := 0
 	for i in range(game.tiles.size()):
 		match game.tiles[i]:
 			"Farm":
 				expected_offline_food += 2 * game.keep_level * game.tile_levels[i] * 2880
 			"Mine":
 				expected_offline_gold += 2 * game.keep_level * game.tile_levels[i] * 2880
+			"Lumber Camp":
+				expected_offline_wood += 2 * game.keep_level * game.tile_levels[i] * 2880
+			"Quarry":
+				expected_offline_stone += 2 * game.keep_level * game.tile_levels[i] * 2880
 			"Keep":
 				expected_offline_gold += game.keep_level * 2880
 				expected_offline_wood += 2880
 	var gold_before_offline: int = game.gold
 	var wood_before_offline: int = game.wood
 	var food_before_offline: int = game.food
+	var stone_before_offline: int = game.stone
 	game.last_saved_unix = int(Time.get_unix_time_from_system()) - 36000
 	game._apply_offline_production(false)
-	if game.gold != gold_before_offline + expected_offline_gold or game.wood != wood_before_offline + expected_offline_wood or game.food != food_before_offline + expected_offline_food:
+	if game.gold != gold_before_offline + expected_offline_gold or game.wood != wood_before_offline + expected_offline_wood or game.food != food_before_offline + expected_offline_food or game.stone != stone_before_offline + expected_offline_stone:
 		_fail("Offline production did not apply the exact eight-hour capped production.")
 		return
 
@@ -183,6 +189,7 @@ func _run_tests() -> void:
 	var saved_gold: int = game.gold
 	var saved_wood: int = game.wood
 	var saved_food: int = game.food
+	var saved_stone: int = game.stone
 	var saved_guards: int = game.guards
 	var saved_tiles: Array = game.tiles.duplicate()
 	var saved_levels: PackedInt32Array = game.tile_levels.duplicate()
@@ -192,6 +199,7 @@ func _run_tests() -> void:
 	game.gold = 0
 	game.wood = 0
 	game.food = 0
+	game.stone = 0
 	game.guards = 0
 	game.tiles[0] = "Empty"
 	game.tile_levels[0] = 1
@@ -199,7 +207,7 @@ func _run_tests() -> void:
 	game.outpost_defeated[0] = 0
 	game.achievements.clear()
 	game._load_game()
-	if game.gold != saved_gold or game.wood != saved_wood or game.food != saved_food or game.guards != saved_guards:
+	if game.gold != saved_gold or game.wood != saved_wood or game.food != saved_food or game.stone != saved_stone or game.guards != saved_guards:
 		_fail("Kingdom save/load did not restore resource and guard values.")
 		return
 	if game.tiles != saved_tiles or game.tile_levels != saved_levels or game.keep_level != saved_keep_level:
@@ -240,7 +248,7 @@ func _run_tests() -> void:
 	if game.gold != 0 or game.wood != 0 or game.food != 0 or game.guards != 0:
 		_fail("Save normalization did not clamp negative resource and guard values.")
 		return
-	if game.keep_level != 1 or game.selected_tile != 8 or game.tiles[0] != "Empty" or game.tiles[4] != "Keep" or game.tile_levels[0] != 99:
+	if game.keep_level != 1 or game.selected_tile != 8 or game.tiles[0] != "Empty" or game.tiles[4] != "Keep" or game.tile_levels[0] != 5:
 		_fail("Save normalization did not restore valid kingdom limits.")
 		return
 	if game.outpost_defeated[0] != 0 or game.region_scouted[0] != 0:
