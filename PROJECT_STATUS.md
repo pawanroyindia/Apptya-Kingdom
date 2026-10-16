@@ -14,9 +14,10 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Farm, mine, Lumber Camp, Quarry, Academy, Barracks and Keep construction/collection/upgrades; Academy levels discount research costs.
 - [x] Queued infantry, archer and cavalry training; scouting, exploration, ten enemy outposts, battle outcomes, rewards and achievements.
 - [x] Tactical campaign combat: troop composition, enemy doctrines, scouting intelligence, probability-based outcomes, bounded casualty calculations, and rewards; enemy army formations adapt across Shield Wall, Bow Line and Cavalry Wing encounters.
+- [x] Selectable Balanced/Aggressive/Defensive battle stances: aggressive play improves attack odds but increases expected casualties; defensive play reduces expected casualties at the cost of attack odds. Stance is saved, synchronized in LAN snapshots, and host-validated.
 - [x] Four-step tutorial, combat/economy/scouting research, troop practice, three claimable campaign rewards and a persistent three-objective quest board.
 - [x] Royal Captain hero progression: XP from battle/scouting/exploration, level cap 20, skill upgrades to level 5, army-power bonus, save/load persistence, and a distinct gold-armored 3D model with a live level label.
-- [x] Local save/load, backup recovery, save-data normalization, timed upgrade restoration, and periodic autosave.
+- [x] Local save/load, backup recovery, save-data normalization, timed upgrade restoration, and periodic autosave. Primary-save and backup-copy errors are surfaced instead of silently ignored.
 - [x] Procedural 3D valley, castle, buildings, stone perimeter wall with four watchtowers and a southern gate, river/bridge, hills, boulders, lanterns, ten enemy outposts, and distinct infantry/archer/cavalry silhouettes.
 - [x] Dynamic four-minute day/night lighting cycle with changing sky, ambient light, sun warmth and energy; integrated with the Low graphics preset.
 - [x] Touch camera orbit, two-finger pinch zoom, tile selection, and camera reset.
