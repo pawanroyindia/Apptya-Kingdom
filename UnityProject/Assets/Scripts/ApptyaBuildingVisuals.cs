@@ -22,6 +22,7 @@ namespace ApptyaKingdom
         readonly GameObject[] guardMarkers = new GameObject[25];
         readonly Vector3[] guardHomePositions = new Vector3[25];
         float troopMotionClock;
+        Transform practiceTarget;
 
         void Start()
         {
@@ -64,13 +65,14 @@ namespace ApptyaKingdom
                 }
             }
 
+            CreatePracticeTarget();
             if (state != null) state.Changed += Refresh;
             Refresh();
         }
 
         void Update()
         {
-            troopMotionClock += Time.deltaTime;
+            troopMotionClock += Time.deltaTime;\n            if (practiceTarget != null) practiceTarget.localScale = Vector3.one * (1f + Mathf.Sin(troopMotionClock * 1.7f) * .025f);
             for (int i = 0; i < guardMarkers.Length; i++)
             {
                 var guard = guardMarkers[i];
