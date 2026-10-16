@@ -778,6 +778,11 @@ func _run_tests() -> void:
 		_fail("Combat director did not scale an overwhelming army advantage or bound casualties.")
 		return
 
+	var penultimate_outpost: Dictionary = combat_rules.resolve_outpost(5, 3, 2, 10, 0, 0, 1, 1, 10, 8, true)
+	var final_boss: Dictionary = combat_rules.resolve_outpost(5, 3, 2, 10, 0, 0, 1, 1, 10, 9, true)
+	if final_boss["trait"] != "Warlord's Citadel" or final_boss["enemy_power"] <= penultimate_outpost["enemy_power"]:
+		_fail("The final campaign outpost did not expose a distinct, stronger boss encounter.")
+		return
 	var balanced_stance: Dictionary = combat_rules.resolve_outpost(5, 3, 2, 10, 0, 0, 1, 1, 10, 9, false, "Balanced")
 	var aggressive_stance: Dictionary = combat_rules.resolve_outpost(5, 3, 2, 10, 0, 0, 1, 1, 10, 9, false, "Aggressive")
 	var defensive_stance: Dictionary = combat_rules.resolve_outpost(5, 3, 2, 10, 0, 0, 1, 1, 10, 9, false, "Defensive")
