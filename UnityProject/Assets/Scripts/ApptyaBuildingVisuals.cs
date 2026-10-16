@@ -85,7 +85,8 @@ namespace ApptyaKingdom
                 var troopRenderer = guardMarkers[i].GetComponent<Renderer>();
                 if (troopRenderer)
                     troopRenderer.sharedMaterial = i < state.Data.infantry ? bronzeMat :
-                        i < state.Data.infantry + state.Data.archers ? goldMat : crimsonMat;
+                        i < state.Data.infantry + state.Data.archers ? goldMat :
+                        i < state.Data.infantry + state.Data.archers + state.Data.cavalry ? crimsonMat : bronzeMat;
                 int column = i % 5;
                 int row = i / 5;
                 guardMarkers[i].transform.position = new Vector3(-9.2f + column * 1.1f, .55f, 9.4f + row * .9f);
