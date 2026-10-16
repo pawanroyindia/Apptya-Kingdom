@@ -720,8 +720,13 @@ func _run_tests() -> void:
 	var combat_rules = load("res://combat_director.gd")
 	var infantry_battle: Dictionary = combat_rules.resolve_outpost(8, 0, 0, 20, 2, 3, 3, 2, 2, 0, true)
 	var cavalry_battle: Dictionary = combat_rules.resolve_outpost(0, 0, 8, 20, 2, 3, 3, 2, 2, 2, true)
+	var archer_counter: Dictionary = combat_rules.resolve_outpost(0, 8, 0, 20, 2, 3, 3, 2, 2, 0, true)
+	var cavalry_vs_fort: Dictionary = combat_rules.resolve_outpost(0, 0, 8, 20, 2, 3, 3, 2, 2, 0, true)
 	if infantry_battle["trait"] == cavalry_battle["trait"] or infantry_battle["chance"] < 8 or infantry_battle["chance"] > 92 or infantry_battle["loss_losses"] > 8:
 		_fail("Tactical combat director did not expose distinct enemy traits or bounded odds/casualties.")
+		return
+	if archer_counter["chance"] <= cavalry_vs_fort["chance"]:
+		_fail("The Fortified Hold enemy doctrine did not reward the correct troop counter.")
 		return
 	var army_battle: Dictionary = combat_rules.resolve_enemy_army(100, 0, 0, 100, 5, 20, 10, 5, 1)
 	if army_battle["chance"] < 90 or army_battle["loss_losses"] > 100:
