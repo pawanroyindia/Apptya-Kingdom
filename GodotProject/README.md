@@ -6,7 +6,7 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 
 - Portrait, touch-friendly interface
 - Gold, wood, food and stone resource counters with direct gathering actions
-- Procedural 3D valley with a river, bridge, roads, stone perimeter wall, four watchtowers, a southern gate, trees, a castle keep, farms, mines, barracks, ten enemy outposts, visible guard markers, and a gold-armored Royal Captain hero model with a level label
+- Procedural 3D valley with a river, bridge, roads, stone perimeter wall, four watchtowers, a southern gate, trees, a castle keep, farms, mines, barracks, ten enemy outposts, visible guard markers, and a gold-armored Royal Captain hero model with a level label; four custom tiling SVG surface textures (masonry, wood grain, woven banner, grass detail), shared textured materials, and added building finish details
 - Dynamic day/night lighting cycle that changes the sky, ambient light and sun warmth; Low graphics mode keeps reduced lighting and disables shadows
 - Touch drag to orbit the camera and two-finger pinch to zoom
 - Nine selectable kingdom tiles
@@ -20,9 +20,9 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Distinct procedural 3D silhouettes for fortified, archer and cavalry outposts to communicate enemy doctrine visually
 - Timed production and bounded eight-hour offline production with research bonuses
 - Periodic autosave, backup recovery, save-data normalization, persisted upgrade/training timers, and explicit error reporting when backup or primary save writes fail
-- Procedural WAV sound effects for gathering, upgrades, training and battle outcomes, with a persistent mute toggle
-- A looping procedural ambient music bed with its own on/off control and saved preference
-- Short finite ambient animations for tree sway and guard idle motion, building reveal/upgrade feedback, hero level-up feedback, marching/exploration squads and battle impact rings
+- Procedural WAV sound effects for gathering, upgrades, training and battle outcomes using layered harmonics and transient envelopes, with a persistent mute toggle
+- A 24-second layered procedural ambient music bed with sustained harmony, plucked arpeggios, bass pulse and melody, with its own on/off control and saved preference
+- Continuous tree sway, guard and hero idle motion, animated banners, building reveal/upgrade feedback, hero level-up feedback, marching/exploration squads and battle impact rings
 - LAN co-op for one host and one guest on the same Wi-Fi: host-authoritative resource/build/training/research/scouting/attack/claim/tactical-stance actions, shared kingdom snapshots and validation of client requests
 - Seven-day daily reward streak, resource payouts, day-seven bonus, duplicate-claim protection, live reset countdown and saved progress
 - Upgradeable single Academy with timed upgrades, research discounts up to 25%, and save-data duplicate cleanup
@@ -30,7 +30,7 @@ This is a new, licence-free Godot implementation of the current mobile kingdom-m
 - Persistent Low / Balanced / High graphics presets and camera reset
 - Local save/load on the device, including graphics preferences; save recovery enforces a unique Keep and Barracks troop capacity
 
-This is a reimplementation of the prototype mechanics, not an automatic conversion of Unity scenes or C# scripts. It uses procedural low-poly models, not final production art, and synthesized prototype audio rather than an authored soundtrack. LAN co-op is intentionally Wi-Fi/LAN-only: one host and one guest on the same local Wi-Fi network, UDP port 24567, no public-internet matchmaking, no remote servers, and no internet-based accounts. Source-level tests pass, but physical-phone connectivity remains unverified.
+This is a reimplementation of the prototype mechanics, not an automatic conversion of Unity scenes or C# scripts. Four custom SVG textures and richer material details are integrated, but characters and buildings are still procedural low-poly models without rigged character animation; the music and effects remain generated prototypes rather than professionally authored production audio. These changes improve the prototype but do not yet satisfy premium production-art/audio quality. LAN co-op is intentionally Wi-Fi/LAN-only: one host and one guest on the same local Wi-Fi network, UDP port 24567, no public-internet matchmaking, no remote servers, and no internet-based accounts. Physical-phone connectivity remains unverified.
 
 ## LAN co-op quick start
 
