@@ -57,6 +57,11 @@ func _run_tests() -> void:
 	if game.outpost_threat.size() != 5 or game.world_view.current_outposts.size() != 5:
 		_fail("Five-outpost campaign map was not initialized.")
 		return
+	var initial_mesh_count := game.world_view.find_children("*", "MeshInstance3D", true, false).size()
+	print("APPTYA_WORLD_MESH_COUNT=%d" % initial_mesh_count)
+	if initial_mesh_count > 400:
+		_fail("Procedural world exceeded the mobile mesh-node budget.")
+		return
 	game._select_outpost(4)
 	if game.selected_outpost != 4 or game.world_view.selected_outpost != 4:
 		_fail("Fifth outpost could not be selected in the campaign UI/world.")
