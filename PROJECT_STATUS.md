@@ -26,7 +26,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Headless Godot editor parsing, project startup, economy, training, research, exploration, save recovery and touch tests passed ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848762730)).
 - [x] The central 3D tile-picking test has passed in a prior workflow run.
 - [x] Re-run the expanded gameplay/save/touch/troop/research test suite after the campaign and save-normalization changes ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851194005)).
-- [ ] Confirm the newest regression that loads a saved Low-quality preset applies at startup ([run pending](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851218827)).
+- [x] Verify a saved Low-quality preset is applied when the scene starts, including render scale and shadow state ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851218827)).
 - [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity and signature checks align. Actual export remains untested until approved.
 - [x] Add a CI mesh-node budget and refresh-stability check: 193 mesh nodes at startup, below the 400-node guardrail; physical-device FPS remains unverified.
 - [ ] Physical-device installation, touch testing, and performance validation are post-export gates and cannot be claimed before an APK exists.
