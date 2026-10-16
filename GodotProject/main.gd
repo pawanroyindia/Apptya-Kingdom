@@ -287,7 +287,10 @@ func _refresh_ui() -> void:
 				production = "Gold production: %d per tick" % (2 * keep_level * tile_levels[selected_tile])
 			elif tiles[selected_tile] == "Keep":
 				production = "Keep produces %d gold and 1 wood per tick" % keep_level
-			tile_detail_label.text = "Selected: %s (Level %d) on tile %d. %s" % [tiles[selected_tile], tile_levels[selected_tile], selected_tile + 1, production]
+			var upgrade_note := ""
+			if building_upgrade_finish_unix > int(Time.get_unix_time_from_system()) and building_upgrade_tile == selected_tile:
+				upgrade_note = " Building upgrade completes in %ds." % (building_upgrade_finish_unix - int(Time.get_unix_time_from_system()))
+			tile_detail_label.text = "Selected: %s (Level %d) on tile %d. %s%s" % [tiles[selected_tile], tile_levels[selected_tile], selected_tile + 1, production, upgrade_note]
 		for i in range(outpost_buttons.size()):
 			outpost_buttons[i].text = "%sOutpost %d\nThreat %d%s" % ["▶ " if i == selected_outpost else "", i + 1, outpost_threat[i], " • Defeated" if outpost_defeated[i] == 1 else ""]
 		outpost_label.text = _get_outpost_description()
