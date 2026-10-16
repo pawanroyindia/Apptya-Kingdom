@@ -1,0 +1,75 @@
+name: Generate Production Asset Pack
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/asset_pipeline/**"
+      - ".github/workflows/production-assets.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Blender and Python audio dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender python3
+          blender --version
+          python3 --version
+
+      - name: Generate UV-mapped PBR models and skeletal animation clips
+        run: |
+          blender --background --factory-startup --python tools/asset_pipeline/generate_models.py
+
+      - name: Generate mixed stereo soundtrack and game effects
+        run: |
+          python3 tools/asset_pipeline/generate_audio.py
+
+      - name: Verify asset outputs and animation exports
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s GodotProject/assets/production/royal_captain.glb
+          test -s GodotProject/assets/production/kingdom_guard.glb
+          test -s GodotProject/assets/production/keep.glb
+          test -s GodotProject/assets/production/barracks.glb
+          test -s GodotProject/assets/production/watchtower.glb
+          test -s GodotProject/assets/production/audio/kingdom_theme.wav
+          for sound in gather build train victory defeat scout; do test -s "GodotProject/assets/production/audio/$sound.wav"; done
+          test "$(find GodotProject/assets/production/textures -name '*.png' | wc -l)" -ge 8
+          python3 - <<'PY'
+          import os, struct, wave
+          base="GodotProject/assets/production"
+          for f in ["audio/kingdom_theme.wav","audio/gather.wav","audio/build.wav","audio/train.wav","audio/victory.wav","audio/defeat.wav","audio/scout.wav"]:
+              with wave.open(os.path.join(base,f),"rb") as w:
+                  assert w.getnchannels()==2 and w.getframerate()==22050 and w.getnframes()>1000, f
+          print("APPTYA_ASSET_OUTPUTS_VALID")
+          PY
+
+      - name: Import and smoke-test generated assets in Godot
+        run: |
+          curl --fail --location --retry 3 https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_linux.x86_64.zip --output /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x /tmp/godot/Godot_v4.5.1-stable_linux.x86_64
+          /tmp/godot/Godot_v4.5.1-stable_linux.x86_64 --headless --editor --path GodotProject --quit
+
+      - name: Commit generated models, textures and audio into repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add GodotProject/assets/production
+          if git diff --cached --quiet; then
+            echo "Generated assets already match repository."
+          else
+            git commit -m "Add generated UV-mapped kingdom assets and mixed audio pack"
+            git push
+          fi
