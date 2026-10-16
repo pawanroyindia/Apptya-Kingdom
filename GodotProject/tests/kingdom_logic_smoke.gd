@@ -57,6 +57,38 @@ func _run_tests() -> void:
 		_fail("Guard training or tutorial progression failed.")
 		return
 
+	# Resource collection must award the correct resource for the selected building.
+	game._select_tile(0)
+	var food_before_collection: int = game.food
+	game._collect_selected_building()
+	if game.food <= food_before_collection:
+		_fail("Farm collection did not increase food.")
+		return
+
+	# A building cannot be placed on an occupied tile, and failed actions must not charge resources.
+	var gold_before_invalid_build: int = game.gold
+	var wood_before_invalid_build: int = game.wood
+	game._build_mine()
+	if game.tiles[0] != "Farm" or game.gold != gold_before_invalid_build or game.wood != wood_before_invalid_build:
+		_fail("Building on an occupied tile changed the kingdom state.")
+		return
+
+	# Barracks construction and guard training resource costs must be applied exactly.
+	game._select_tile(6)
+	var barracks_gold_before: int = game.gold
+	var barracks_wood_before: int = game.wood
+	game._build_barracks()
+	if game.tiles[6] != "Barracks" or game.gold != barracks_gold_before - 80 or game.wood != barracks_wood_before - 30:
+		_fail("Barracks construction or resource costs failed.")
+		return
+	var guards_before_training: int = game.guards
+	var training_gold_before: int = game.gold
+	var training_food_before: int = game.food
+	game._train_guard()
+	if game.guards != guards_before_training + 1 or game.gold != training_gold_before - 20 or game.food != training_food_before - 10:
+		_fail("Guard training resource costs failed.")
+		return
+
 	game._select_tile(0)
 	var original_level: int = game.tile_levels[0]
 	game._upgrade_selected_building()
@@ -92,6 +124,24 @@ func _run_tests() -> void:
 		_fail("Targeted outpost attack did not consume the required guards.")
 		return
 	await create_timer(0.9).timeout
+
+	# Production must award resources and preserve the capped-offline economy.
+	var gold_before_tick: int = game.gold
+	var wood_before_tick: int = game.wood
+	var food_before_tick: int = game.food
+	game._on_production_tick()
+	if game.gold <= gold_before_tick or game.wood <= wood_before_tick or game.food <= food_before_tick:
+		_fail("Active production tick did not generate resources from built economy.")
+		return
+	var gold_before_offline: int = game.gold
+	game.last_saved_unix = int(Time.get_unix_time_from_system()) - 36000
+	game._apply_offline_production(false)
+	if game.gold <= gold_before_offline:
+		_fail("Offline production did not award resources.")
+		return
+	if game.gold > gold_before_offline + 2 * game.keep_level * 99 * 2880:
+		_fail("Offline production exceeded the configured eight-hour cap.")
+		return
 
 	game._persist_game()
 	var saved_gold: int = game.gold
