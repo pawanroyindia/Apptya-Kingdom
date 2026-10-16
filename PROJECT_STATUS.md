@@ -24,12 +24,14 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Touch camera orbit, two-finger pinch zoom, tile selection, and camera reset.
 - [x] Persistent Low / Balanced / High 3D render-quality presets; Low disables shadows and lowers 3D render scale for weaker phones.
 - [x] Procedurally generated WAV sound effects for gathering, building upgrades, troop training, and battle wins/losses, with a persistent on/off control.
-- [x] A 16-second looping procedural ambient soundtrack with an independent music toggle and persisted preference (prototype audio, not a professionally authored soundtrack).
+- [x] Expanded the ambient soundtrack to a 24-second layered procedural score (sustained harmony, plucked arpeggio, bass pulse and melody) with an independent music toggle and persisted preference; still prototype audio, not a professionally authored soundtrack.
 - [x] Daily reward system with real-world daily reset, a seven-day streak, resource rewards, a seventh-day bonus, duplicate-claim protection, visible reset countdown, and save/load persistence.
 - [x] Sequential campaign progression: each outpost unlocks only after the previous outpost is captured; locked attacks do not consume troops, and the HUD reports progress through the final campaign-complete state.
 - [x] Distinct procedural outpost structures for fortified, archer and cavalry enemy doctrines; visual silhouettes align with the combat rules.
+- [x] Added custom tiling SVG masonry, wood-grain, woven-banner and grass-detail textures, shared PBR-style material variation, and additional building finish details. This is a source-level visual enhancement, not a claim that premium rigged production models are complete.
+- [x] Enriched synthesized sound effects with harmonic layers, pitch sweep and transient envelopes; added a layered 24-second generated music loop. These remain procedural audio prototypes.
 - [x] Save normalization removes duplicate Keeps/Academies, enforces Barracks and queued-training capacity, clamps resources/hero/reward values, validates timed-operation targets, and repairs impossible sequential campaign progress.
-- [x] Visible construction/outpost reveal effects, finite tree-sway and staggered guard-idle animations, water ripples, exploration scout journey, marching guard squad, and expanding battle impact rings.
+- [x] Visible construction/outpost reveal effects, continuous tree-sway, guard/hero idle and animated banners, water ripples, exploration scout journey, marching guard squad, and expanding battle impact rings.
 - [x] Improved procedural model details: Keep windows, farmhouse doors, Barracks facade, Academy stained glass, troop helmets/shields, and Royal Captain level-up feedback.
 - [x] Added LAN-only co-op for one host and one guest: host/join by local IP, validated host-authoritative gameplay actions, shared kingdom snapshots, and client-side prevention of independent production/timer completion. Same Wi-Fi and UDP port 24567 are required; no internet matchmaking or remote server is part of the scope.
 - [x] Academy can be upgraded through the normal timed building system; duplicate Academies are rejected and sanitized from malformed saves.
@@ -55,8 +57,8 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [ ] Physical-device installation, touch testing, and performance validation are post-export gates and cannot be claimed before an APK exists.
 
 ## Remaining non-blocking prototype scope
-- The world still uses procedural low-poly meshes and a custom SVG app icon, not final production art assets. Sound effects and ambient music are synthesized prototypes, not authored production audio.
-- LAN co-op is intentionally local-network-only. Live two-phone networking has not been verified; reconnect/session recovery and robust handling of router isolation remain outstanding. Authored music/audio, production art/animation, and physical Android device profiling remain outstanding.
+- The world still uses procedural low-poly meshes and a custom SVG app icon, not final production character/building assets or rigged character animation. The new surface textures and detail pass improve readability but do not equal premium production art. Sound effects and ambient music are still synthesized prototypes, not professionally authored production audio.
+- LAN co-op is intentionally local-network-only. Live two-phone networking has not been verified; reconnect/session recovery and robust handling of router isolation remain outstanding. Professionally authored music/audio, production-quality rigged 3D models/animations, and physical Android device profiling remain outstanding.
 - Campaign depth currently includes ten sequential outposts, tactical enemy doctrines, composition-aware battles and escalating enemy-army encounters. More campaign chapters, authored soundtrack, and production-quality sound design are still future work. Internet matchmaking is intentionally out of scope.
 - A successful headless check does not prove Android export, APK installation, LAN connectivity between physical phones, or device compatibility.
 - The APK workflow has not been run and no APK has been generated. This is intentional. Do not run the manual APK workflow unless the user explicitly asks after reviewing this checklist.
