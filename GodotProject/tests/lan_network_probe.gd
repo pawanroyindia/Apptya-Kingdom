@@ -30,6 +30,10 @@ class ProbeKingdom:
 		gold = int(snapshot.get("gold", gold))
 		battle_stance = str(snapshot.get("battle_stance", battle_stance))
 
+	func _resume_timed_upgrades() -> void:
+		# ProbeKingdom has no gameplay timers; production main.gd does.
+		pass
+
 	func _persist_game() -> int:
 		# Mirror the production main.gd contract: a successful host save publishes
 		# local UI/timer changes, not just changes initiated by a guest RPC.
