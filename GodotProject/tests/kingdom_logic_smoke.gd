@@ -58,6 +58,14 @@ func _run_tests() -> void:
 	if not game.music_enabled or game.music_settings_buttons[0].text != "Music: ON" or not game.music_player.playing:
 		_fail("Music toggle did not resume playback or update its button.")
 		return
+	game._notification(Control.NOTIFICATION_APPLICATION_PAUSED)
+	if game.music_player.playing:
+		_fail("Ambient music continued playing after the app was paused.")
+		return
+	game._notification(Control.NOTIFICATION_APPLICATION_RESUMED)
+	if not game.music_player.playing:
+		_fail("Ambient music did not resume when the app returned to the foreground.")
+		return
 
 	var initial_yaw: float = game.world_view.camera_yaw
 	var drag_event := InputEventScreenDrag.new()
