@@ -133,6 +133,9 @@ func _run_tests() -> void:
 	if not game.network_session._is_allowed_action("gather", {"resource": "gold", "amount": 20}) or game.network_session._is_allowed_action("gather", {"resource": "gold", "amount": 999}) or game.network_session._is_allowed_action("execute_script", {}):
 		_fail("LAN co-op accepted an invalid or unsupported client action.")
 		return
+	if not game.network_session._is_allowed_action("claim_reward", {"reward_id": "first_victory"}) or game.network_session._is_allowed_action("claim_reward", {"reward_id": "admin"}) or not game.network_session._is_allowed_action("claim_quest", {"quest_id": "stronghold"}):
+		_fail("LAN co-op did not enforce the campaign reward/quest action allowlist.")
+		return
 	var altered_snapshot := coop_snapshot.duplicate(true)
 	altered_snapshot["gold"] = 311
 	game._apply_multiplayer_snapshot(altered_snapshot)
@@ -146,6 +149,24 @@ func _run_tests() -> void:
 	malformed_snapshot["tiles"] = ["Keep"]
 	if game.network_session._valid_snapshot(malformed_snapshot):
 		_fail("LAN co-op accepted a malformed kingdom snapshot.")
+		return
+	var duplicate_keep_snapshot := coop_snapshot.duplicate(true)
+	duplicate_keep_snapshot["tiles"][0] = "Keep"
+	if game.network_session._valid_snapshot(duplicate_keep_snapshot):
+		_fail("LAN co-op accepted a snapshot with duplicate Keeps.")
+		return
+	var invalid_level_snapshot := coop_snapshot.duplicate(true)
+	invalid_level_snapshot["tile_levels"][0] = 6
+	if game.network_session._valid_snapshot(invalid_level_snapshot):
+		_fail("LAN co-op accepted a building level outside the supported range.")
+		return
+	var host_start_result: int = game.network_session.host_game()
+	if host_start_result != OK or not game.network_session.is_network_active() or not game.multiplayer.is_server():
+		_fail("LAN co-op host could not start its ENet server.")
+		return
+	game.network_session.disconnect_game()
+	if game.network_session.is_network_active():
+		_fail("LAN co-op disconnect did not return to offline mode.")
 		return
 	if game.outpost_threat.size() != 10 or game.world_view.current_outposts.size() != 10:
 		_fail("Ten-outpost campaign map was not initialized.")
