@@ -306,13 +306,13 @@ func _on_server_disconnected() -> void:
 	_set_status("Host disconnected. Your local kingdom remains available.")
 
 func _is_lan_ipv4(address: String) -> bool:
-	if not IP.is_valid_ip_address(address) or address.contains(":"):
+	if address.contains(":"):
 		return false
 	var octets := address.split(".")
 	if octets.size() != 4:
 		return false
 	for octet_text in octets:
-		if not octet_text.is_valid_int():
+		if not octet_text.is_valid_int() or octet_text.begins_with("+") or octet_text.begins_with("-"):
 			return false
 		var octet := int(octet_text)
 		if octet < 0 or octet > 255:
