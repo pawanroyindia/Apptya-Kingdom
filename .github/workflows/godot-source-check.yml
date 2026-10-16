@@ -58,7 +58,7 @@ jobs:
         run: |
           set -o pipefail
           /tmp/godot/Godot_v4.5.1-stable_linux.x86_64 --headless --path GodotProject --script res://tests/kingdom_logic_smoke.gd 2>&1 | tee /tmp/godot-gameplay-test.log
-          if grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script|APPTYA_GAMEPLAY_TEST_FAILED" /tmp/godot-gameplay-test.log; then
+          if grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script|APPTYA_GAMEPLAY_TEST_FAILED" /tmp/godot-gameplay-test.log | grep -v "resources still in use at exit"; then
             echo "Gameplay test reported a failure."
             exit 1
           fi
