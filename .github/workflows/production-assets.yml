@@ -38,7 +38,7 @@ jobs:
 
       - name: Generate UV-mapped PBR models and skeletal animation clips
         run: |
-          PYTHONPATH=/usr/lib/python3/dist-packages blender --background --factory-startup --python tools/asset_pipeline/generate_models.py
+          PYTHONPATH=/usr/lib/python3/dist-packages blender --background --factory-startup --python-exit-code 1 --python tools/asset_pipeline/generate_models.py
 
       - name: Download CC0 medieval modules and compose authored buildings
         shell: bash
@@ -61,7 +61,7 @@ jobs:
             ffmpeg -hide_banner -loglevel error -y -i "$KIT_DIR/glTF/$texture" -vf "scale=512:512:flags=lanczos" -frames:v 1 "$KIT_DIR/glTF/resized-$texture"
             mv "$KIT_DIR/glTF/resized-$texture" "$KIT_DIR/glTF/$texture"
           done
-          PYTHONPATH=/usr/lib/python3/dist-packages blender --background --factory-startup --python tools/asset_pipeline/compose_authored_buildings.py
+          PYTHONPATH=/usr/lib/python3/dist-packages blender --background --factory-startup --python-exit-code 1 --python tools/asset_pipeline/compose_authored_buildings.py
           cp "$KIT_DIR/QUATERNIUS_CC0_1.0.txt" GodotProject/assets/production/source_models/QUATERNIUS_CC0_1.0.txt
 
       - name: Generate mixed stereo soundtrack and game effects
