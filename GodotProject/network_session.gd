@@ -91,6 +91,8 @@ func _is_allowed_action(action: String, payload: Dictionary) -> bool:
 	match action:
 		"gather":
 			return str(payload.get("resource", "")) in ["wood", "food", "stone", "gold"] and int(payload.get("amount", 0)) in [15, 20, 25, 30]
+		"set_stance":
+			return str(payload.get("stance", "")) in ["Balanced", "Aggressive", "Defensive"]
 		"build_farm", "build_mine", "build_lumber_camp", "build_quarry", "build_academy", "build_barracks", "upgrade_keep", "collect", "upgrade_building", "train_infantry", "train_archers", "train_cavalry", "scout", "attack", "explore", "practice", "train_hero", "upgrade_hero_skill", "claim_daily", "army_battle":
 			return true
 		"claim_reward":
@@ -107,6 +109,8 @@ func _is_allowed_action(action: String, payload: Dictionary) -> bool:
 			return false
 
 func _valid_snapshot(snapshot: Dictionary) -> bool:
+	if snapshot.has("battle_stance") and str(snapshot["battle_stance"]) not in ["Balanced", "Aggressive", "Defensive"]:
+		return false
 	for key in ["gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry", "keep_level", "hero_level", "tiles", "tile_levels", "outpost_defeated", "region_scouted"]:
 		if not snapshot.has(key):
 			return false
