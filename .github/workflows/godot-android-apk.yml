@@ -6,6 +6,8 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/godot-android-apk.yml"
+      - "GodotProject/project.godot"
+      - "GodotProject/export_presets.cfg"
   workflow_dispatch:
 
 permissions:
