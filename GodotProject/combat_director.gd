@@ -29,7 +29,7 @@ static func resolve_outpost(infantry: int, archers: int, cavalry: int, hero_powe
 		enemy_power += 8
 	elif trait_id == 2:
 		enemy_power += 10
-	var chance := clampi(50 + int(round(float(effective_power - enemy_power) * 1.15)) + (12 if scouted else -8), 8, 92)
+	var chance := clampi(50 + int(round(float(effective_power - enemy_power) * 0.15)) + (12 if scouted else -8), 8, 92)
 	var loss_ratio := clampf(float(enemy_power) / float(effective_power + enemy_power), 0.08, 0.78)
 	var win_losses := clampi(int(ceil(float(total_troops) * loss_ratio * 0.42)), 0, total_troops)
 	var loss_losses := clampi(int(ceil(float(total_troops) * loss_ratio * 0.95)), 1 if total_troops > 0 else 0, total_troops)
