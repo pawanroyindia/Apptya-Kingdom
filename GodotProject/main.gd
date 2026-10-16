@@ -428,10 +428,11 @@ func _refresh_ui() -> void:
 		outpost_label.text = _get_outpost_description()
 		tutorial_label.text = _get_tutorial_text()
 		achievements_label.text = "Achievements: %d/8 — %s" % [achievements.size(), ", ".join(achievements) if not achievements.is_empty() else "none yet"]
-		campaign_label.text = "Army power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s" % [_army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality]
 		var captured_outposts := 0
 		for defeated in outpost_defeated:
 			captured_outposts += 1 if defeated == 1 else 0
+		var campaign_progress := "CAMPAIGN COMPLETE" if captured_outposts >= outpost_defeated.size() else "Outposts captured: %d/%d" % [captured_outposts, outpost_defeated.size()]
+		campaign_label.text = "%s\nArmy power %d • Enemy power %d (Lv %d)\nExplored: %d regions • Combat %d/5 • Economy %d/5 • Scouting %d/5 • Drills %d/20\nGraphics: %s" % [campaign_progress, _army_power(), _enemy_power(), enemy_level, explored_regions, combat_research, economy_research, scouting_research, practice_drills, graphics_quality]
 		var highest_building_level := 1
 		for i in range(tiles.size()):
 			if tiles[i] in ["Farm", "Mine", "Lumber Camp", "Quarry", "Barracks"]:
@@ -885,10 +886,13 @@ func _attack_outpost() -> void:
 		food += 20 * threat
 		status_message = "Victory at Outpost %d! Reward: %d gold and %d food." % [selected_outpost + 1, reward, 20 * threat]
 		_award_achievement("outpost", "First Outpost", 50, 10)
-		if _all_outposts_captured():
+		var campaign_won := _all_outposts_captured()
+		if campaign_won:
 			_award_achievement("all_outposts", "Realm Conqueror", 250, 100)
 		if tutorial_step == 3:
 			_advance_tutorial(4)
+		if campaign_won:
+			status_message = "CAMPAIGN COMPLETE! All ten enemy outposts are secured. The kingdom is united."
 	else:
 		_award_hero_xp(10)
 		defeats = mini(defeats + 1, 1000000)
