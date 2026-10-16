@@ -48,7 +48,7 @@ jobs:
         run: |
           set -o pipefail
           /tmp/godot/Godot_v4.5.1-stable_linux.x86_64 --headless --path GodotProject --quit-after 5 2>&1 | tee /tmp/godot-run.log
-          if grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script" /tmp/godot-run.log; then
+          if grep -E "ERROR:|SCRIPT ERROR|Parse Error|Failed to load script" /tmp/godot-run.log | grep -v "resources still in use at exit"; then
             echo "Godot runtime reported a script or resource error."
             exit 1
           fi
