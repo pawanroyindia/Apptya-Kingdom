@@ -1291,11 +1291,16 @@ func _load_game() -> void:
 	if (loaded_levels is PackedInt32Array or loaded_levels is Array) and loaded_levels.size() == tile_levels.size():
 		for i in range(tile_levels.size()):
 			tile_levels[i] = clampi(int(loaded_levels[i]), 1, 5)
-	var loaded_outposts = config.get_value("kingdom", "outpost_defeated", outpost_defeated)
+	# Clear campaign arrays before loading so short legacy saves cannot retain stale progress.
+	outpost_defeated = PackedInt32Array()
+	outpost_defeated.resize(outpost_threat.size())
+	region_scouted = PackedInt32Array()
+	region_scouted.resize(outpost_threat.size())
+	var loaded_outposts = config.get_value("kingdom", "outpost_defeated", PackedInt32Array())
 	if (loaded_outposts is PackedInt32Array or loaded_outposts is Array) and loaded_outposts.size() > 0:
 		for i in range(mini(outpost_defeated.size(), loaded_outposts.size())):
 			outpost_defeated[i] = 1 if int(loaded_outposts[i]) == 1 else 0
-	var loaded_scouted = config.get_value("kingdom", "region_scouted", region_scouted)
+	var loaded_scouted = config.get_value("kingdom", "region_scouted", PackedInt32Array())
 	if (loaded_scouted is PackedInt32Array or loaded_scouted is Array) and loaded_scouted.size() > 0:
 		for i in range(mini(region_scouted.size(), loaded_scouted.size())):
 			region_scouted[i] = 1 if int(loaded_scouted[i]) == 1 else 0
