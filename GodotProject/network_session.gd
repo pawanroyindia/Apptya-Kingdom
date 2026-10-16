@@ -107,21 +107,41 @@ func _is_allowed_action(action: String, payload: Dictionary) -> bool:
 			return false
 
 func _valid_snapshot(snapshot: Dictionary) -> bool:
-	if not snapshot.has("gold") or not snapshot.has("wood") or not snapshot.has("food") or not snapshot.has("stone"):
-		return false
-	if not snapshot.has("tiles") or not snapshot.has("tile_levels") or not snapshot.has("outpost_defeated") or not snapshot.has("region_scouted"):
-		return false
-	if not snapshot["tiles"] is Array or snapshot["tiles"].size() != 9:
-		return false
-	if not snapshot["tile_levels"] is Array or snapshot["tile_levels"].size() != 9:
-		return false
-	if not snapshot["outpost_defeated"] is Array or snapshot["outpost_defeated"].size() != 10:
-		return false
-	if not snapshot["region_scouted"] is Array or snapshot["region_scouted"].size() != 10:
-		return false
-	for key in ["gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry", "keep_level", "hero_level"]:
-		if not snapshot.has(key) or int(snapshot[key]) < 0:
+	for key in ["gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry", "keep_level", "hero_level", "tiles", "tile_levels", "outpost_defeated", "region_scouted"]:
+		if not snapshot.has(key):
 			return false
+	for key in ["gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry"]:
+		if int(snapshot[key]) < 0 or int(snapshot[key]) > 2000000000:
+			return false
+	if int(snapshot["keep_level"]) < 1 or int(snapshot["keep_level"]) > 10 or int(snapshot["hero_level"]) < 1 or int(snapshot["hero_level"]) > 20:
+		return false
+	if not (snapshot["tiles"] is Array) or snapshot["tiles"].size() != 9:
+		return false
+	if not (snapshot["tile_levels"] is Array) or snapshot["tile_levels"].size() != 9:
+		return false
+	if not (snapshot["outpost_defeated"] is Array) or snapshot["outpost_defeated"].size() != 10:
+		return false
+	if not (snapshot["region_scouted"] is Array) or snapshot["region_scouted"].size() != 10:
+		return false
+	var valid_buildings := ["Empty", "Farm", "Mine", "Keep", "Lumber Camp", "Quarry", "Academy", "Barracks"]
+	for tile in snapshot["tiles"]:
+		if str(tile) not in valid_buildings:
+			return false
+	if snapshot["tiles"].count("Keep") != 1 or snapshot["tiles"].count("Academy") > 1:
+		return false
+	for level in snapshot["tile_levels"]:
+		if int(level) < 1 or int(level) > 5:
+			return false
+	for value in snapshot["outpost_defeated"]:
+		if int(value) not in [0, 1]:
+			return false
+	for value in snapshot["region_scouted"]:
+		if int(value) not in [0, 1]:
+			return false
+	if int(snapshot.get("selected_tile", 4)) < 0 or int(snapshot.get("selected_tile", 4)) > 8:
+		return false
+	if int(snapshot.get("selected_outpost", 0)) < 0 or int(snapshot.get("selected_outpost", 0)) > 9:
+		return false
 	return true
 
 func _on_peer_connected(peer_id: int) -> void:
