@@ -36,7 +36,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Sequential campaign gates now apply to scouting as well as attacks; repeated scouting cannot farm rewards or consume guards.
 
 ## Verification
-- [x] Latest source-check passed after the combat type-inference fix, all three enemy-doctrine counter tests, LAN snapshot hardening, corrupt future-timer recovery tests, save recovery, and two-process ENet action/snapshot round trip ([successful run #212](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38858269272)).
+- [x] Gameplay regression suite passed after adding Balanced/Aggressive/Defensive stance tradeoffs, stance save/load and LAN synchronization, explicit save-write error reporting, and the stronger Warlord's Citadel final boss with a unique visual/reward ([successful run #225](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38859013905)). The expanded LAN probe verifies a guest stance action is accepted by the host and returned in the authoritative snapshot.
 - [x] Headless Godot editor parsing, project startup, economy, training, research, exploration, save recovery and touch tests passed ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848762730)).
 - [x] The central 3D tile-picking test has passed in a prior workflow run.
 - [x] Re-run the expanded gameplay/save/touch/troop/research/quest/hero test suite after the campaign and save-normalization changes ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38852128706)).
