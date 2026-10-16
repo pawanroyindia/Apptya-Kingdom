@@ -122,6 +122,36 @@ func _is_allowed_action(action: String, payload: Dictionary) -> bool:
 func _valid_snapshot(snapshot: Dictionary) -> bool:
 	if snapshot.has("battle_stance") and str(snapshot["battle_stance"]) not in ["Balanced", "Aggressive", "Defensive"]:
 		return false
+	# Validate optional persisted counters/timers before they can be applied and saved.
+	var now_unix := int(Time.get_unix_time_from_system())
+	var current_utc_day := int(floor(float(now_unix) / 86400.0))
+	var numeric_ranges := {
+		"day": [1, 1000000],
+		"daily_reward_claim_day": [-1, current_utc_day],
+		"daily_reward_streak": [0, 7],
+		"explored_regions": [0, 1000000],
+		"victories": [0, 1000000],
+		"defeats": [0, 1000000],
+		"practice_drills": [0, 20],
+		"tutorial_step": [0, 4],
+		"troop_training_finish_unix": [0, now_unix + 120],
+		"keep_upgrade_finish_unix": [0, now_unix + 120],
+		"building_upgrade_finish_unix": [0, now_unix + 120],
+		"building_upgrade_tile": [-1, 8]
+	}
+	for key in numeric_ranges:
+		if snapshot.has(key):
+			if not (snapshot[key] is int) or int(snapshot[key]) < int(numeric_ranges[key][0]) or int(snapshot[key]) > int(numeric_ranges[key][1]):
+				return false
+	for key in ["sound_enabled", "music_enabled", "reward_first_victory_claimed", "reward_explorer_claimed", "reward_keep_claimed", "quest_builder_claimed", "quest_stronghold_claimed", "quest_conqueror_claimed"]:
+		if snapshot.has(key) and not (snapshot[key] is bool):
+			return false
+	if snapshot.has("achievements"):
+		if not (snapshot["achievements"] is Array or snapshot["achievements"] is PackedStringArray):
+			return false
+		for achievement in snapshot["achievements"]:
+			if not (achievement is String):
+				return false
 	for key in ["gold", "wood", "food", "stone", "guards", "infantry", "archers", "cavalry", "keep_level", "hero_level", "tiles", "tile_levels", "outpost_defeated", "region_scouted"]:
 		if not snapshot.has(key):
 			return false
@@ -147,6 +177,20 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 		if queued_count < 0 or queued_count > 5 or queued_type not in ["", "infantry", "archer", "cavalry"]:
 			return false
 		if (queued_count == 0) != (queued_type == ""):
+			return false
+		if queued_count > 0 and (not snapshot.has("troop_training_finish_unix") or int(snapshot["troop_training_finish_unix"]) <= 0):
+			return false
+	if snapshot.has("keep_upgrade_finish_unix") and int(snapshot["keep_upgrade_finish_unix"]) > 0 and int(snapshot["keep_level"]) >= 10:
+		return false
+	if snapshot.has("building_upgrade_finish_unix") and int(snapshot["building_upgrade_finish_unix"]) > 0:
+		if not snapshot.has("building_upgrade_tile"):
+			return false
+		var upgrade_tile := int(snapshot["building_upgrade_tile"])
+		if upgrade_tile < 0 or upgrade_tile >= 9:
+			return false
+		if str(snapshot["tiles"][upgrade_tile]) not in ["Farm", "Mine", "Barracks", "Lumber Camp", "Quarry", "Academy"]:
+			return false
+		if int(snapshot["tile_levels"][upgrade_tile]) >= 5:
 			return false
 	for key in ["combat_research", "economy_research", "scouting_research"]:
 		if snapshot.has(key) and (int(snapshot[key]) < 0 or int(snapshot[key]) > 5):
