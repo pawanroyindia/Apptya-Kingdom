@@ -551,9 +551,6 @@ func _set_battle_stance(stance: String) -> void:
 	_persist_game()
 	_refresh_ui()
 
-	if is_instance_valid(network_session) and network_session.is_network_active() and multiplayer.is_server():
-		network_session.publish_snapshot()
-
 func _on_network_status_changed(message: String) -> void:
 	if is_instance_valid(network_status_label):
 		network_status_label.text = message
@@ -1778,6 +1775,10 @@ func _persist_game() -> int:
 	if save_error != OK:
 		status_message = "Save failed (error %d). The previous backup was preserved if available." % save_error
 		return save_error
+	# Host-side UI actions and timed completions must sync to the guest too,
+	# not only actions initiated by the guest over RPC.
+	if is_instance_valid(network_session) and network_session.is_network_active() and multiplayer.is_server():
+		network_session.publish_snapshot()
 	return OK
 
 func _load_game() -> void:
