@@ -512,8 +512,16 @@ func _build_terrain() -> void:
 		add_child(tree)
 		animated_trees.append(tree)
 		_add_cylinder(tree, 0.16, 1.1, Vector3(0, 0.42, 0), "#6b4b35")
-		_add_sphere(tree, Vector3(0, 1.55, 0), Vector3(1.05, 1.25, 1.05), "#3e7547")
-		_add_sphere(tree, Vector3(0.55, 1.85, 0.18), Vector3(0.72, 0.8, 0.72), "#4f8a50")
+		# Three overlapping foliage tiers create a clearer tree silhouette than a single sphere.
+		_add_cone(tree, 0.92, 1.35, Vector3(0, 1.35, 0), "#356b40")
+		_add_cone(tree, 0.78, 1.25, Vector3(0, 1.95, 0), "#3e7547")
+		_add_cone(tree, 0.58, 1.05, Vector3(0, 2.48, 0), "#4f8a50")
+		_add_sphere(tree, Vector3(-0.34, 1.75, 0.18), Vector3(0.48, 0.56, 0.46), "#477e49")
+		_add_sphere(tree, Vector3(0.38, 2.0, -0.12), Vector3(0.42, 0.5, 0.44), "#5b9656")
+		var branch_left := _add_cylinder(tree, 0.055, 0.58, Vector3(-0.2, 0.78, 0), "#75563c")
+		branch_left.rotation_degrees.z = -38.0
+		var branch_right := _add_cylinder(tree, 0.05, 0.52, Vector3(0.2, 0.86, 0), "#75563c")
+		branch_right.rotation_degrees.z = 42.0
 
 	# Layered hills and boulders give the valley a deeper horizon and more readable edges.
 	for i in range(7):
@@ -538,6 +546,17 @@ func _build_landmarks() -> void:
 	_add_box(self, Vector3(0.28, 0.85, 11.8), Vector3(5.9, 0.43, 0), wall_color)
 	_add_box(self, Vector3(4.4, 0.85, 0.28), Vector3(-3.7, 0.43, 5.9), wall_color)
 	_add_box(self, Vector3(4.4, 0.85, 0.28), Vector3(3.7, 0.43, 5.9), wall_color)
+	# Repeated stone cap blocks and a contrasting lower course give the perimeter a built finish.
+	for wall_x in range(-5, 6):
+		if absf(float(wall_x)) > 1.5:
+			_add_box(self, Vector3(0.62, 0.16, 0.38), Vector3(float(wall_x), 0.91, -5.9), "#c2c0b0")
+			_add_box(self, Vector3(0.62, 0.16, 0.38), Vector3(float(wall_x), 0.91, 5.9), "#c2c0b0")
+	for wall_z in range(-5, 6):
+		_add_box(self, Vector3(0.38, 0.16, 0.62), Vector3(-5.9, 0.91, float(wall_z)), "#c2c0b0")
+		_add_box(self, Vector3(0.38, 0.16, 0.62), Vector3(5.9, 0.91, float(wall_z)), "#c2c0b0")
+	for band_z in [-0.15, 0.38]:
+		_add_box(self, Vector3(0.32, 0.055, 11.8), Vector3(-5.9, band_z, 0), "#b7b1a3")
+		_add_box(self, Vector3(0.32, 0.055, 11.8), Vector3(5.9, band_z, 0), "#b7b1a3")
 	var watchtower_path := "res://assets/production/watchtower.glb"
 	var watchtower_scene := load(watchtower_path) as PackedScene if ResourceLoader.exists(watchtower_path) else null
 	for corner_x in [-5.9, 5.9]:
@@ -627,6 +646,11 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 		_add_box(root, Vector3(0.3, 0.62, 0.07), Vector3(0, 0.35, 0.65), "#5d4432")
 		_add_box(root, Vector3(0.13, 0.22, 0.045), Vector3(-0.28, 0.78, 0.64), "#e4c77f")
 		_add_box(root, Vector3(0.13, 0.22, 0.045), Vector3(0.28, 0.78, 0.64), "#e4c77f")
+		# Narrow masonry seams and corner stones break up the flat procedural keep walls.
+		for seam_y in [0.42, 0.82]:
+			_add_box(root, Vector3(1.34, 0.035, 1.24), Vector3(0, seam_y, 0), "#9b9b8c")
+		for corner_x in [-0.57, 0.57]:
+			_add_box(root, Vector3(0.12, 1.05, 0.12), Vector3(corner_x, 0.62, 0.61), "#d0c6b2")
 		_add_box(root, Vector3(0.08, 0.95, 0.08), Vector3(0.2, 2.6, 0), "#634a35")
 		var royal_banner := _add_box(root, Vector3(0.65, 0.42, 0.06), Vector3(0.48, 2.8, 0), "#f1d38a")
 		animated_flags.append(royal_banner)
