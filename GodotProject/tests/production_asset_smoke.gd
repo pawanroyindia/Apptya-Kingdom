@@ -1,0 +1,59 @@
+extends SceneTree
+
+func _initialize() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
+	var models := {
+		"royal_captain": "res://assets/production/royal_captain.glb",
+		"kingdom_guard": "res://assets/production/kingdom_guard.glb",
+		"keep": "res://assets/production/keep.glb",
+		"barracks": "res://assets/production/barracks.glb",
+		"watchtower": "res://assets/production/watchtower.glb"
+	}
+	for model_name in models:
+		var path: String = models[model_name]
+		if not ResourceLoader.exists(path):
+			_fail("Missing generated model: " + path)
+			return
+		var packed := load(path) as PackedScene
+		if packed == null:
+			_fail("Generated GLB did not import as a PackedScene: " + path)
+			return
+		var instance := packed.instantiate()
+		root.add_child(instance)
+		if model_name in ["royal_captain", "kingdom_guard"]:
+			var players := instance.find_children("*", "AnimationPlayer", true, false)
+			if players.is_empty():
+				_fail("Rigged character has no AnimationPlayer: " + model_name)
+				return
+			var player := players[0] as AnimationPlayer
+			for clip in ["Idle", "Walk", "Attack"]:
+				var found := false
+				for clip_name in player.get_animation_list():
+					if clip_name.to_lower().contains(clip.to_lower()):
+						found = true
+				if not found:
+					_fail("Character GLB is missing " + clip + " clip: " + model_name)
+					return
+		instance.queue_free()
+	for texture_name in ["gold", "steel", "cloth", "red", "skin", "leather", "stone", "wood", "roof", "linen"]:
+		var texture_path := "res://assets/production/textures/%s.png" % texture_name
+		if not ResourceLoader.exists(texture_path) or load(texture_path) == null:
+			_fail("Missing imported PBR texture: " + texture_path)
+			return
+	for sound_name in ["kingdom_theme", "gather", "build", "train", "victory", "defeat", "scout"]:
+		var audio_path := "res://assets/production/audio/%s.wav" % sound_name
+		if not ResourceLoader.exists(audio_path):
+			_fail("Missing rendered audio file: " + audio_path)
+			return
+		var audio := load(audio_path) as AudioStreamWAV
+		if audio == null or audio.data.is_empty() or audio.mix_rate < 11025:
+			_fail("Rendered audio failed to import: " + audio_path)
+			return
+	print("APPTYA_PRODUCTION_ASSET_TESTS_PASSED")
+	quit(0)
+
+func _fail(message: String) -> void:
+	push_error("APPTYA_PRODUCTION_ASSET_TEST_FAILED: " + message)
+	quit(1)
