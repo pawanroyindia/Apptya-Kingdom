@@ -1,43 +1,51 @@
-# Mobile-friendly Unity license setup for cloud APK builds
+# Unity license requirement for cloud APK builds
 
-The Android build workflow currently stops before Unity compilation because this repository has no Unity license secret configured. No APK has been produced.
+The Android APK workflow is configured, but GitHub Actions currently stops before Unity compilation because no Unity license secret or serial is configured.
 
-## Step 1 — Generate the activation request
+## What is required
 
-1. Open the repository on GitHub.
-2. Open **Actions → Request Unity License File**.
-3. Tap **Run workflow** if the workflow has not already run automatically.
-4. Open the successful run and download the **Unity-Activation-Request** artifact ZIP.
-5. Extract the file named `Unity_v6000.0.46f1.alf`.
+GameCI's current activation documentation requires an already activated Unity license for cloud builds. The legacy request-activation action was attempted and returned: **“This action is no longer supported.”** It has been removed rather than leaving a workflow that cannot work.
 
-## Step 2 — Get the Unity license file
+For the Android build workflow, add the secrets that match your license type:
 
-1. Open Unity's official manual activation page: https://license.unity3d.com/manual
-2. Upload the `.alf` activation request and follow the Unity website instructions.
-3. Download the resulting Unity license file (`.ulf`).
+### Unity Personal
+- `UNITY_LICENSE` — contents of a valid Unity `.ulf` license file
+- `UNITY_EMAIL` — Unity account email
+- `UNITY_PASSWORD` — Unity account password
 
-The exact options available depend on the Unity account and license eligibility. Do not share the license file publicly.
+Current GameCI documentation says manual activation of Personal licenses is no longer supported in the general flow. The `.ulf` file normally comes from activating Unity Hub on a computer. If you have access to a computer with Unity Hub, activate your Personal license there and retrieve the license file. Do not put license contents or credentials in chat, issues, commits, or public files.
 
-## Step 3 — Add the secret from a phone
+### Unity Pro/Plus
+- `UNITY_SERIAL` — valid subscription serial
+- `UNITY_EMAIL` — Unity account email
+- `UNITY_PASSWORD` — Unity account password
 
-1. Open the GitHub repository and go to **Settings**.
-2. Open **Secrets and variables → Actions**.
+## Add secrets using GitHub on mobile
+
+1. Open https://github.com/pawanroyindia/Apptya-Kingdom
+2. Open **Settings → Secrets and variables → Actions**.
 3. Tap **New repository secret**.
-4. Name it exactly `UNITY_LICENSE`.
-5. Open the downloaded `.ulf` file in a text editor, copy its complete contents, and paste those contents into the secret value. Save it.
-6. Return to **Actions → Android APK Build** and run the workflow again.
+4. Add each required secret using the exact name above and save it.
+5. Open **Actions → Android APK Build** and run the workflow again.
 
-If you use a Unity serial-based license instead, add the applicable `UNITY_SERIAL`, `UNITY_EMAIL`, and `UNITY_PASSWORD` secrets as required by GameCI. Never put license contents or account passwords in chat, issues, commits, or public files.
+Do not paste a password, serial, or license into a repository file.
 
-## What the build will produce
+## Build configuration and output
 
-On a successful run, download the `apptya-kingdom-android-build` artifact. It should contain:
-- `ApptyaKingdom.apk` — Android ARM64 debug APK, not Play Store release-signed.
-- `android-build-report.txt` — Unity build result and output verification.
+- Unity Editor: 6000.0.46f1
+- Android APK (not AAB)
+- Application ID: `com.apptya.kingdom`
+- Portrait orientation; ARM64; Android API 36
+- Expected artifact: `apptya-kingdom-android-build`
+- Expected files: `ApptyaKingdom.apk` and `android-build-report.txt`
 
-## Current verified status
+The intended APK is a debug build, not release-signed. It must be inspected and tested before distribution.
 
-- Source-preflight workflow: passed.
-- Android APK build: attempted; blocked before Unity compilation because no license file or serial secret was available.
-- APK artifact: not produced.
-- Unity compilation, gameplay regression, APK contents inspection, and physical-device testing: not verified yet.
+## Verified status (2026-10-16)
+
+- Source-preflight workflow: **PASS**.
+- Android build workflow: **FAILED before Unity compilation** because license secrets are empty.
+- APK: **NOT PRODUCED**.
+- Unity C# compilation, gameplay regression tests, APK inspection, and physical-device testing: **NOT VERIFIED**.
+
+Reference: [GameCI activation documentation](https://game.ci/docs/github/activation/).
