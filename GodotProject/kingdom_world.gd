@@ -388,6 +388,14 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 		_add_box(root, Vector3(0.12, 0.72, 0.12), Vector3(0.48, 0.55, -0.3), "#75563c")
 		_add_box(root, Vector3(0.58, 0.14, 0.18), Vector3(0.48, 0.88, -0.3), "#c0c5c2")
 		_add_textured_level_marker(root, level, Vector3(0.48, 1.15, -0.3), "#f5d779")
+	elif kind == "Academy":
+		_add_box(root, Vector3(1.2, 0.9, 1.05), Vector3(0, 0.48, 0), "#d1c6a6")
+		_add_box(root, Vector3(0.42, 1.25, 0.42), Vector3(0, 1.35, -0.12), "#b8ad91")
+		_add_cone(root, 0.58, 0.52, Vector3(0, 2.18, -0.12), "#496c60")
+		_add_box(root, Vector3(0.3, 0.48, 0.07), Vector3(0, 0.37, 0.56), "#4c3527")
+		_add_box(root, Vector3(0.12, 0.5, 0.06), Vector3(-0.42, 0.56, 0.54), "#d6a84f")
+		_add_box(root, Vector3(0.12, 0.5, 0.06), Vector3(0.42, 0.56, 0.54), "#d6a84f")
+		_add_textured_level_marker(root, level, Vector3(0.48, 1.35, -0.34), "#f5d779")
 	else:
 		_add_box(root, Vector3(0.8, 0.55, 0.8), Vector3(0, 0.32, 0), "#8a6242")
 	return root
