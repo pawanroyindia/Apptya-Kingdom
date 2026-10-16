@@ -214,6 +214,7 @@ func _build_farm() -> void:
 	gold -= 50
 	wood -= 10
 	status_message = "Farm built. It produces food over time."
+	_refresh_ui()
 
 func _build_mine() -> void:
 	if not _can_build("Mine", 70, 20):
@@ -222,6 +223,7 @@ func _build_mine() -> void:
 	gold -= 70
 	wood -= 20
 	status_message = "Mine built. It produces gold over time."
+	_refresh_ui()
 
 func _build_barracks() -> void:
 	if not _can_build("Barracks", 80, 30):
@@ -230,6 +232,7 @@ func _build_barracks() -> void:
 	gold -= 80
 	wood -= 30
 	status_message = "Barracks built. Train guards to protect your realm."
+	_refresh_ui()
 
 func _can_build(building: String, gold_cost: int, wood_cost: int) -> bool:
 	if tiles[selected_tile] != "Empty":
