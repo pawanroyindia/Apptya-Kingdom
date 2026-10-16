@@ -739,10 +739,7 @@ func _run_tests() -> void:
 	game.tile_levels[0] = 1000
 	game.outpost_defeated[0] = 9
 	game.region_scouted[0] = -2
-	game.gold = 3000000001
 	game.daily_reward_claim_day = int(floor(float(Time.get_unix_time_from_system()) / 86400.0)) + 99
-	game.outpost_defeated[0] = 1
-	game.outpost_defeated[1] = 0
 	game.outpost_defeated[2] = 1
 	game.region_scouted[2] = 1
 	game._normalize_save_data()
@@ -771,6 +768,24 @@ func _run_tests() -> void:
 		return
 	if game.outpost_defeated[0] != 0 or game.region_scouted[0] != 0:
 		_fail("Save normalization did not sanitize outpost progress.")
+		return
+	var utc_day_now := int(floor(float(Time.get_unix_time_from_system()) / 86400.0))
+	if game.daily_reward_claim_day > utc_day_now or game.outpost_defeated[2] != 0 or game.region_scouted[2] != 0:
+		_fail("Save normalization did not clamp future reward claims or repair locked campaign progress.")
+		return
+	game.gold = 3000000001
+	game._normalize_save_data()
+	if game.gold != 2000000000:
+		_fail("Save normalization did not cap corrupt resource values safely.")
+		return
+	game.gold = 300
+	game.outpost_defeated[0] = 1
+	game.outpost_defeated[1] = 0
+	game.outpost_defeated[2] = 1
+	game.region_scouted[2] = 1
+	game._normalize_save_data()
+	if game.outpost_defeated[0] != 1 or game.outpost_defeated[2] != 0 or game.region_scouted[2] != 0:
+		_fail("Save normalization did not preserve valid campaign progress while clearing impossible later captures.")
 		return
 
 	# Independently verify recovery from a save whose troop roster exceeds Barracks capacity.
