@@ -129,6 +129,7 @@ namespace ApptyaKingdom
             GridButton(contentObject.transform, "Reward: First Victory", () => ClaimAchievement("first_victory"));
             GridButton(contentObject.transform, "Reward: Explorer", () => ClaimAchievement("explorer"));
             GridButton(contentObject.transform, "Reward: Keep Builder", () => ClaimAchievement("keep_builder"));
+            GridButton(contentObject.transform, "Open Research Center", OpenResearchCenter);
             GridButton(contentObject.transform, "Research: Combat", () => Say(ApptyaGameState.Instance == null ? "Game state is unavailable." : ApptyaGameState.Instance.Research("combat")));
             GridButton(contentObject.transform, "Research: Economy", () => Say(ApptyaGameState.Instance == null ? "Game state is unavailable." : ApptyaGameState.Instance.Research("economy")));
             GridButton(contentObject.transform, "Research: Cartography", () => Say(ApptyaGameState.Instance == null ? "Game state is unavailable." : ApptyaGameState.Instance.Research("scouting")));
@@ -212,7 +213,7 @@ namespace ApptyaKingdom
             var d = state.Data;
             if (selectedBuildingKey == "practice")
             {
-                selectionInfo.text = selectedBuildingName + " • Select Practice troops to review army readiness.";
+                selectionInfo.text = selectedBuildingName + " • Drills " + d.practiceDrills + "/20 • Army power bonus +" + d.practiceDrills + " • Select Practice troops.";
                 return;
             }
             if (selectedBuildingKey == "enemy")
@@ -306,6 +307,54 @@ namespace ApptyaKingdom
             var state = ApptyaGameState.Instance;
             if (state.GetBuildingLevel(key) >= 5) return label + " • MAX";
             return state.IsUpgradeActive(key) ? label + " • " + Mathf.CeilToInt(state.UpgradeTimeRemaining(key)) + "s" : label + " • IDLE";
+        }
+
+        void OpenResearchCenter()
+        {
+            var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null) { Say("Game state is unavailable. Reopen the starter scene."); return; }
+            var existing = GameObject.Find("Research Center Overlay");
+            if (existing) Destroy(existing);
+            Transform parent = safeArea != null ? safeArea.transform : hudCanvasObject.transform;
+            var panel = Panel(parent, "Research Center Overlay", new Vector2(.04f, .16f), new Vector2(.96f, .84f), Vector2.zero, Vector2.zero);
+            var title = TextAt(panel.transform, "Research Center Title", new Vector2(.5f, 1f), new Vector2(0, -38), new Vector2(800, 58), 30, TextAnchor.MiddleCenter);
+            title.text = "RESEARCH CENTER";
+            var details = TextAt(panel.transform, "Research Center Details", new Vector2(.5f, .58f), new Vector2(0, -10), new Vector2(820, 330), 21, TextAnchor.MiddleCenter);
+            details.horizontalOverflow = HorizontalWrapMode.Wrap;
+            details.text = ResearchCenterSummary(state);
+            ButtonAt(panel.transform, "Research Combat Drills", new Vector2(0, -190), () => ResearchFromCenter("combat", details), 620);
+            ButtonAt(panel.transform, "Research Efficient Production", new Vector2(0, -250), () => ResearchFromCenter("economy", details), 620);
+            ButtonAt(panel.transform, "Research Cartography", new Vector2(0, -310), () => ResearchFromCenter("scouting", details), 620);
+            ButtonAt(panel.transform, "Close Research", new Vector2(0, -370), () => Destroy(panel), 260);
+        }
+
+        string ResearchCenterSummary(ApptyaGameState state)
+        {
+            var d = state.Data;
+            return "COMBAT DRILLS  " + d.combatResearch + "/5\\n+2 power per troop per level\\n" + ResearchCostAndGate(d.combatResearch, true) +
+                "\\n\\nEFFICIENT PRODUCTION  " + d.economyResearch + "/5\\n+1 wood, food and stone per level every 30 seconds\\n" + ResearchCostAndGate(d.economyResearch, false) +
+                "\\n\\nCARTOGRAPHY  " + d.scoutingResearch + "/5\\nImproves exploration loot\\n" + ResearchCostAndGate(d.scoutingResearch, false) +
+                "\\n\\nCosts per next level: 60 wood + 40 stone + 25 gold, multiplied by the next level.";
+        }
+
+        string ResearchCostAndGate(int level, bool combat)
+        {
+            if (level >= 5) return "MAX LEVEL";
+            int next = level + 1;
+            var state = ApptyaGameState.Instance;
+            return "Next: " + (60 * next) + " wood / " + (40 * next) + " stone / " + (25 * next) +
+                " gold • Requires Keep " + next + (combat ? " and Barracks " + next : "") +
+                (state.Data.keepLevel < next || (combat && state.Data.barracksLevel < next) ? " • LOCKED" : " • AVAILABLE");
+        }
+
+        void ResearchFromCenter(string branch, Text details)
+        {
+            var state = ApptyaGameState.Instance;
+            if (state == null || state.Data == null) { Say("Game state is unavailable."); return; }
+            string result = state.Research(branch);
+            Say(result);
+            Refresh();
+            details.text = ResearchCenterSummary(state);
         }
 
         void QueueTroop(string type)
