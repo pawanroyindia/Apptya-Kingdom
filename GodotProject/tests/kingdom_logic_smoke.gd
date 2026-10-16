@@ -286,10 +286,25 @@ func _run_tests() -> void:
 	if host_start_result != OK or not game.network_session.is_network_active() or not game.multiplayer.is_server():
 		_fail("LAN co-op host could not start its ENet server.")
 		return
+	# Simulate a guest timer expiring while connected: disconnect must complete it
+	# instead of leaving a past-due one-shot timer permanently stopped.
+	var infantry_before_disconnect: int = game.infantry
+	var guards_before_disconnect: int = game.guards
+	game.queued_troop_type = "infantry"
+	game.queued_troop_count = 1
+	game.troop_training_finish_unix = int(Time.get_unix_time_from_system()) - 1
 	game.network_session.disconnect_game()
 	if game.network_session.is_network_active():
 		_fail("LAN co-op disconnect did not return to offline mode.")
 		return
+	if game.queued_troop_count != 0 or game.infantry != infantry_before_disconnect + 1:
+		_fail("Expired troop training did not resume after LAN disconnect.")
+		return
+	game.infantry = infantry_before_disconnect
+	game.guards = guards_before_disconnect
+	game.queued_troop_type = ""
+	game.queued_troop_count = 0
+	game.troop_training_finish_unix = 0
 	if game.outpost_threat.size() != 10 or game.world_view.current_outposts.size() != 10:
 		_fail("Ten-outpost campaign map was not initialized.")
 		return
