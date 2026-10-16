@@ -763,7 +763,6 @@ func _material(color_value: String) -> StandardMaterial3D:
 	material.albedo_texture = material_textures.get(texture_key, surface_noise) as Texture2D
 	material.uv1_scale = Vector3(2.0, 2.0, 2.0)
 	material.roughness = 0.78
-	var base_color := Color(color_value)
 	# Reflective accents are polished; stone, earth and cloth remain matte.
 	if base_color.r > 0.68 and base_color.g > 0.42 and base_color.b < 0.72:
 		material.metallic = 0.22
