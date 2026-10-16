@@ -140,6 +140,9 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 	for value in snapshot["region_scouted"]:
 		if int(value) not in [0, 1]:
 			return false
+	for i in range(1, 10):
+		if int(snapshot["outpost_defeated"][i - 1]) != 1 and (int(snapshot["outpost_defeated"][i]) == 1 or int(snapshot["region_scouted"][i]) == 1):
+			return false
 	if int(snapshot.get("selected_tile", 4)) < 0 or int(snapshot.get("selected_tile", 4)) > 8:
 		return false
 	if int(snapshot.get("selected_outpost", 0)) < 0 or int(snapshot.get("selected_outpost", 0)) > 9:
