@@ -610,7 +610,9 @@ func _run_tests() -> void:
 		_fail("Archer training did not enter the queue for timer persistence.")
 		return
 	var pending_troop_training: int = game.troop_training_finish_unix
-	game._persist_game()
+	if game._persist_game() != OK:
+		_fail("Persisting the kingdom returned a save or backup error.")
+		return
 	var saved_gold: int = game.gold
 	var saved_wood: int = game.wood
 	var saved_food: int = game.food
@@ -632,6 +634,7 @@ func _run_tests() -> void:
 	var saved_daily_claim_day: int = game.daily_reward_claim_day
 	var saved_daily_streak: int = game.daily_reward_streak
 	var saved_enemy_level: int = game.enemy_level
+	var saved_battle_stance: String = game.battle_stance
 	var saved_explored_regions: int = game.explored_regions
 	var saved_research: Array = [game.combat_research, game.economy_research, game.scouting_research, game.practice_drills]
 	var saved_rewards: Array = [game.reward_first_victory_claimed, game.reward_explorer_claimed, game.reward_keep_claimed]
@@ -653,6 +656,7 @@ func _run_tests() -> void:
 	game.tiles[0] = "Empty"
 	game.tile_levels[0] = 1
 	game.keep_level = 1
+	game.battle_stance = "Aggressive" if saved_battle_stance != "Aggressive" else "Defensive"
 	game.daily_reward_claim_day = -1
 	game.daily_reward_streak = 0
 	game.graphics_quality = "Low" if saved_graphics_quality != "Low" else "High"
@@ -678,6 +682,9 @@ func _run_tests() -> void:
 		return
 	if game.tiles != saved_tiles or game.tile_levels != saved_levels or game.keep_level != saved_keep_level:
 		_fail("Kingdom save/load did not restore building levels.")
+		return
+	if game.battle_stance != saved_battle_stance:
+		_fail("Kingdom save/load did not restore the tactical battle stance.")
 		return
 	if game.graphics_quality != saved_graphics_quality:
 		_fail("Kingdom save/load did not restore the graphics preset.")
