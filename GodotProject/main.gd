@@ -669,55 +669,56 @@ func _mix_effects(first: AudioStreamWAV, second: AudioStreamWAV, second_gain: fl
 	stream.data = pcm
 	return stream
 func _make_ambient_music() -> AudioStreamWAV:
-	# Original procedural score with sustained harmony, plucked arpeggios, bass and a melodic motif.
+	# Original 32-second score: eight-chord medieval-fantasy progression with pad, harp ostinato, bass, lead and percussion.
 	const SAMPLE_RATE := 11025
-	const LOOP_SECONDS := 24.0
+	const LOOP_SECONDS := 32.0
 	const BEAT_SECONDS := 0.5
 	var sample_count := int(SAMPLE_RATE * LOOP_SECONDS)
 	var pcm := PackedByteArray()
 	pcm.resize(sample_count * 2)
-	var chord_roots := [73.42, 58.27, 87.31, 65.41]
-	var chord_thirds := [87.31, 69.30, 110.0, 77.78]
-	var chord_fifths := [110.0, 87.31, 130.81, 98.0]
-	var chord_octaves := [146.83, 116.54, 174.61, 130.81]
-	var melody := [293.66, 0.0, 349.23, 392.0, 440.0, 0.0, 392.0, 349.23, 261.63, 0.0, 293.66, 349.23, 392.0, 0.0, 349.23, 293.66, 349.23, 0.0, 392.0, 440.0, 523.25, 0.0, 440.0, 392.0, 261.63, 0.0, 293.66, 349.23, 392.0, 0.0, 349.23, 293.66, 293.66, 0.0, 349.23, 392.0, 440.0, 0.0, 392.0, 349.23, 261.63, 0.0, 293.66, 349.23, 392.0, 0.0, 349.23, 293.66]
-	var arpeggio := [0, 2, 1, 2, 3, 2, 1, 2]
-	var scale_notes := [293.66, 349.23, 392.0, 440.0, 523.25, 587.33]
+	var chord_roots := [73.42, 58.27, 87.31, 65.41, 98.0, 73.42, 55.0, 73.42]
+	var chord_thirds := [87.31, 69.30, 110.0, 82.41, 116.54, 87.31, 69.30, 87.31]
+	var chord_fifths := [110.0, 87.31, 130.81, 98.0, 146.83, 110.0, 82.41, 110.0]
+	var chord_octaves := [146.83, 116.54, 174.61, 130.81, 196.0, 146.83, 110.0, 146.83]
+	var lead_notes := [293.66, 0.0, 349.23, 392.0, 440.0, 0.0, 392.0, 349.23, 523.25, 0.0, 440.0, 392.0, 349.23, 0.0, 293.66, 0.0, 349.23, 0.0, 392.0, 440.0, 523.25, 0.0, 587.33, 523.25, 493.88, 0.0, 440.0, 392.0, 349.23, 0.0, 293.66, 0.0, 392.0, 0.0, 440.0, 523.25, 587.33, 0.0, 523.25, 440.0, 392.0, 0.0, 349.23, 392.0, 440.0, 0.0, 493.88, 440.0, 440.0, 0.0, 392.0, 349.23, 293.66, 0.0, 349.23, 392.0, 293.66, 0.0, 349.23, 392.0, 440.0, 0.0, 349.23, 293.66]
+	var arp_pattern := [0, 2, 1, 2, 3, 2, 1, 2]
 	for i in range(sample_count):
 		var t := float(i) / SAMPLE_RATE
-		var bar_index := mini(int(t / 6.0), 3)
-		var bar_time := fposmod(t, 6.0)
-		var root: float = chord_roots[bar_index]
-		var third: float = chord_thirds[bar_index]
-		var fifth: float = chord_fifths[bar_index]
-		var octave: float = chord_octaves[bar_index]
-		var pad_envelope := 0.72 + 0.28 * sin(TAU * bar_time / 6.0)
-		var pad := sin(TAU * root * t) * 0.045
-		pad += sin(TAU * third * t) * 0.025
-		pad += sin(TAU * fifth * t) * 0.032
-		pad += sin(TAU * octave * t) * 0.018
-		pad += sin(TAU * (root * 2.0) * t) * 0.008
+		var chord_index := mini(int(t / 4.0), 7)
+		var chord_time := fposmod(t, 4.0)
+		var root: float = chord_roots[chord_index]
+		var third: float = chord_thirds[chord_index]
+		var fifth: float = chord_fifths[chord_index]
+		var octave: float = chord_octaves[chord_index]
+		var pad_envelope := 0.7 + 0.3 * sin(TAU * chord_time / 4.0)
+		var pad := sin(TAU * root * 2.0 * t) * 0.038
+		pad += sin(TAU * third * 2.0 * t + 0.12) * 0.023
+		pad += sin(TAU * fifth * 2.0 * t + 0.24) * 0.03
+		pad += sin(TAU * octave * t) * 0.022
+		pad += sin(TAU * root * 4.0 * t) * 0.007
 		pad *= pad_envelope
 		var beat_index := int(t / BEAT_SECONDS)
 		var beat_position := fposmod(t, BEAT_SECONDS)
-		var arp_index: int = arpeggio[beat_index % arpeggio.size()]
-		var arp_frequency: float = scale_notes[(arp_index + bar_index) % scale_notes.size()]
-		var pluck_envelope := exp(-beat_position * 8.5) * minf(1.0, beat_position * 90.0)
-		var pluck := (sin(TAU * arp_frequency * t) + sin(TAU * arp_frequency * 2.01 * t) * 0.22) * pluck_envelope * 0.07
+		var arp_index: int = arp_pattern[beat_index % arp_pattern.size()]
+		var arp_frequency: float = [root * 4.0, third * 4.0, fifth * 4.0, octave * 2.0][arp_index]
+		var pluck_envelope := exp(-beat_position * 7.5) * minf(1.0, beat_position * 90.0)
+		var pluck := (sin(TAU * arp_frequency * t) + sin(TAU * arp_frequency * 2.01 * t) * 0.2 + sin(TAU * arp_frequency * 3.02 * t) * 0.06) * pluck_envelope * 0.052
 		var bass_frequency: float = root * 0.5
-		var bass_envelope := exp(-beat_position * 3.5)
-		var bass := sin(TAU * bass_frequency * t) * bass_envelope * 0.065
-		var melody_index := mini(int(t / BEAT_SECONDS), melody.size() - 1)
-		var melody_frequency: float = melody[melody_index]
-		var melody_envelope := minf(1.0, beat_position * 12.0) * minf(1.0, (BEAT_SECONDS - beat_position) * 4.0)
+		var bass_envelope := exp(-beat_position * 3.0) * (0.7 + 0.3 * sin(TAU * beat_position / BEAT_SECONDS))
+		var bass := (sin(TAU * bass_frequency * t) + sin(TAU * bass_frequency * 2.0 * t) * 0.18) * bass_envelope * 0.062
+		var melody_index := mini(beat_index, lead_notes.size() - 1)
+		var melody_frequency: float = lead_notes[melody_index]
+		var melody_envelope := minf(1.0, beat_position * 14.0) * minf(1.0, (BEAT_SECONDS - beat_position) * 3.2)
 		var lead := 0.0
 		if melody_frequency > 0.0:
-			lead = (sin(TAU * melody_frequency * t) + sin(TAU * melody_frequency * 2.0 * t) * 0.12) * melody_envelope * 0.032
+			lead = (sin(TAU * melody_frequency * t) + sin(TAU * melody_frequency * 2.0 * t) * 0.18 + sin(TAU * melody_frequency * 3.0 * t) * 0.04) * melody_envelope * 0.034
 		var phrase_time := fposmod(t, 2.0)
-		var drum_envelope := exp(-phrase_time * 13.0)
-		var drum := sin(TAU * (72.0 - 22.0 * phrase_time) * phrase_time) * drum_envelope * 0.025
-		var edge_fade := minf(1.0, minf(t / 0.28, (LOOP_SECONDS - t) / 0.28))
-		var sample := clampf((pad + pluck + bass + lead + drum) * edge_fade, -0.75, 0.75)
+		var drum_envelope := exp(-phrase_time * 12.0)
+		var drum := sin(TAU * (72.0 - 24.0 * phrase_time) * phrase_time) * drum_envelope * 0.022
+		var shaker_phase := sin(TAU * 317.0 * t) * sin(TAU * 463.0 * t)
+		var shaker := shaker_phase * exp(-beat_position * 18.0) * 0.009
+		var edge_fade := minf(1.0, minf(t / 0.3, (LOOP_SECONDS - t) / 0.3))
+		var sample := clampf((pad + pluck + bass + lead + drum + shaker) * edge_fade, -0.75, 0.75)
 		pcm.encode_s16(i * 2, int(sample * 32767.0))
 	var stream := AudioStreamWAV.new()
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
