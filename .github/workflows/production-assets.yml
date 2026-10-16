@@ -122,6 +122,8 @@ jobs:
             # Other source fixes can land while Blender and audio rendering run.
             # Rebase the generated asset commit onto the latest main before publishing.
             git fetch origin main
-            git rebase origin/main
+            # If another successful run already added these generated asset paths,
+            # prefer the freshly regenerated and fully tested asset blobs.
+            git rebase -X theirs origin/main
             git push origin HEAD:main
           fi
