@@ -75,10 +75,10 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 	if next_levels.size() != 9:
 		next_levels = PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 	var next_outposts := defeated.duplicate()
-	if next_outposts.size() != 5:
+	if next_outposts.size() != 10:
 		next_outposts = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 	var next_scouted := scouted.duplicate()
-	if next_scouted.size() != 5:
+	if next_scouted.size() != 10:
 		next_scouted = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 	var next_keep_level := clampi(keep_level, 1, 10)
 	var next_guards := maxi(guards, 0)
