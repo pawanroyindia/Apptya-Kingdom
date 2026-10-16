@@ -11,7 +11,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 ## Gameplay and mobile controls
 - [x] Mobile portrait UI and scrollable control layout.
 - [x] Gold, wood, food and stone economy with direct gathering, active and capped offline production.
-- [x] Farm, mine, Lumber Camp, Quarry, Barracks and Keep construction/collection/upgrades.
+- [x] Farm, mine, Lumber Camp, Quarry, Academy, Barracks and Keep construction/collection/upgrades; Academy levels discount research costs.
 - [x] Queued infantry, archer and cavalry training; scouting, exploration, ten enemy outposts, battle outcomes, rewards and achievements.
 - [x] Four-step tutorial, combat/economy/scouting research, troop practice, three claimable campaign rewards and a persistent three-objective quest board.
 - [x] Royal Captain hero progression: XP from battle/scouting/exploration, level cap 20, skill upgrades to level 5, army-power bonus, save/load persistence, and a distinct gold-armored 3D model with a live level label.
@@ -30,7 +30,8 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] The central 3D tile-picking test has passed in a prior workflow run.
 - [x] Re-run the expanded gameplay/save/touch/troop/research/quest/hero test suite after the campaign and save-normalization changes ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38852128706)).
 - [x] Validate generated sound streams, mute/unmute UI behavior, and sound-preference save/load ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853048014)).
-- [x] Validate daily reward streak progression, exact resource payout, same-day claim blocking, countdown/claimed UI, and save recovery ([latest successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853165597)).
+- [x] Validate daily reward streak progression, exact resource payout, same-day claim blocking, countdown/claimed UI, and save recovery ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853165597)).
+- [ ] Verify Academy construction, 3D model, tile inspection, and level-based research discount in the current CI run ([pending](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853300699)).
 - [x] Recheck hero level-up feedback, 3D hero model/label synchronization, and the updated test suite ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
 - [x] Verify a saved Low-quality preset is applied when the scene starts, including render scale and shadow state ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
 - [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity and signature checks align. Actual export remains untested until approved.
