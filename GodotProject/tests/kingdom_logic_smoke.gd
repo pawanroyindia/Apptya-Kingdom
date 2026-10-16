@@ -57,7 +57,7 @@ func _run_tests() -> void:
 	if game.outpost_threat.size() != 5 or game.world_view.current_outposts.size() != 5:
 		_fail("Five-outpost campaign map was not initialized.")
 		return
-	var initial_mesh_count := game.world_view.find_children("*", "MeshInstance3D", true, false).size()
+	var initial_mesh_count: int = game.world_view.find_children("*", "MeshInstance3D", true, false).size()
 	print("APPTYA_WORLD_MESH_COUNT=%d" % initial_mesh_count)
 	if initial_mesh_count > 400:
 		_fail("Procedural world exceeded the mobile mesh-node budget.")
@@ -68,11 +68,11 @@ func _run_tests() -> void:
 		return
 	game._select_outpost(0)
 	await create_timer(0.1).timeout
-	var stable_mesh_count := game.world_view.find_children("*", "MeshInstance3D", true, false).size()
+	var stable_mesh_count: int = game.world_view.find_children("*", "MeshInstance3D", true, false).size()
 	for refresh_index in range(3):
 		game._refresh_ui()
 	await create_timer(0.1).timeout
-	var refreshed_mesh_count := game.world_view.find_children("*", "MeshInstance3D", true, false).size()
+	var refreshed_mesh_count: int = game.world_view.find_children("*", "MeshInstance3D", true, false).size()
 	if refreshed_mesh_count > stable_mesh_count + 10:
 		_fail("Repeated UI refreshes caused procedural world node growth.")
 		return
