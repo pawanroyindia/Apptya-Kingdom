@@ -22,13 +22,13 @@ jobs:
       - name: Install Blender and Python audio dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y blender python3
+          sudo apt-get install -y blender python3 python3-numpy
           blender --version
           python3 --version
 
       - name: Generate UV-mapped PBR models and skeletal animation clips
         run: |
-          blender --background --factory-startup --python tools/asset_pipeline/generate_models.py
+          PYTHONPATH=/usr/lib/python3/dist-packages blender --background --factory-startup --python tools/asset_pipeline/generate_models.py
 
       - name: Generate mixed stereo soundtrack and game effects
         run: |
