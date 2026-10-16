@@ -38,7 +38,7 @@ This is a reimplementation of the prototype mechanics, not an automatic conversi
 4. Tap **Join Host IP**. The host is authoritative for shared resource, building, training, research, scouting, battle and claim actions.
 5. If connection fails, check Wi-Fi client isolation and whether UDP port `24567` is allowed. The feature is LAN-only; mobile data or different networks will not work without additional networking infrastructure.
 
-The LAN co-op code has automated snapshot/action validation, but live two-phone connectivity and reconnect behavior still need device testing.
+The LAN co-op code has passed an automated two-process localhost ENet action/snapshot round trip. Live connectivity between physical phones, Wi-Fi/router behavior, and reconnect behavior still need device testing.
 
 ## Android APK from GitHub
 
@@ -49,7 +49,7 @@ The workflow `.github/workflows/godot-android-apk.yml` builds a debug APK using 
 3. Run **Run workflow** only after explicit approval to build an APK. Source changes do not trigger APK builds.
 4. Open the completed run and download the `apptya-kingdom-godot-apk` artifact.
 
-The latest headless Godot integration run passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38855710165)), including project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, generated sound effects and looping ambient music, audio preference persistence and pause/resume behavior, daily rewards, Academy timed upgrades and duplicate-save recovery, sequential campaign scouting/attack gates, duplicate-scout prevention, LAN snapshot/action validation, ENet host/disconnect lifecycle, and the procedural-world mesh budget/stable-refresh checks. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
+The latest headless Godot integration run passed ([workflow run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38855832229)), including project parsing/startup, gameplay and save recovery, touch controls, quest and hero progression, generated sound effects and looping ambient music, audio preference persistence and pause/resume behavior, daily rewards, Academy timed upgrades and duplicate-save recovery, sequential campaign scouting/attack gates, duplicate-scout prevention, LAN snapshot/action validation, a two-process ENet host/client action-and-snapshot round trip, and the procedural-world mesh budget/stable-refresh checks. The APK workflow remains manual-only and has not been run. The first approved APK workflow run is still required to verify the export setup. The APK is for testing, not a Play Store release.
 
 ## Validation
 
