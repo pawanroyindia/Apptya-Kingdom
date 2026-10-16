@@ -193,6 +193,15 @@ func _run_tests() -> void:
 	if game.combat_research != 1 or game.economy_research != 1 or game.scouting_research != 1:
 		_fail("Combat, economy, or scouting research did not advance.")
 		return
+	var enemy_level_before_battle: int = game.enemy_level
+	var victories_before_battle: int = game.victories
+	if game._army_power() < game._enemy_power():
+		_fail("Test army fixture should be stronger than the first enemy.")
+		return
+	game._attack_enemy_army()
+	if game.enemy_level != enemy_level_before_battle + 1 or game.victories != victories_before_battle + 1:
+		_fail("Power-based enemy battle did not award victory or scale enemy level.")
+		return
 	var drill_level_before: int = game.practice_drills
 	game._practice_troops()
 	if game.practice_drills != drill_level_before + 1:
@@ -308,6 +317,7 @@ func _run_tests() -> void:
 	var saved_levels: PackedInt32Array = game.tile_levels.duplicate()
 	var saved_keep_level: int = game.keep_level
 	var saved_day: int = game.day
+	var saved_enemy_level: int = game.enemy_level
 	var saved_explored_regions: int = game.explored_regions
 	var saved_research: Array = [game.combat_research, game.economy_research, game.scouting_research, game.practice_drills]
 	var saved_rewards: Array = [game.reward_first_victory_claimed, game.reward_explorer_claimed, game.reward_keep_claimed]
@@ -345,8 +355,8 @@ func _run_tests() -> void:
 	if game.outpost_defeated != saved_defeated or game.achievements != saved_achievements:
 		_fail("Kingdom save/load did not restore campaign and achievement progress.")
 		return
-	if game.day != saved_day or game.explored_regions != saved_explored_regions:
-		_fail("Kingdom save/load did not restore campaign day and exploration progress.")
+	if game.day != saved_day or game.enemy_level != saved_enemy_level or game.explored_regions != saved_explored_regions:
+		_fail("Kingdom save/load did not restore campaign day, enemy level and exploration progress.")
 		return
 	if [game.combat_research, game.economy_research, game.scouting_research, game.practice_drills] != saved_research:
 		_fail("Kingdom save/load did not restore research and practice progress.")
