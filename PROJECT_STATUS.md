@@ -20,9 +20,9 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Visible construction/outpost reveal effects and marching guard squad during attacks.
 
 ## Verification
-- [x] Headless Godot editor parsing and project startup have passed in prior workflow runs.
+- [x] Headless Godot editor parsing and project startup passed in the latest successful run ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38847387686)).
 - [x] The central 3D tile-picking test has passed in a prior workflow run.
-- [ ] Re-run the full gameplay/save/touch test suite after the latest changes and fix every failure.
+- [x] Re-run the full gameplay/save/touch test suite after the latest changes and fix every failure ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38847387686)).
 - [ ] Review Android export preset and workflow configuration before first export.
 - [ ] Review performance and visual layout for low-end Android devices as far as CI can check without a device.
 - [ ] Physical-device installation, touch testing, and performance validation are post-export gates and cannot be claimed before an APK exists.
