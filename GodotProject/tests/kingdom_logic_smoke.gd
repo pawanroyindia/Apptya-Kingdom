@@ -156,10 +156,32 @@ func _run_tests() -> void:
 
 	game._persist_game()
 	var saved_gold: int = game.gold
+	var saved_wood: int = game.wood
+	var saved_food: int = game.food
+	var saved_guards: int = game.guards
+	var saved_tiles: Array = game.tiles.duplicate()
+	var saved_levels: PackedInt32Array = game.tile_levels.duplicate()
+	var saved_keep_level: int = game.keep_level
+	var saved_defeated: PackedInt32Array = game.outpost_defeated.duplicate()
+	var saved_achievements: PackedStringArray = game.achievements.duplicate()
 	game.gold = 0
+	game.wood = 0
+	game.food = 0
+	game.guards = 0
+	game.tiles[0] = "Empty"
+	game.tile_levels[0] = 1
+	game.keep_level = 1
+	game.outpost_defeated[0] = 0
+	game.achievements.clear()
 	game._load_game()
-	if game.gold <= 0 or saved_gold <= 0:
-		_fail("Kingdom save/load round trip failed.")
+	if game.gold != saved_gold or game.wood != saved_wood or game.food != saved_food or game.guards != saved_guards:
+		_fail("Kingdom save/load did not restore resource and guard values.")
+		return
+	if game.tiles != saved_tiles or game.tile_levels != saved_levels or game.keep_level != saved_keep_level:
+		_fail("Kingdom save/load did not restore building levels.")
+		return
+	if game.outpost_defeated != saved_defeated or game.achievements != saved_achievements:
+		_fail("Kingdom save/load did not restore campaign and achievement progress.")
 		return
 
 	var absolute_save := ProjectSettings.globalize_path("user://apptya_kingdom_save.cfg")
