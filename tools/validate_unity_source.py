@@ -176,6 +176,13 @@ def gameplay_invariants() -> list[str]:
     else:
         errors.append("ApptyaBuildingVisuals.cs: building visuals source is missing")
 
+    hud_path = ROOT / "UnityProject/Assets/Scripts/ApptyaRuntimeHud.cs"
+    if hud_path.is_file():
+        hud = hud_path.read_text(encoding="utf-8")
+        for practice_rule in ('"Practice troops"', "void PracticeSelectedTarget()", 'selectedBuildingKey != "practice"', "state.ArmyPower()"):
+            if practice_rule not in hud:
+                errors.append(f"ApptyaRuntimeHud.cs: practice target interaction missing: {practice_rule}")
+
     setup_path = ROOT / "UnityProject/Assets/Editor/ApptyaProjectSetup.cs"
     if setup_path.is_file():
         setup = setup_path.read_text(encoding="utf-8")
