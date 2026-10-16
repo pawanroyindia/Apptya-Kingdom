@@ -28,13 +28,20 @@ func _run() -> void:
 				_fail("Rigged character has no AnimationPlayer: " + model_name)
 				return
 			var player := players[0] as AnimationPlayer
-			for clip in ["Idle", "Walk", "Attack"]:
+			var required_clips := {
+				"Idle": ["idle", "stand", "breath"],
+				"Walk": ["walk", "run", "jog", "move"],
+				"Attack": ["attack", "slash", "combat", "sword", "hit"]
+			}
+			for clip in required_clips:
 				var found := false
 				for clip_name in player.get_animation_list():
-					if clip_name.to_lower().contains(clip.to_lower()):
-						found = true
+					var normalized := clip_name.to_lower()
+					for alias in required_clips[clip]:
+						if normalized.contains(alias):
+							found = true
 				if not found:
-					_fail("Character GLB is missing " + clip + " clip: " + model_name)
+					_fail("Character GLB is missing " + clip + " motion clip: " + model_name)
 					return
 		instance.queue_free()
 	for texture_name in ["gold", "steel", "cloth", "red", "skin", "leather", "stone", "wood", "roof", "linen"]:
