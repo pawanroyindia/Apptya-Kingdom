@@ -55,7 +55,7 @@ jobs:
           print("APPTYA_ASSET_OUTPUTS_VALID")
           PY
 
-      - name: Import assets and run production plus gameplay regression tests
+      - name: Import assets and run full production regression suite
         shell: bash
         run: |
           set -euo pipefail
