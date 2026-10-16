@@ -6,12 +6,21 @@ func _initialize() -> void:
 func _run_tests() -> void:
 	_remove_save("user://apptya_kingdom_save.cfg")
 	_remove_save("user://apptya_kingdom_save_backup.cfg")
+	var initial_settings := ConfigFile.new()
+	initial_settings.set_value("kingdom", "graphics_quality", "Low")
+	initial_settings.set_value("kingdom", "saved_at", int(Time.get_unix_time_from_system()))
+	if initial_settings.save("user://apptya_kingdom_save.cfg") != OK:
+		_fail("Could not create the saved graphics preset startup fixture.")
+		return
 	var game = load("res://main.tscn").instantiate()
 	root.add_child(game)
 	await process_frame
 	await process_frame
 	await physics_frame
 	await physics_frame
+	if game.graphics_quality != "Low" or not is_equal_approx(game.world_viewport.scaling_3d_scale, 0.75) or game.world_view.sun_light.shadow_enabled:
+		_fail("Saved graphics quality was not applied when the kingdom scene started.")
+		return
 
 	var initial_yaw: float = game.world_view.camera_yaw
 	var drag_event := InputEventScreenDrag.new()
