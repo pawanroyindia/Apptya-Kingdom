@@ -30,8 +30,8 @@ var current_guards := 4
 var current_infantry := 4
 var current_archers := 0
 var current_cavalry := 0
-var current_outposts := PackedInt32Array([0, 0, 0, 0, 0])
-var current_scouted := PackedInt32Array([0, 0, 0, 0, 0])
+var current_outposts := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+var current_scouted := PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
 func _ready() -> void:
 	_build_environment()
@@ -76,10 +76,10 @@ func set_kingdom_state(tile_data: Array, level_data: PackedInt32Array, keep_leve
 		next_levels = PackedInt32Array([1, 1, 1, 1, 1, 1, 1, 1, 1])
 	var next_outposts := defeated.duplicate()
 	if next_outposts.size() != 5:
-		next_outposts = PackedInt32Array([0, 0, 0, 0, 0])
+		next_outposts = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 	var next_scouted := scouted.duplicate()
 	if next_scouted.size() != 5:
-		next_scouted = PackedInt32Array([0, 0, 0, 0, 0])
+		next_scouted = PackedInt32Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 	var next_keep_level := clampi(keep_level, 1, 10)
 	var next_guards := maxi(guards, 0)
 	var next_infantry := maxi(infantry, 0)
@@ -455,7 +455,11 @@ func _rebuild_outposts() -> void:
 		if is_instance_valid(node):
 			node.queue_free()
 	outpost_nodes.clear()
-	var positions := [Vector3(-10.0, 0.0, -8.0), Vector3(-5.0, 0.0, -12.0), Vector3(0.0, 0.0, -14.0), Vector3(5.0, 0.0, -12.0), Vector3(10.0, 0.0, -8.0)]
+	var positions := [
+		Vector3(-12.0, 0.0, -9.0), Vector3(-8.0, 0.0, -13.0), Vector3(-3.0, 0.0, -14.0),
+		Vector3(3.0, 0.0, -14.0), Vector3(8.0, 0.0, -13.0), Vector3(12.0, 0.0, -8.0),
+		Vector3(12.0, 0.0, 1.0), Vector3(9.0, 0.0, 10.0), Vector3(2.0, 0.0, 13.0), Vector3(-9.0, 0.0, 10.0)
+	]
 	for i in range(positions.size()):
 		var root := Node3D.new()
 		root.position = positions[i]
