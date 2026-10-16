@@ -32,7 +32,8 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Validate generated sound streams, mute/unmute UI behavior, and sound-preference save/load ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853048014)).
 - [x] Validate daily reward streak progression, exact resource payout, same-day claim blocking, countdown/claimed UI, and save recovery ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853165597)).
 - [x] Verify Academy construction, 3D model parsing, tile inspection, and level-2 research discount ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853359637)).
-- [ ] Verify Academy level-5 discount cap and final integration suite in the current CI run ([pending](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853406776)).
+- [x] Verify Academy level-5 research discount cap at 25% ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853406776)).
+- [ ] Verify Academy's 3D model node structure in the latest integration run ([pending](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38853433973)).
 - [x] Recheck hero level-up feedback, 3D hero model/label synchronization, and the updated test suite ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
 - [x] Verify a saved Low-quality preset is applied when the scene starts, including render scale and shadow state ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
 - [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity and signature checks align. Actual export remains untested until approved.
