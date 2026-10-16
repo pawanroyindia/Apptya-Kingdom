@@ -199,6 +199,21 @@ func _run_tests() -> void:
 	if game.network_session._valid_snapshot(invalid_flags_snapshot):
 		_fail("LAN co-op accepted a non-boolean quest claim flag.")
 		return
+	var malformed_gold_snapshot := coop_snapshot.duplicate(true)
+	malformed_gold_snapshot["gold"] = "not-a-number"
+	if game.network_session._valid_snapshot(malformed_gold_snapshot):
+		_fail("LAN co-op accepted a non-integer resource value.")
+		return
+	var malformed_level_snapshot := coop_snapshot.duplicate(true)
+	malformed_level_snapshot["tile_levels"][0] = "bad-level"
+	if game.network_session._valid_snapshot(malformed_level_snapshot):
+		_fail("LAN co-op accepted a non-integer building level.")
+		return
+	var malformed_building_snapshot := coop_snapshot.duplicate(true)
+	malformed_building_snapshot["tiles"][0] = 123
+	if game.network_session._valid_snapshot(malformed_building_snapshot):
+		_fail("LAN co-op accepted a non-string building identifier.")
+		return
 	if not game.network_session._is_allowed_action("gather", {"resource": "gold", "amount": 20, "tile": 4, "outpost": 0}) or game.network_session._is_allowed_action("gather", {"resource": "gold", "amount": 999, "tile": 4, "outpost": 0}) or game.network_session._is_allowed_action("execute_script", {"tile": 4, "outpost": 0}):
 		_fail("LAN co-op accepted an invalid or unsupported client action.")
 		return
