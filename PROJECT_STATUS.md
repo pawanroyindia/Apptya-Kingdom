@@ -20,15 +20,15 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Visible construction/outpost reveal effects, water ripples, exploration scout journey and marching guard squad during attacks.
 
 ## Verification
-- [x] Headless Godot editor parsing, project startup, economy, training, research, exploration, save recovery and touch tests passed ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848617457)).
+- [x] Headless Godot editor parsing, project startup, economy, training, research, exploration, save recovery and touch tests passed ([run details](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848762730)).
 - [x] The central 3D tile-picking test has passed in a prior workflow run.
-- [x] Re-run the expanded gameplay/save/touch/troop/research test suite after the latest changes and fix every failure ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848617457)).
+- [x] Re-run the expanded gameplay/save/touch/troop/research test suite after the latest changes and fix every failure ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38848762730)).
 - [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity and signature checks align. Actual export remains untested until approved.
 - [x] Add a CI mesh-node budget and refresh-stability check: 193 mesh nodes at startup, below the 400-node guardrail; physical-device FPS remains unverified.
 - [ ] Physical-device installation, touch testing, and performance validation are post-export gates and cannot be claimed before an APK exists.
 
 ## Remaining non-blocking prototype scope
 - The world uses procedural low-poly meshes and a custom SVG app icon, not final production art assets.
-- Campaign depth is currently limited to five outposts and the implemented prototype economy; there is no multiplayer or audio system.
+- Campaign depth is currently limited to five outposts, escalating enemy army encounters and the implemented prototype economy; there is no multiplayer or audio system.
 - A successful headless check does not prove Android export, APK installation, or device compatibility.
 - The APK workflow has not been run and no APK has been generated. This is intentional. Do not run the manual APK workflow unless the user explicitly asks after reviewing this checklist.
