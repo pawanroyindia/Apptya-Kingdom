@@ -460,7 +460,7 @@ func play_attack(target_index: int, victory: bool) -> void:
 			_add_capsule(soldier, Vector3(0, 0.55, 0), uniform_color)
 			_add_sphere(soldier, Vector3(0, 1.2, 0), Vector3(0.22, 0.22, 0.22), "#d9b18c")
 			if troop_type == "infantry":
-					_add_box(soldier, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
+				_add_box(soldier, Vector3(0.12, 0.58, 0.12), Vector3(0.2, 0.58, 0), "#bca46e")
 				_add_box(soldier, Vector3(0.34, 0.4, 0.12), Vector3(-0.22, 0.58, 0.08), "#8c6845")
 				_add_box(soldier, Vector3(0.08, 0.08, 0.15), Vector3(-0.22, 0.58, 0.15), "#d8bd76")
 			else:
@@ -571,9 +571,9 @@ func _rebuild_guards() -> void:
 			_add_capsule(guard, Vector3(0, 0.55, 0), uniform_color)
 			_add_sphere(guard, Vector3(0, 1.2, 0), Vector3(0.24, 0.24, 0.24), "#d9b18c")
 			if troop_type == "infantry":
-					_add_box(guard, Vector3(0.12, 0.58, 0.12), Vector3(0.18, 0.58, 0), "#bca46e")
-			_add_box(guard, Vector3(0.34, 0.4, 0.12), Vector3(-0.22, 0.58, 0.08), "#8c6845")
-			_add_box(guard, Vector3(0.08, 0.08, 0.15), Vector3(-0.22, 0.58, 0.15), "#d8bd76")
+				_add_box(guard, Vector3(0.12, 0.58, 0.12), Vector3(0.18, 0.58, 0), "#bca46e")
+				_add_box(guard, Vector3(0.34, 0.4, 0.12), Vector3(-0.22, 0.58, 0.08), "#8c6845")
+				_add_box(guard, Vector3(0.08, 0.08, 0.15), Vector3(-0.22, 0.58, 0.15), "#d8bd76")
 			else:
 				_add_cylinder(guard, 0.035, 0.7, Vector3(0.28, 0.78, 0), "#8a6748")
 				_add_box(guard, Vector3(0.12, 0.45, 0.12), Vector3(-0.18, 0.58, 0), "#648d55")
