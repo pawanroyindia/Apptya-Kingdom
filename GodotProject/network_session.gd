@@ -42,6 +42,10 @@ func join_game(address: String) -> Error:
 
 func disconnect_game() -> void:
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
+	# A one-shot timer may have expired while its callback intentionally did
+	# nothing on a connected guest. Resume due operations immediately on disconnect.
+	if is_instance_valid(game_root):
+		game_root._resume_timed_upgrades()
 	_set_status("LAN co-op disconnected. Local kingdom is still saved.")
 
 func is_network_active() -> bool:
