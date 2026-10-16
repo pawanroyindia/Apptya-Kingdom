@@ -4,6 +4,7 @@ const SAVE_PATH := "user://apptya_kingdom_save.cfg"
 const BACKUP_SAVE_PATH := "user://apptya_kingdom_save_backup.cfg"
 const MAX_OFFLINE_SECONDS := 28800
 const TICK_SECONDS := 10.0
+const COMBAT_DIRECTOR = preload("res://combat_director.gd")
 
 var gold := 300
 var wood := 150
@@ -765,8 +766,8 @@ func _get_outpost_description() -> String:
 		return "Outpost %d is locked. Capture Outpost %d first to advance the campaign." % [selected_outpost + 1, selected_outpost]
 	if region_scouted[selected_outpost] != 1:
 		return "Target: Outpost %d. This region is unexplored. Scout it to reveal enemy threat before attacking." % (selected_outpost + 1)
-	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 + combat_research * 5 + practice_drills + archers * 2 + cavalry * 3, 10, 90)
-	return "Scouted target: Outpost %d • Threat %d • Estimated success chance %d%% • Guards required: %d" % [selected_outpost + 1, threat, chance, 3 + threat]
+	var battle: Dictionary = COMBAT_DIRECTOR.resolve_outpost(infantry, archers, cavalry, _hero_power(), combat_research, practice_drills, keep_level, _get_barracks_level(), threat, selected_outpost, true)
+	return "Scouted target: Outpost %d • %s • Enemy power %d • Estimated success chance %d%% • Guards required: %d" % [selected_outpost + 1, battle["trait"], battle["enemy_power"], battle["chance"], 3 + threat]
 
 func _select_outpost(index: int) -> void:
 	if _route_network_action("select_outpost", {"outpost": index}):
@@ -1149,9 +1150,11 @@ func _attack_outpost() -> void:
 		status_message = "Outpost %d requires at least %d guards." % [selected_outpost + 1, required_guards]
 		_refresh_ui()
 		return
-	var chance := clampi(65 - threat * 12 + keep_level * 6 + guards / 2 + combat_research * 5 + practice_drills + archers * 2 + cavalry * 3 - (0 if region_scouted[selected_outpost] == 1 else 15), 10, 90)
-	_remove_troops(required_guards)
+	var battle: Dictionary = COMBAT_DIRECTOR.resolve_outpost(infantry, archers, cavalry, _hero_power(), combat_research, practice_drills, keep_level, _get_barracks_level(), threat, selected_outpost, region_scouted[selected_outpost] == 1)
+	var chance := int(battle["chance"])
 	var won_attack := randi_range(1, 100) <= chance
+	var casualties := int(battle["win_losses"] if won_attack else battle["loss_losses"])
+	_remove_troops(casualties)
 	if is_instance_valid(world_view):
 		world_view.play_attack(selected_outpost, won_attack)
 	_play_sound("victory" if won_attack else "defeat")
@@ -1163,7 +1166,7 @@ func _attack_outpost() -> void:
 		var reward := 100 * threat + keep_level * 25
 		gold += reward
 		food += 20 * threat
-		status_message = "Victory at Outpost %d! Reward: %d gold and %d food." % [selected_outpost + 1, reward, 20 * threat]
+		status_message = "Victory at Outpost %d! %s defeated at %d%% odds. Lost %d troops; reward: %d gold and %d food." % [selected_outpost + 1, battle["trait"], chance, casualties, reward, 20 * threat]
 		_award_achievement("outpost", "First Outpost", 50, 10)
 		var campaign_won := _all_outposts_captured()
 		if campaign_won:
@@ -1175,9 +1178,7 @@ func _attack_outpost() -> void:
 	else:
 		_award_hero_xp(10)
 		defeats = mini(defeats + 1, 1000000)
-		status_message = "Attack failed at Outpost %d. Your guards lost the battle." % (selected_outpost + 1)
-		if randi_range(0, 1) == 1:
-			_remove_troops(1)
+		status_message = "Attack failed at Outpost %d vs %s (%d%% odds). Lost %d troops; regroup, research, or improve troop composition." % [selected_outpost + 1, battle["trait"], chance, casualties]
 	_persist_game()
 	_refresh_ui()
 
@@ -1247,13 +1248,16 @@ func _attack_enemy_army() -> void:
 		status_message = "Train guards before attacking the enemy army."
 		_refresh_ui()
 		return
-	var army := _army_power()
-	var enemy := _enemy_power()
+	var battle: Dictionary = COMBAT_DIRECTOR.resolve_enemy_army(infantry, archers, cavalry, _hero_power(), combat_research, practice_drills, keep_level, _get_barracks_level(), enemy_level)
+	var army := int(battle["kingdom_power"])
+	var enemy := int(battle["enemy_power"])
+	var chance := int(battle["chance"])
+	var won_battle := randi_range(1, 100) <= chance
+	var lost := int(battle["win_losses"] if won_battle else battle["loss_losses"])
+	_remove_troops(lost)
 	day = mini(day + 1, 1000000)
-	if army >= enemy:
+	if won_battle:
 		_award_hero_xp(40)
-		var lost := mini(guards, maxi(0, int(enemy / 45)))
-		_remove_troops(lost)
 		var wood_reward := 35 + enemy_level * 10
 		var stone_reward := 20 + enemy_level * 5
 		var gold_reward := 25 + enemy_level * 8
@@ -1262,17 +1266,15 @@ func _attack_enemy_army() -> void:
 		gold += gold_reward
 		victories = mini(victories + 1, 1000000)
 		enemy_level = mini(enemy_level + 1, 100000)
-		status_message = "VICTORY! Army %d vs enemy %d. Lost %d guards; loot: %d wood, %d stone, %d gold." % [army, enemy, lost, wood_reward, stone_reward, gold_reward]
+		status_message = "VICTORY vs %s! Power %d vs %d (%d%% odds). Lost %d troops; loot: %d wood, %d stone, %d gold." % [battle["trait"], army, enemy, chance, lost, wood_reward, stone_reward, gold_reward]
 		if tutorial_step == 3:
 			_advance_tutorial(4)
 	else:
 		_award_hero_xp(15)
-		var lost := mini(guards, maxi(1, int(ceil(float(enemy - army) / 18.0))))
-		_remove_troops(lost)
 		var food_lost := mini(food, 15 * lost)
 		food -= food_lost
 		defeats = mini(defeats + 1, 1000000)
-		status_message = "DEFEAT. Army %d vs enemy %d. Lost %d guards and %d food. Train and research before retrying." % [army, enemy, lost, food_lost]
+		status_message = "DEFEAT vs %s. Power %d vs %d (%d%% odds). Lost %d troops and %d food. Improve your army before retrying." % [battle["trait"], army, enemy, chance, lost, food_lost]
 	_persist_game()
 	_refresh_ui()
 
@@ -1722,22 +1724,24 @@ func _load_game() -> void:
 	_apply_offline_production(false)
 
 func _normalize_save_data() -> void:
-	gold = maxi(gold, 0)
-	wood = maxi(wood, 0)
-	food = maxi(food, 0)
-	stone = maxi(stone, 0)
+	const MAX_RESOURCE := 2000000000
+	gold = clampi(gold, 0, MAX_RESOURCE)
+	wood = clampi(wood, 0, MAX_RESOURCE)
+	food = clampi(food, 0, MAX_RESOURCE)
+	stone = clampi(stone, 0, MAX_RESOURCE)
 	if graphics_quality not in ["Low", "Balanced", "High"]:
 		graphics_quality = "Balanced"
 	hero_level = clampi(hero_level, 1, 20)
 	hero_skill_level = clampi(hero_skill_level, 1, 5)
-	hero_xp = maxi(hero_xp, 0)
+	hero_xp = clampi(hero_xp, 0, 1000000)
 	while hero_level < 20 and hero_xp >= hero_level * 100:
 		hero_xp -= hero_level * 100
 		hero_level += 1
 	if hero_level >= 20:
 		hero_xp = 0
 	day = clampi(day, 1, 1000000)
-	daily_reward_claim_day = maxi(daily_reward_claim_day, -1)
+	var current_utc_day := int(floor(float(Time.get_unix_time_from_system()) / 86400.0))
+	daily_reward_claim_day = clampi(daily_reward_claim_day, -1, current_utc_day)
 	daily_reward_streak = clampi(daily_reward_streak, 0, 7)
 	enemy_level = clampi(enemy_level, 1, 100000)
 	explored_regions = clampi(explored_regions, 0, 1000000)
@@ -1801,14 +1805,25 @@ func _normalize_save_data() -> void:
 	for i in range(outpost_defeated.size()):
 		outpost_defeated[i] = 1 if outpost_defeated[i] == 1 else 0
 		region_scouted[i] = 1 if region_scouted[i] == 1 else 0
-	if keep_upgrade_finish_unix < 0:
+	# Repair impossible campaign states: later regions cannot remain captured/scouted through a corrupt save.
+	for i in range(1, outpost_defeated.size()):
+		if outpost_defeated[i - 1] != 1:
+			outpost_defeated[i] = 0
+			region_scouted[i] = 0
+	# Keep all persisted timers tied to a valid operation and supported building.
+	var now := int(Time.get_unix_time_from_system())
+	if keep_upgrade_finish_unix < now or keep_level >= 10:
 		keep_upgrade_finish_unix = 0
-	if building_upgrade_finish_unix < 0:
+	if building_upgrade_finish_unix < now or building_upgrade_tile < 0 or building_upgrade_tile >= tiles.size():
 		building_upgrade_finish_unix = 0
-	if troop_training_finish_unix < 0:
-		troop_training_finish_unix = 0
-	if building_upgrade_tile < -1 or building_upgrade_tile >= tiles.size():
 		building_upgrade_tile = -1
+	elif tiles[building_upgrade_tile] not in ["Farm", "Mine", "Barracks", "Lumber Camp", "Quarry", "Academy"] or tile_levels[building_upgrade_tile] >= 5:
+		building_upgrade_finish_unix = 0
+		building_upgrade_tile = -1
+	if troop_training_finish_unix < now or queued_troop_count <= 0:
+		troop_training_finish_unix = 0
+		if queued_troop_count <= 0:
+			queued_troop_type = ""
 
 func _apply_offline_production(refresh_after: bool) -> void:
 	var now := int(Time.get_unix_time_from_system())
