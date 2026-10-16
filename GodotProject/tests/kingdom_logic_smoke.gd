@@ -133,14 +133,25 @@ func _run_tests() -> void:
 	if game.gold <= gold_before_tick or game.wood <= wood_before_tick or game.food <= food_before_tick:
 		_fail("Active production tick did not generate resources from built economy.")
 		return
+	var expected_offline_gold := 0
+	var expected_offline_wood := 0
+	var expected_offline_food := 0
+	for i in range(game.tiles.size()):
+		match game.tiles[i]:
+			"Farm":
+				expected_offline_food += 2 * game.keep_level * game.tile_levels[i] * 2880
+			"Mine":
+				expected_offline_gold += 2 * game.keep_level * game.tile_levels[i] * 2880
+			"Keep":
+				expected_offline_gold += game.keep_level * 2880
+				expected_offline_wood += 2880
 	var gold_before_offline: int = game.gold
+	var wood_before_offline: int = game.wood
+	var food_before_offline: int = game.food
 	game.last_saved_unix = int(Time.get_unix_time_from_system()) - 36000
 	game._apply_offline_production(false)
-	if game.gold <= gold_before_offline:
-		_fail("Offline production did not award resources.")
-		return
-	if game.gold > gold_before_offline + 2 * game.keep_level * 99 * 2880:
-		_fail("Offline production exceeded the configured eight-hour cap.")
+	if game.gold != gold_before_offline + expected_offline_gold or game.wood != wood_before_offline + expected_offline_wood or game.food != food_before_offline + expected_offline_food:
+		_fail("Offline production did not apply the exact eight-hour capped production.")
 		return
 
 	game._persist_game()
