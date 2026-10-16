@@ -423,9 +423,28 @@ func _rebuild_guards() -> void:
 	for i in range(visible_count):
 		var guard := Node3D.new()
 		guard.position = Vector3(-0.95 + float(i % 4) * 0.55, 0.08, 1.0 + float(int(i / 4)) * 0.55)
-		_add_capsule(guard, Vector3(0, 0.55, 0), "#526e9c")
-		_add_sphere(guard, Vector3(0, 1.2, 0), Vector3(0.24, 0.24, 0.24), "#d9b18c")
-		_add_box(guard, Vector3(0.12, 0.58, 0.12), Vector3(0.18, 0.58, 0), "#bca46e")
+		var troop_type := "infantry"
+		if i >= current_infantry and i < current_infantry + current_archers:
+			troop_type = "archer"
+		elif i >= current_infantry + current_archers:
+			troop_type = "cavalry"
+		if troop_type == "cavalry":
+			_add_box(guard, Vector3(0.55, 0.38, 0.85), Vector3(0, 0.48, 0), "#8c6845")
+			_add_sphere(guard, Vector3(0, 0.72, -0.38), Vector3(0.26, 0.22, 0.3), "#8c6845")
+			_add_capsule(guard, Vector3(0, 1.12, 0.05), "#b58b49")
+			_add_sphere(guard, Vector3(0, 1.75, 0.05), Vector3(0.22, 0.22, 0.22), "#d9b18c")
+			for leg_x in [-0.18, 0.18]:
+				for leg_z in [-0.25, 0.25]:
+					_add_box(guard, Vector3(0.09, 0.32, 0.09), Vector3(leg_x, 0.2, leg_z), "#6b4b35")
+		else:
+			var uniform_color := "#526e9c" if troop_type == "infantry" else "#648d55"
+			_add_capsule(guard, Vector3(0, 0.55, 0), uniform_color)
+			_add_sphere(guard, Vector3(0, 1.2, 0), Vector3(0.24, 0.24, 0.24), "#d9b18c")
+			if troop_type == "infantry":
+				_add_box(guard, Vector3(0.12, 0.58, 0.12), Vector3(0.18, 0.58, 0), "#bca46e")
+			else:
+				_add_cylinder(guard, 0.035, 0.7, Vector3(0.28, 0.78, 0), "#8a6748")
+				_add_box(guard, Vector3(0.12, 0.45, 0.12), Vector3(-0.18, 0.58, 0), "#648d55")
 		add_child(guard)
 		guard_nodes.append(guard)
 
