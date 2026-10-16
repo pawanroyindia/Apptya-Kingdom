@@ -101,7 +101,7 @@ jobs:
           ffmpeg -hide_banner -loglevel error -y -i "$MUSIC_DIR/once_upon_a_time_loop_0.mp3" -af "volume=0.82" -ar 22050 -ac 2 -c:a pcm_s16le "$MODEL_DIR/audio/kingdom_theme.wav"
           cat > "$MODEL_DIR/ASSET_PROVENANCE.md" <<'EOF'
           # Third-party runtime assets
-          - Character and gate-tower models: Quaternius RPG Character Pack and Medieval Village MegaKit, CC0 1.0 Universal. Keep and barracks are assembled from the pack's textured wall and roof modules. Source repository snapshot: Hakhyun-Kim/constellation-defense at commit 8ad1c93e382e2a6a5755882c1b9b2922877fab6e. The GLB models are used without geometry or texture edits.
+          - Royal Captain and guard: Quaternius RPG Character Pack models from the pinned CC0 asset snapshot in Hakhyun-Kim/constellation-defense at commit 8ad1c93e382e2a6a5755882c1b9b2922877fab6e; their UVs, rigs and clips are retained. Watchtower: Quaternius Medieval Village MegaKit gate-tower model. Keep and barracks are assembled from the kit's textured wall/roof modules; source PBR textures are resized to 512px for mobile.
           - Sound samples: Kenney, RPG Audio / Impact Sounds selections, CC0 1.0 Universal. The source OGG files are retained in `source_sfx/`; each runtime WAV mixes one source sample with the project's original generated effect.
           - Kingdom score: "Once Upon a Time (loop)" by TAD, CC0 1.0, from OpenGameArt; source MP3 is retained in `source_music/` and converted to the runtime WAV without trimming.
           - Source: https://quaternius.com/packs/rpgcharacters.html ; https://quaternius.com/packs/medievalvillagemegakit.html ; https://kenney.nl/assets/rpg-audio ; https://kenney.nl/assets/impact-sounds ; https://opengameart.org/content/once-upon-a-time-loop
