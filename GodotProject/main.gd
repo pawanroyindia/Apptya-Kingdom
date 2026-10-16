@@ -34,6 +34,8 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST:
 		_persist_game()
+	elif what == NOTIFICATION_APPLICATION_RESUMED:
+		_apply_offline_production(true)
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -307,6 +309,7 @@ func _save_game() -> void:
 	_refresh_ui()
 
 func _persist_game() -> Error:
+	last_saved_unix = int(Time.get_unix_time_from_system())
 	var config := ConfigFile.new()
 	config.set_value("kingdom", "gold", gold)
 	config.set_value("kingdom", "wood", wood)
@@ -315,7 +318,7 @@ func _persist_game() -> Error:
 	config.set_value("kingdom", "keep_level", keep_level)
 	config.set_value("kingdom", "selected_tile", selected_tile)
 	config.set_value("kingdom", "tiles", tiles)
-	config.set_value("kingdom", "saved_at", int(Time.get_unix_time_from_system()))
+	config.set_value("kingdom", "saved_at", last_saved_unix)
 	return config.save(SAVE_PATH)
 
 func _load_game() -> void:
@@ -335,7 +338,11 @@ func _load_game() -> void:
 		for building in loaded_tiles:
 			tiles.append(str(building))
 	last_saved_unix = int(config.get_value("kingdom", "saved_at", Time.get_unix_time_from_system()))
-	var elapsed := clampi(int(Time.get_unix_time_from_system()) - last_saved_unix, 0, MAX_OFFLINE_SECONDS)
+	_apply_offline_production(false)
+
+func _apply_offline_production(refresh_after: bool) -> void:
+	var now := int(Time.get_unix_time_from_system())
+	var elapsed := clampi(now - last_saved_unix, 0, MAX_OFFLINE_SECONDS)
 	var ticks := int(elapsed / int(TICK_SECONDS))
 	for building in tiles:
 		match building:
@@ -349,3 +356,5 @@ func _load_game() -> void:
 	if elapsed >= 10:
 		status_message = "Welcome back. Offline production was capped at 8 hours."
 	_persist_game()
+	if refresh_after:
+		_refresh_ui()
