@@ -9,6 +9,8 @@ var selected_outpost := 0
 var selected_tile_index := 4
 var tile_highlight: Node3D
 var world_camera: Camera3D
+var sun_light: DirectionalLight3D
+var quality_preset := "Balanced"
 var camera_distance := 24.0
 var camera_yaw := 0.0
 var camera_elevation := 0.65
@@ -93,18 +95,31 @@ func _build_environment() -> void:
 	environment_node.environment = environment
 	add_child(environment_node)
 
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-48, -32, 0)
-	sun.light_color = Color("#fff0d4")
-	sun.light_energy = 1.25
-	sun.shadow_enabled = true
-	add_child(sun)
+	sun_light = DirectionalLight3D.new()
+	sun_light.rotation_degrees = Vector3(-48, -32, 0)
+	sun_light.light_color = Color("#fff0d4")
+	sun_light.light_energy = 1.25
+	sun_light.shadow_enabled = true
+	add_child(sun_light)
 
 	world_camera = Camera3D.new()
 	world_camera.fov = 42
 	add_child(world_camera)
 	_update_camera()
 	world_camera.current = true
+
+
+func set_quality_preset(preset: String) -> void:
+	quality_preset = preset if preset in ["Low", "Balanced", "High"] else "Balanced"
+	if is_instance_valid(sun_light):
+		sun_light.shadow_enabled = quality_preset != "Low"
+		sun_light.light_energy = 1.1 if quality_preset == "Low" else 1.25
+
+func reset_camera() -> void:
+	camera_distance = 24.0
+	camera_yaw = 0.0
+	camera_elevation = 0.65
+	_update_camera()
 
 func _update_camera() -> void:
 	if not is_instance_valid(world_camera):
