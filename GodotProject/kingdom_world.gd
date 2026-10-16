@@ -178,6 +178,22 @@ func _make_building(kind: String, level: int, position_value: Vector3, is_keep: 
 		_add_box(root, Vector3(0.8, 0.55, 0.8), Vector3(0, 0.32, 0), "#8a6242")
 	return root
 
+func play_attack(target_index: int, victory: bool) -> void:
+	var safe_target := clampi(target_index, 0, 2)
+	var positions := [Vector3(-8.0, 1.1, -9.0), Vector3(0.0, 1.1, -11.0), Vector3(8.0, 1.1, -9.0)]
+	var projectile := _add_sphere(self, Vector3(0, 1.25, 1.0), Vector3(0.25, 0.25, 0.25), "#f1d38a")
+	var tween := create_tween()
+	tween.tween_property(projectile, "position", positions[safe_target], 0.72).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	tween.tween_callback(projectile.queue_free)
+	tween.tween_callback(_show_battle_flash.bind(positions[safe_target], victory))
+
+func _show_battle_flash(position_value: Vector3, victory: bool) -> void:
+	var flash_color := "#e4d17e" if victory else "#b53d36"
+	var flash := _add_sphere(self, position_value, Vector3(0.2, 0.2, 0.2), flash_color)
+	var tween := create_tween()
+	tween.tween_property(flash, "scale", Vector3(1.8, 1.8, 1.8), 0.28)
+	tween.tween_callback(flash.queue_free)
+
 func _rebuild_outposts() -> void:
 	for node in outpost_nodes:
 		if is_instance_valid(node):
