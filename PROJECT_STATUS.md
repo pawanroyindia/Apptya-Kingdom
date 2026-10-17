@@ -1,11 +1,16 @@
 # Apptya Kingdom — Work Checklist
 
+## Latest automation progress — 2026-10-17
+- [ ] Legacy-save regression test added in commit `f0d74e1c2e6e16f7cf9c8a2396c37f5c3837f6b4` on branch `automation/legacy-save-regression-test-20261017`. It seeds stale capture/scouting flags for outpost 4, loads a three-outpost legacy save, and asserts missing tail entries reset. The source assertion was reviewed, but the test has **not** run in Godot CI yet.
+- Baseline source check passed on commit `7d6c8fbe489232aaff4208b44abcc5dd13be98e8` ([run 38885918162](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38885918162)); that run predates the new regression test.
+- Pull-request creation and APK-workflow safety edits were blocked by tool safety checks. The branch is not merged, and no workflow was run by this automation.
+
 This checklist tracks development before the first APK export. **Do not run the APK workflow until the pre-export checklist is reviewed and approved.**
 
 ## Engine and build path
 - [x] Keep the original Unity project in the repository as a fallback.
 - [x] Add a Godot 4.5 project that does not require Unity licensing credentials.
-- [x] Configure a manual-only Android APK workflow; ordinary source changes must not export an APK.
+- [ ] Enforce manual-only Android APK workflows with an explicit approval confirmation; both current APK workflow files still contain push triggers and must be corrected before any approved export.
 - [x] Configure a separate headless source/runtime/gameplay validation workflow.
 
 ## Gameplay and mobile controls
@@ -51,7 +56,7 @@ This checklist tracks development before the first APK export. **Do not run the 
 - [x] Verify Academy timed upgrade costs/completion, duplicate-Academy prevention/save normalization, locked-outpost scouting, and duplicate-scout reward prevention ([successful Godot source check](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38854283305)).
 - [x] Recheck hero level-up feedback, 3D hero model/label synchronization, and the updated test suite ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
 - [x] Verify a saved Low-quality preset is applied when the scene starts, including render scale and shadow state ([successful run](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38851624870)).
-- [x] Statically review Android export preset and workflow configuration; the action inputs, preset output path, Android SDK, Java 17, APK integrity/signature checks, and Android INTERNET permission for LAN co-op are configured. CI asserts the networking permission remains enabled. Actual export remains untested until approved.
+- [x] Statically review Android export preset, Android SDK/Java 17 configuration, APK integrity/signature checks, and the Android INTERNET permission required for LAN co-op. CI asserts the networking permission remains enabled. Export was inadvertently run by an existing push-triggered workflow on 2026-10-16; export/signing completed in the runner, but post-export path verification failed and no artifact was uploaded. This is not a verified build or a user-approved export.
 - [x] Add a CI mesh-node budget and refresh-stability check: the generated-asset scene measured 291 MeshInstance3D nodes, below the 400-node guardrail, and the repeated-refresh test passed; physical-device FPS remains unverified.
 - [x] Harden LAN host action validation: require in-range tile/outpost selection, validate typed payloads and allowlisted values, reject unknown actions, and cover malformed gather amounts/selection indexes in the two-process LAN regression test ([successful source check](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38859719314)).
 - [x] Validate incoming LAN snapshots before applying them: bound campaign/reward counters and timers, validate persisted flag types and achievements, and reject malformed day/timer/quest-flag snapshots in regression tests (same successful source check).
@@ -62,4 +67,4 @@ This checklist tracks development before the first APK export. **Do not run the 
 - The runtime theme is an enhanced original procedural orchestral-style score; the effects combine synthesized material-specific Foley-like layers with CC0 sample recordings. They are not a commissioned orchestral recording or custom-recorded Foley session. LAN co-op is intentionally local-network-only; live two-phone networking, reconnect/session recovery, physical Android device profiling and two-phone verification remain outstanding.
 - Campaign depth currently includes ten sequential outposts, tactical enemy doctrines, composition-aware battles and escalating enemy-army encounters. The practical in-repository asset pass is complete, but a truly bespoke AAA art pass, professional motion-capture/skin-deformation review, commissioned musicians, custom-recorded Foley, and physical-device visual/performance validation cannot be honestly marked complete by headless CI alone. Internet matchmaking is intentionally out of scope.
 - A successful headless check does not prove Android export, APK installation, LAN connectivity between physical phones, or device compatibility.
-- The APK workflow has not been run and no APK has been generated. This is intentional. Do not run the manual APK workflow unless the user explicitly asks after reviewing this checklist.
+- The Godot APK workflow ran automatically on 2026-10-16 (run [38886905134](https://github.com/pawanroyindia/Apptya-Kingdom/actions/runs/38886905134)) despite the no-export-until-approved requirement. Logs show export and signing succeeded in the runner, but the verification step failed because `GodotProject/build/ApptyaKingdom.apk` was not present at the asserted path; upload found no file. No APK artifact was delivered. Do not run either APK workflow again until the user explicitly approves. Both workflow files currently have push triggers; correcting them to manual-only with an explicit confirmation was blocked by tool safety checks in the 2026-10-17 automation run.
