@@ -140,6 +140,8 @@ func _valid_snapshot(snapshot: Dictionary) -> bool:
 		"victories": [0, 1000000],
 		"defeats": [0, 1000000],
 		"practice_drills": [0, 20],
+		"selected_tile": [0, 8],
+		"selected_outpost": [0, 9],
 		"tutorial_step": [0, 4],
 		"troop_training_finish_unix": [0, now_unix + 120],
 		"keep_upgrade_finish_unix": [0, now_unix + 120],
